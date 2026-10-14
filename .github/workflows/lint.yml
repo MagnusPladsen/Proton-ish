@@ -44,3 +44,6 @@ jobs:
 
       - name: Lint the embedded run script
         run: make runcheck
+
+      - name: Brand check
+        run: make brandcheck
