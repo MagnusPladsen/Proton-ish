@@ -80,6 +80,34 @@ is "runtime.env value exported" "$CX_ROOT/frameworks" "$DYLD_FALLBACK_LIBRARY_PA
 is "runtime.env never executes" "no" "$([ -e "$hb/pwned" ] && echo yes || echo no)"
 is "DXMT renderer is prepended" "$CX_ROOT/renderers/dxmt/wine" "$WINEDLLPATH_PREPEND"
 is "Windows user is steamuser" "steamuser" "$WINEUSERNAME"
+is "keys from runtime.env are remembered for the game" " DYLD_FALLBACK_LIBRARY_PATH WINEDEBUG" "$np_hb_keys"
+# A user's launch option wins over the engine default; lowercase keys never pass, whatever the locale
+unset -v lower DYLD_FALLBACK_LIBRARY_PATH
+WINEDEBUG=+seh np_hb_keys=""
+eval "$hb_block"
+is "a launch option beats runtime.env" "+seh" "$WINEDEBUG"
+# The locale must be set when the shell starts for pattern ranges to follow it
+# shellcheck disable=SC2016 # Expanded by the child shell.
+leaked=$(LC_ALL=en_US.UTF-8 CX_ROOT="$CX_ROOT" np_runtime=highball hb_block="$hb_block" \
+  sh -c 'eval "$hb_block"; printf %s "${lower:-}"')
+is "a lowercase key is ignored under a UTF-8 locale" "" "$leaked"
+
+echo "== Highball environment reaches the game =="
+hb_forward=$(sed -n '/^# Highball: forward the engine environment/,/^fi # highball forward$/p' "$SRC")
+[ -n "$hb_forward" ] || { echo "FAIL: Highball forwarding block not found"; exit 1; }
+np_hb_keys=" DYLD_FALLBACK_LIBRARY_PATH GST_PLUGIN_PATH"
+GST_PLUGIN_PATH=/F/gst
+set --
+eval "$hb_forward"
+is "engine and runtime keys are passed with --env" \
+  "--env GST_PLUGIN_PATH=/F/gst --env CX_FWD_COMPAT_GL_CTX=1 --env WINEDLLPATH_PREPEND=$CX_ROOT/renderers/dxmt/wine --env WINEUSERNAME=steamuser " \
+  "$(printf '%s ' "$@")"
+# shellcheck disable=SC2016 # Match the literal script lines.
+launcher_text=$(sed -n '/^cat > "$loader_macos\/launcher" <<LAUNCHER$/,/^LAUNCHER$/p' "$SRC")
+case "$launcher_text" in
+  *'DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export'*) ok "launcher re-exports the engine's DYLD fallback paths" ;;
+  *) bad "launcher re-exports the engine's DYLD fallback paths" "a DYLD_FALLBACK case in the launcher" "none" ;;
+esac
 rm -rf "$hb"
 
 echo "== Apple GPTK initialization and launcher environment =="
