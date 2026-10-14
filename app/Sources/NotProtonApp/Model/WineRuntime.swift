@@ -74,7 +74,8 @@ struct CrossOverRuntime: WineRuntime {
     }
 }
 
-// Highball's engine copied flat into root: bin/wine is the loader and there is no licence
+// Highball's engine copied flat into root. bin/wine is its launcher and identifies the build;
+// games run the real loader in lib/wine/x86_64-unix, as with CrossOver. No licence.
 struct HighballRuntime: WineRuntime {
     var kind: RuntimeKind { .highball }
 
@@ -82,7 +83,7 @@ struct HighballRuntime: WineRuntime {
 
     func layout(root: URL, flavor: CompatTool.Flavor) -> PrefixTools.WineLayout {
         PrefixTools.WineLayout(
-            loader: root.appending(path: "bin/wine"),
+            loader: root.appending(path: "lib/wine/x86_64-unix/wine"),
             server: root.appending(path: "bin/wineserver"),
             unixDir: root.appending(path: "lib/wine/x86_64-unix")
         )

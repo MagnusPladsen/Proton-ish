@@ -64,7 +64,7 @@ rm -rf "$rt_work"
 
 echo "== Highball runner environment =="
 # shellcheck disable=SC2016 # Match the literal script lines.
-hb_block=$(sed -n '/^# Highball: loader in bin/,/^fi # highball$/p' "$SRC")
+hb_block=$(sed -n '/^# Highball: server in bin/,/^fi # highball$/p' "$SRC")
 [ -n "$hb_block" ] || { echo "FAIL: Highball block not found"; exit 1; }
 hb=$(mktemp -d)
 CX_ROOT="$hb/root"; np_runtime=highball
@@ -73,7 +73,7 @@ mkdir -p "$CX_ROOT/bin" "$CX_ROOT/lib/wine/x86_64-unix" "$CX_ROOT/renderers/dxmt
 printf 'DYLD_FALLBACK_LIBRARY_PATH=%s/frameworks\nlower=x\n$(touch %s/pwned)=x\nWINEDEBUG=fixme-all\n' "$CX_ROOT" "$hb" > "$CX_ROOT/runtime.env"
 WINELOADER=/wrong; WINESERVER=/wrong; wine_unix=/wrong
 eval "$hb_block"
-is "Highball loader is bin/wine" "$CX_ROOT/bin/wine" "$WINELOADER"
+is "Highball loader is the x86_64-unix wine, as for CrossOver" "$CX_ROOT/lib/wine/x86_64-unix/wine" "$WINELOADER"
 is "Highball server is bin/wineserver" "$CX_ROOT/bin/wineserver" "$WINESERVER"
 is "Highball unix dir" "$CX_ROOT/lib/wine/x86_64-unix" "$wine_unix"
 is "runtime.env value exported" "$CX_ROOT/frameworks" "$DYLD_FALLBACK_LIBRARY_PATH"

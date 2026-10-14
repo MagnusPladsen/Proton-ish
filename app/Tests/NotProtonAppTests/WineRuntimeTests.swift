@@ -78,13 +78,14 @@ struct WineRuntimeTests {
         #expect(root.path(percentEncoded: false) == "/S/runners/\(RuntimeKind.crossover.rawValue)-26.3.0.39832/\(SupportPaths.clonedFolder)")
     }
 
-    @Test("Highball's loader and server live in bin, its unix libraries in lib/wine")
+    @Test("Highball runs its x86_64-unix loader and keeps wineserver in bin")
     func highballLayout() {
         let root = URL(filePath: "/R/root")
         let runtime = RuntimeKind.highball.runtime
         #expect(runtime.unixLoader(inRoot: root).path(percentEncoded: false) == "/R/root/bin/wine")
         let layout = runtime.layout(root: root, flavor: .fex)
-        #expect(layout.loader.path(percentEncoded: false) == "/R/root/bin/wine")
+        // Run the real loader directly, as for CrossOver; bin/wine is Highball's launcher
+        #expect(layout.loader.path(percentEncoded: false) == "/R/root/lib/wine/x86_64-unix/wine")
         #expect(layout.server.path(percentEncoded: false) == "/R/root/bin/wineserver")
         #expect(layout.unixDir.path(percentEncoded: false) == "/R/root/lib/wine/x86_64-unix")
         #expect(runtime.accessStatus(root: root).licensed)
@@ -161,11 +162,11 @@ struct WineRuntimeTests {
         #expect(RuntimeKind.of(runner: URL(filePath: "/elsewhere/root")) == .crossover)
 
         #expect(PrefixTools.layout(runner: highball, flavor: .rosetta).loader.path(percentEncoded: false)
-            == "/S/runners/highball-x64-crossover26.3-r19/root/bin/wine")
+            == "/S/runners/highball-x64-crossover26.3-r19/root/lib/wine/x86_64-unix/wine")
         let prefix = WinePrefix(appID: "1", name: nil, library: SteamLibrary(root: URL(filePath: "/L")), lastUsed: nil)
         let env = PrefixTools.environment(prefix: prefix, runner: highball, flavor: .rosetta)
         #expect(env["WINEUSERNAME"] == "steamuser")
-        #expect(env["WINELOADER"] == "/S/runners/highball-x64-crossover26.3-r19/root/bin/wine")
+        #expect(env["WINELOADER"] == "/S/runners/highball-x64-crossover26.3-r19/root/lib/wine/x86_64-unix/wine")
         #expect(env["CX_ROOT"] == nil)
     }
 }

@@ -175,10 +175,10 @@ if [ "$np_flavor" = rosetta ] || [ ! -x "$WINELOADER" ] || [ ! -x "$WINESERVER" 
   WINESERVER="$CX_ROOT/bin/wineserver"
   [ -x "$WINESERVER" ] || WINESERVER="$CX_ROOT/bin/wineserver-x86"
 fi
-# Highball: loader in bin, engine environment from runtime.env, DXMT, Proton's user name
+# Highball: server in bin, engine environment from runtime.env, DXMT, Proton's user name
 if [ "$np_runtime" = highball ]; then
   wine_unix="$CX_ROOT/lib/wine/x86_64-unix"
-  WINELOADER="$CX_ROOT/bin/wine"
+  WINELOADER="$wine_unix/wine"
   WINESERVER="$CX_ROOT/bin/wineserver"
   if [ -r "$CX_ROOT/runtime.env" ]; then
     while IFS= read -r np_env_line || [ -n "$np_env_line" ]; do
@@ -1388,10 +1388,6 @@ for f in "$wine_unix"/*; do
   ln -sfn "$f" "$loader_macos/$base"
 done
 ln "$WINELOADER" "$loader_macos/wine" 2>/dev/null || cp "$WINELOADER" "$loader_macos/wine"
-if [ "$np_runtime" = highball ]; then
-  ln -sfn "$CX_ROOT/lib" "$loader_app/Contents/lib"
-  ln -sfn "$CX_ROOT/share" "$loader_app/Contents/share"
-fi
 if [ -x "$loader_macos/wine" ]; then
   WINELOADER="$loader_app/Contents/MacOS/wine"
   echo "loader staged in bundle for game mode" >> "$log" 2>&1 || true
