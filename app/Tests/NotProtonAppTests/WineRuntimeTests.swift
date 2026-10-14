@@ -116,4 +116,39 @@ struct WineRuntimeTests {
         #expect(RunnerStore.clonedBuilds(in: runners) == ["x64-old-r1"])
         #expect(RunnerInstaller.hasClone(forBuild: "x64-old-r1", runners: runners))
     }
+
+    @Test("Highball r19 is a supported Rosetta build with one tool")
+    func highballR19Supported() throws {
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))
+        #expect(build.runtime == .highball)
+        #expect(build.tools.map(\.name) == ["protonish-highball-x64-crossover26.3-r19"])
+        #expect(build.tools.allSatisfy { $0.flavor == .rosetta })
+        #expect(NtdllPatcher.byBuild["x64-crossover26.3-r19"]?.count == 2)
+    }
+
+    // Runs when the r19 engine is on this Mac (Highball install or the plan's scratch fixture):
+    // the app's own patcher must reproduce the pinned output byte for byte.
+    @Test("The app patches Highball r19's ntdll to the pinned hashes")
+    func highballR19PatchesToPin() throws {
+        let repo = URL(filePath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let candidates = [
+            repo.appending(path: "scratch/hb-r19/engine"),
+            HighballSource.home().appending(path: "engines/x64-crossover26.3-r19/engine"),
+        ]
+        guard let root = candidates.first(where: {
+            FileManager.default.fileExists(atPath: $0.appending(path: "lib/wine/x86_64-windows/ntdll.dll").path(percentEncoded: false))
+        }) else { return }
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))
+        let out = try scratchDirectory("hb-patch")
+        defer { try? FileManager.default.removeItem(at: out) }
+        for patch in NtdllPatcher.patches(for: build) {
+            let destination = out.appending(path: "\(patch.arch.rawValue).dll")
+            let hash = try NtdllPatcher.write(patch, build: build,
+                                              from: root.appending(path: "lib/wine/\(patch.arch.rawValue)/ntdll.dll"),
+                                              to: destination)
+            #expect(hash == build.patchedNtdll[patch.arch])
+        }
+    }
 }
