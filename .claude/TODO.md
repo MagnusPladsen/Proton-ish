@@ -2,6 +2,8 @@
 
 ## High Priority
 ## Medium Priority
+- [ ] Version ordering: DeploymentContent.Build.isNewer uses String.compare(.numeric), so "0.1.0-beta.1" sorts above "0.1.0" and a final release would be refused over a beta; use pre-release-aware ordering before shipping 0.1.0 (added: 2026-10-14)
+- [ ] CrossOver row lists Highball's "r19" in "Supported:" (SupportedRunners.versionList includes Highball builds) (added: 2026-10-14)
 - [ ] Highball parity for Steam games: every game that works in Highball should work here (added: 2026-10-14)
   - M2b: map the in-Steam graphics panel to Highball's renderers (DXMT, D3DMetal when the Apple licence is accepted, DXVK, vkd3d) per game
   - Import per-game fixes from highball-db (CC0): renderer, DLL overrides, env vars, Windows version, keyed by Steam app id
