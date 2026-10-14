@@ -39,7 +39,7 @@ is "trio outranks user" "lsteamclient=n;steamclient=n;steamclient64=n;lsteamclie
 echo "== Apple GPTK initialization and launcher environment =="
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-np_support="$work/Application Support/notproton"
+np_support="$work/Application Support/protonish"
 np_build="test"
 library="$np_support/runners/crossover-$np_build/CrossOver/lib64/apple_gptk/external/libd3dshared.dylib"
 init=$(sed -n '/^CX_ROOT=/,/^wine_unix=/p' "$SRC")

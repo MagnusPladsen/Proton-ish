@@ -391,7 +391,7 @@ $(RUN_SCRIPT_H): dylib/feats/compat_run.sh dylib/embed_script.py
 
 $(OUT_DIR)/dylib/feats/compat.o: $(RUN_SCRIPT_H)
 
-SUPPORT_DIR        := $(HOME)/Library/Application Support/notproton
+SUPPORT_DIR        := $(HOME)/Library/Application Support/protonish
 OVERLAY_SHIM_SRC   := overlay-shim/overlay_shim.m
 OVERLAY_SHIM_ARM   := $(OUT_DIR)/overlay-shim.arm64.dylib
 OVERLAY_SHIM_X86   := $(OUT_DIR)/overlay-shim.x86_64.dylib

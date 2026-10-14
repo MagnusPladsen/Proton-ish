@@ -31,7 +31,7 @@ struct PrefixToolsTests {
     func logPathsMatchRunScript() throws {
         let source = try Self.compatSource()
         #expect(source.contains(#"log="$STEAM_COMPAT_DATA_PATH/notproton-run.log""#))
-        #expect(source.contains(#"loader_root="$HOME/Library/Application Support/notproton/launchers/$app_id""#))
+        #expect(source.contains(#"loader_root="$HOME/Library/Application Support/protonish/launchers/$app_id""#))
         #expect(source.contains(#"wine_log="$loader_root/notproton-wine.log""#))
 
         let prefix = samplePrefix()
@@ -39,7 +39,7 @@ struct PrefixToolsTests {
         #expect(PrefixLog.launch.url(for: prefix, launchers: launchers) == prefix.root.appending(path: "notproton-run.log"))
         #expect(PrefixLog.wine.url(for: prefix, launchers: launchers).path(percentEncoded: false)
             == "/tmp/launchers/1574480/notproton-wine.log")
-        #expect(SupportPaths.launchers.path(percentEncoded: false).hasSuffix("Application Support/notproton/launchers"))
+        #expect(SupportPaths.launchers.path(percentEncoded: false).hasSuffix("Application Support/protonish/launchers"))
     }
 
     @Test("The runner variables are the ones RUN_SCRIPT exports")

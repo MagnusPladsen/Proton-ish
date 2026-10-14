@@ -55,7 +55,7 @@ struct UninstallTests {
         let inner = root.appending(path: "inner")
         let legacyCompat = inner.appending(path: "legacycompat")
         let compatTool = root.appending(path: "compatibilitytools.d/notproton")
-        let support = root.appending(path: "notproton")
+        let support = root.appending(path: "protonish")
         let caches = root.appending(path: "valve-packages")
 
         let tools = compatTool.deletingLastPathComponent()

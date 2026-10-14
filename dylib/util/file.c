@@ -57,7 +57,7 @@ const char *np_home_dir(void) {
 }
 
 void np_support_path(char *buf, size_t bufsz, const char *home, const char *rel) {
-    static const char base[] = "/Library/Application Support/notproton";
+    static const char base[] = "/Library/Application Support/protonish";
     if (rel && rel[0])
         snprintf(buf, bufsz, "%s%s/%s", home, base, rel);
     else

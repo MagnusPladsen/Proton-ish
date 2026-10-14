@@ -17,7 +17,7 @@ case "$verb" in
     ;;
 esac
 
-np_support="$HOME/Library/Application Support/notproton"
+np_support="$HOME/Library/Application Support/protonish"
 iconmaker="$np_support/iconmaker"
 
 find_client_root() {
@@ -1307,7 +1307,7 @@ bundle_name=$(printf '%s' "$game_name" | tr -d '/:"`$\\')
 bundle_name=${bundle_name#"${bundle_name%%[!.]*}"}
 [ -n "$bundle_name" ] || bundle_name="Steam Game"
 game_name_xml=$(printf '%s' "$game_name" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')
-loader_root="$HOME/Library/Application Support/notproton/launchers/$app_id"
+loader_root="$HOME/Library/Application Support/protonish/launchers/$app_id"
 mkdir -p "$loader_root"
 loader_app="$loader_root/$bundle_name.app"
 find "$loader_root" -maxdepth 1 -name '.build.*' -mmin +60 -exec rm -rf {} + 2>/dev/null || true
@@ -1375,7 +1375,7 @@ cat > "$loader_macos/launcher" <<LAUNCHER
 export WINELOADER="$WINELOADER"
 wine_log="$loader_root/notproton-wine.log"
 exec > "\$wine_log" 2>&1
-shim="$HOME/Library/Application Support/notproton/overlay-shim.dylib"
+shim="$HOME/Library/Application Support/protonish/overlay-shim.dylib"
 if [ -n "\$STEAM_DYLD_INSERT_LIBRARIES" ]; then
   if [ -f "\$shim" ]; then
     export DYLD_INSERT_LIBRARIES="\$shim:\$STEAM_DYLD_INSERT_LIBRARIES"

@@ -421,7 +421,7 @@ static void load_tool_list(void) {
     if (!home || tools_dir_path(tools_dir, sizeof(tools_dir)) != 0) return;
 
     char path[512];
-    snprintf(path, sizeof(path), "%s/Library/Application Support/notproton/tools", home);
+    snprintf(path, sizeof(path), "%s/Library/Application Support/protonish/tools", home);
     np_compat_load_tool_list(path, tools_dir);
 }
 
