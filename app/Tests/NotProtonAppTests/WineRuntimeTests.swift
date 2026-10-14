@@ -6,10 +6,9 @@ import Testing
 @Suite("Wine runtime")
 struct WineRuntimeTests {
 
-    @Test("Every supported build is a CrossOver build")
-    func supportedBuildsAreCrossOver() {
-        #expect(!SupportedRunners.all.isEmpty)
-        #expect(SupportedRunners.all.allSatisfy { $0.runtime == .crossover })
+    @Test("Every supported build names a known runtime")
+    func supportedBuildsHaveRuntimes() {
+        #expect(SupportedRunners.all.allSatisfy { RuntimeKind.allCases.contains($0.runtime) })
     }
 
     @Test("A rebuild keeps the runtime of the build it belongs to")
@@ -104,5 +103,17 @@ struct WineRuntimeTests {
         """)
         #expect(parsed == ["DYLD_FALLBACK_LIBRARY_PATH": "/R/root/frameworks", "WINEDEBUG": "fixme-all",
                            "GST_PLUGIN_PATH": "/a b/c"])
+    }
+
+    @Test("A clone's runtime comes from its directory, even for a build no longer supported")
+    func runtimeFromDirectory() throws {
+        let runners = FileManager.default.temporaryDirectory.appending(path: "np-rt-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: runners) }
+        try FileManager.default.createDirectory(at: runners.appending(path: "highball-x64-old-r1/root/lib/wine"),
+                                                withIntermediateDirectories: true)
+        #expect(SupportPaths.runtime(forBuild: "x64-old-r1", runners: runners) == .highball)
+        #expect(SupportPaths.runnerRoot(forBuild: "x64-old-r1", runners: runners).lastPathComponent == "highball-x64-old-r1")
+        #expect(RunnerStore.clonedBuilds(in: runners) == ["x64-old-r1"])
+        #expect(RunnerInstaller.hasClone(forBuild: "x64-old-r1", runners: runners))
     }
 }
