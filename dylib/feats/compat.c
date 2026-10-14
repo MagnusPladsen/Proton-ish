@@ -16,7 +16,7 @@
 // The client maps Cloud's Windows path roots into the compat prefix only when
 // the tool's name contains "proton" so without a match every AutoCloud rule silently
 // skips the app.
-#define TOOL_DIR_NAME "notproton"
+#define TOOL_DIR_NAME "protonish"
 #define TOOL_RUN      "/run"
 
 #define COMPAT_MANAGER_ENABLED_OFF  0x7B0
@@ -483,7 +483,7 @@ static int write_tool(const tool_entry_t *tool) {
     return 0;
 }
 
-#define RUN_SCRIPT_MARK "\n# notproton CrossOver compatibility tool shim\n"
+#define RUN_SCRIPT_MARK "\n# protonish CrossOver compatibility tool shim\n"
 
 static int written_here(const char *tool_dir) {
     char path[768];

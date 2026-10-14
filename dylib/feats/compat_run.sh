@@ -1,5 +1,5 @@
 #!/bin/sh
-# notproton CrossOver compatibility tool shim
+# protonish CrossOver compatibility tool shim
 set -e
 
 verb="$1"

@@ -112,7 +112,7 @@ enum SupportPaths {
             let entries = (try? FileManager.default.contentsOfDirectory(
                 at: directory, includingPropertiesForKeys: nil
             )) ?? []
-            return entries.filter { $0.lastPathComponent.hasPrefix("notproton") }
+            return entries.filter { $0.lastPathComponent.hasPrefix("protonish") }
         }
 
         static var libraryFoldersVDF: URL { userData.appending(path: "steamapps/libraryfolders.vdf") }
