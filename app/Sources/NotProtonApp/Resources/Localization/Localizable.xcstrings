@@ -1775,6 +1775,16 @@
         }
       }
     },
+    "Highball engine %@ isn't supported yet." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highball 引擎 %@ 尚不受支持。"
+          }
+        }
+      }
+    },
     "If Proton-ish is installed there, it will stay installed. Continue anyway?" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3991,22 +4001,22 @@
         }
       }
     },
-    "Verify CrossOver" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "验证 CrossOver"
-          }
-        }
-      }
-    },
     "Verify CrossOver license" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "验证 CrossOver 许可证"
+          }
+        }
+      }
+    },
+    "Verify runner" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证运行器"
           }
         }
       }

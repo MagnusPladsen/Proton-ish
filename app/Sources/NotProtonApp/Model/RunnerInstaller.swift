@@ -232,6 +232,57 @@ enum RunnerInstaller {
         }
     }
 
+    static func clone(from engine: HighballEngine, replacingExisting: Bool = false,
+                      runners: URL = SupportPaths.runners) throws -> RunnerBuild {
+        guard case .supported(let build) = engine.support else {
+            throw StepFailure(step: step, detail: String(localized: "Highball engine \(engine.id) isn't supported yet."))
+        }
+        let fm = FileManager.default
+        let target = runners.appending(path: "\(build.runtime.rawValue)-\(build.id)")
+        let existing = hasClone(forBuild: build.id, runners: runners)
+        let occupied = fm.fileExists(atPath: target.path(percentEncoded: false))
+        if !existing || replacingExisting {
+            let staging = runners.appending(path: ".\(target.lastPathComponent).new")
+            try? fm.removeItem(at: staging)
+            try copyPayload(from: engine.engineRoot, to: staging)
+            let root = staging.appending(path: SupportPaths.clonedFolder)
+            for extra in ["frameworks", "renderers", "manifest.json"] {
+                let source = engine.directory.appending(path: extra)
+                guard fm.fileExists(atPath: source.path(percentEncoded: false)) else { continue }
+                let copied = try Shell.run("/bin/cp", ["-c", "-R", source.path(percentEncoded: false),
+                                                       root.appending(path: extra).path(percentEncoded: false)])
+                if copied.status != 0 {
+                    let plain = try Shell.run("/bin/cp", ["-R", source.path(percentEncoded: false),
+                                                          root.appending(path: extra).path(percentEncoded: false)])
+                    guard plain.status == 0 else {
+                        throw StepFailure(step: step, detail: String(localized: "Copying \(extra) failed. \(plain.stderr.trimmingCharacters(in: .whitespacesAndNewlines))"))
+                    }
+                }
+            }
+            scrubDownloadMarkers(at: root)
+            try writeRuntimeEnv(manifest: root.appending(path: "manifest.json"), root: target.appending(path: SupportPaths.clonedFolder))
+            if occupied { try fm.removeItem(at: target) }
+            try fm.moveItem(at: staging, to: target)
+        }
+        try verifyClone(build: build, root: target.appending(path: SupportPaths.clonedFolder))
+        return build
+    }
+
+    // The manifest's baseEnv, with ${frameworks} pointing into the clone. The run script reads it.
+    static func writeRuntimeEnv(manifest: URL, root: URL) throws {
+        let data = try Data(contentsOf: manifest)
+        let object = (try JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+        let base = (object["baseEnv"] as? [String: String]) ?? [:]
+        let frameworks = root.appending(path: "frameworks").path(percentEncoded: false)
+        let lines = base
+            .filter { $0.key.wholeMatch(of: #/[A-Z_][A-Z0-9_]*/#) != nil && !$0.value.contains("\n") }
+            .map { "\($0.key)=\($0.value.replacingOccurrences(of: "${frameworks}", with: frameworks))" }
+            .sorted()
+        // Written next to the staged manifest, before the staging directory moves into place
+        let staged = manifest.deletingLastPathComponent().appending(path: "runtime.env")
+        try Data((lines.joined(separator: "\n") + "\n").utf8).write(to: staged, options: .atomic)
+    }
+
     static func hasClone(forBuild build: String, runners: URL = SupportPaths.runners) -> Bool {
         let root = SupportPaths.clonedRoot(forBuild: build, runners: runners)
         return FileManager.default.fileExists(
@@ -271,7 +322,7 @@ enum RunnerInstaller {
     }
 
     static func verifyClone(build: RunnerBuild, root: URL) throws {
-        let loader = Clean.copy(of: CrossOverSource.unixLoader(inRoot: root))
+        let loader = Clean.copy(of: build.runtime.runtime.unixLoader(inRoot: root))
         guard let hash = Digest.sha256IfPresent(loader) else {
             throw StepFailure(step: step, detail: String(localized: "The clone has no Wine loader at \(loader.lastPathComponent)."))
         }
