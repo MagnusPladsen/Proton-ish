@@ -69,7 +69,8 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 
 Pre-releases are on the [Releases page](https://github.com/MagnusPladsen/Proton-ish/releases).
 
-1. Download `Proton-ish.zip`, unzip it and move `Proton-ish.app` to Applications.
+1. With Homebrew: `brew install --cask magnuspladsen/tap/proton-ish`. Or download `Proton-ish.zip`, unzip it
+   and move `Proton-ish.app` to Applications.
 2. The app is not notarized (that needs a paid Apple developer account), so macOS blocks the first launch.
    Open it once, then allow it under **System Settings → Privacy & Security → Open Anyway**.
 3. Grant **App Management** when asked (Proton-ish modifies the Steam app), then click **Install**.
@@ -112,7 +113,7 @@ If a game has a native macOS version as well as a Windows one, Steam will downlo
 
 **Valve Anti-Cheat is not supported.** Proton itself does not support VAC in Valve titles; Valve ships native Linux ports instead. VAC titles will launch in Insecure Mode and will not allow matchmaking. 
 
-**Homebrew:** not available yet for Proton-ish.
+**Homebrew:** `brew install --cask magnuspladsen/tap/proton-ish` (pre-release builds).
 
 Please read NOTICE for license information.
 
