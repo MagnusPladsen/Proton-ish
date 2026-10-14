@@ -151,4 +151,21 @@ struct WineRuntimeTests {
             #expect(hash == build.patchedNtdll[patch.arch])
         }
     }
+
+    @Test("A runner path names its runtime, and PrefixTools follows it")
+    func prefixToolsFollowRunnerRuntime() throws {
+        let highball = URL(filePath: "/S/runners/highball-x64-crossover26.3-r19/root")
+        let crossover = URL(filePath: "/S/runners/crossover-26.3.0.39832/root")
+        #expect(RuntimeKind.of(runner: highball) == .highball)
+        #expect(RuntimeKind.of(runner: crossover) == .crossover)
+        #expect(RuntimeKind.of(runner: URL(filePath: "/elsewhere/root")) == .crossover)
+
+        #expect(PrefixTools.layout(runner: highball, flavor: .rosetta).loader.path(percentEncoded: false)
+            == "/S/runners/highball-x64-crossover26.3-r19/root/bin/wine")
+        let prefix = WinePrefix(appID: "1", name: nil, library: SteamLibrary(root: URL(filePath: "/L")), lastUsed: nil)
+        let env = PrefixTools.environment(prefix: prefix, runner: highball, flavor: .rosetta)
+        #expect(env["WINEUSERNAME"] == "steamuser")
+        #expect(env["WINELOADER"] == "/S/runners/highball-x64-crossover26.3-r19/root/bin/wine")
+        #expect(env["CX_ROOT"] == nil)
+    }
 }

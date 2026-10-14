@@ -62,6 +62,26 @@ eval "$root_line"
 is "the runner root is runners/<runtime>-<build>/root" "/S/runners/crossover-26.3.0.39832/root" "$CX_ROOT"
 rm -rf "$rt_work"
 
+echo "== Highball runner environment =="
+# shellcheck disable=SC2016 # Match the literal script lines.
+hb_block=$(sed -n '/^# Highball: loader in bin/,/^fi # highball$/p' "$SRC")
+[ -n "$hb_block" ] || { echo "FAIL: Highball block not found"; exit 1; }
+hb=$(mktemp -d)
+CX_ROOT="$hb/root"; np_runtime=highball
+mkdir -p "$CX_ROOT/bin" "$CX_ROOT/lib/wine/x86_64-unix" "$CX_ROOT/renderers/dxmt/wine"
+# shellcheck disable=SC2016 # The command substitution is the attack being tested.
+printf 'DYLD_FALLBACK_LIBRARY_PATH=%s/frameworks\nlower=x\n$(touch %s/pwned)=x\nWINEDEBUG=fixme-all\n' "$CX_ROOT" "$hb" > "$CX_ROOT/runtime.env"
+WINELOADER=/wrong; WINESERVER=/wrong; wine_unix=/wrong
+eval "$hb_block"
+is "Highball loader is bin/wine" "$CX_ROOT/bin/wine" "$WINELOADER"
+is "Highball server is bin/wineserver" "$CX_ROOT/bin/wineserver" "$WINESERVER"
+is "Highball unix dir" "$CX_ROOT/lib/wine/x86_64-unix" "$wine_unix"
+is "runtime.env value exported" "$CX_ROOT/frameworks" "$DYLD_FALLBACK_LIBRARY_PATH"
+is "runtime.env never executes" "no" "$([ -e "$hb/pwned" ] && echo yes || echo no)"
+is "DXMT renderer is prepended" "$CX_ROOT/renderers/dxmt/wine" "$WINEDLLPATH_PREPEND"
+is "Windows user is steamuser" "steamuser" "$WINEUSERNAME"
+rm -rf "$hb"
+
 echo "== Apple GPTK initialization and launcher environment =="
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

@@ -125,7 +125,7 @@ enum PrefixTools {
     ) -> [String: String] {
         let root = runner.path(percentEncoded: false)
         var environment = ProcessInfo.processInfo.environment
-        for (key, value) in RuntimeKind.crossover.runtime.baseEnvironment(root: runner) {
+        for (key, value) in RuntimeKind.of(runner: runner).runtime.baseEnvironment(root: runner) {
             environment[key] = value
         }
         let wine = layout(runner: runner, flavor: flavor)
@@ -150,7 +150,7 @@ enum PrefixTools {
     }
 
     static func layout(runner: URL, flavor: CompatTool.Flavor = .fex) -> WineLayout {
-        RuntimeKind.crossover.runtime.layout(root: runner, flavor: flavor)
+        RuntimeKind.of(runner: runner).runtime.layout(root: runner, flavor: flavor)
     }
 
     private static func readyLoader(

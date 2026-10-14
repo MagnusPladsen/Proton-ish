@@ -18,6 +18,12 @@ protocol WineRuntime: Sendable {
 }
 
 extension RuntimeKind {
+    // A runner root is runners/<runtime>-<build>/root, so its parent names the runtime
+    static func of(runner root: URL) -> RuntimeKind {
+        let parent = root.deletingLastPathComponent().lastPathComponent
+        return allCases.first { parent.hasPrefix("\($0.rawValue)-") } ?? .crossover
+    }
+
     var runtime: any WineRuntime {
         switch self {
         case .crossover: CrossOverRuntime()
