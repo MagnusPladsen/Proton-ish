@@ -1,6 +1,50 @@
-# NotProton
+# Proton-ish
 
-NotProton enables the Steam Play experience from Linux Steam in the macOS Steam client.
+Proton-ish brings the Steam Play experience from Linux Steam to the macOS Steam client.
+Pick a Windows game in your normal macOS Steam library, choose a compatibility tool, press Play.
+
+## Why Proton-ish exists
+
+[NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS, but it only
+supports [CrossOver](https://www.codeweavers.com/crossover), which is a paid product. Today there are
+good free and open-source Wine runtimes for the Mac, such as [Highball](https://github.com/gauthierpiarrette/highball).
+Proton-ish is adding support for those, starting with Highball (in progress, not usable yet), so nobody has to
+pay just to play the Windows games they already own. CrossOver stays fully supported.
+
+If you can afford it, please consider buying CrossOver anyway: CodeWeavers funds most of the Wine
+development that every free runtime, Highball included, is built on.
+
+## Thanks
+
+- **[CodeWeavers](https://www.codeweavers.com/)**, for maintaining and funding [Wine](https://www.winehq.org/)
+  for decades and publishing CrossOver's sources. Without them there would be no Wine on macOS.
+- **[NotProton](https://github.com/NotProtonNot/NotProton)** by NotProtonNot, for the Steam integration,
+  the macOS lsteamclient port and steam-shim. Proton-ish is a fork of NotProton; all of that work is theirs.
+- **[Highball](https://github.com/gauthierpiarrette/highball)** by Gauthier Piarrette, for a free, open-source
+  Wine runtime for Apple Silicon that makes a CrossOver-free setup possible.
+- **[Valve](https://github.com/ValveSoftware/Proton)**, for Proton, lsteamclient and steam_helper.
+
+> Proton-ish is a fork of NotProton and is **not affiliated with or endorsed by** NotProton, Valve,
+> CodeWeavers or Highball. Please report Proton-ish problems at
+> https://github.com/MagnusPladsen/Proton-ish/issues, never to those projects.
+
+## Changes from upstream
+
+- 2026-10-14: Rebranded to Proton-ish (bundle ID `com.magnuspladsen.protonish`, support
+  directory `~/Library/Application Support/protonish/`, tool names `protonish-*`, own update feed).
+
+## Building from source
+
+- Xcode 27 (the same toolchain upstream CI uses); older Xcode versions fail to type-check the app.
+- `brew install shellcheck node` for the lint and panel checks.
+- `make dobby && make all && make app-tests` builds the dylib and runs the Swift tests;
+  `make bridge fonts app` builds the full `out/Proton-ish.app` (the bridge step compiles a Wine tree and takes a while).
+- `make brandcheck` must stay clean: it fails if an upstream NotProton identifier slips back in.
+
+The upstream documentation follows. Where it says "NotProton", read "Proton-ish" unless it refers
+to the upstream project itself.
+
+---
 
 This is done by forcibly enabling the Steam Play functionality in macOS Steam (which is
 present and inert) as well as by porting some components of Valve's Proton to macOS.
@@ -19,7 +63,7 @@ If a game has a native macOS version as well as a Windows one, Steam will downlo
 
 **Valve Anti-Cheat is not supported.** Proton itself does not support VAC in Valve titles; Valve ships native Linux ports instead. VAC titles will launch in Insecure Mode and will not allow matchmaking. 
 
-**This project now has a brew cask.** For brew users, you can install via ``brew install --cask notprotonnot/notproton/notproton``
+**Homebrew:** not available yet for Proton-ish.
 
 Please read NOTICE for license information.
 
@@ -42,5 +86,5 @@ Developer Notes:
 As far as the source structure goes, the macOS app itself is located in the ```app``` folder. The core logic is in ```dylib```.
 ```lsteamclient``` is a macOS port of Valve's lsteamclient. ```steam-shim```is a port of Valve's
 steam-helper from Proton 9.0. ntdll-patch patches the copy of CrossOver that the app
-makes/places in the ```~/Library/Application Support/notproton/runners/``` folder so that
+makes/places in the ```~/Library/Application Support/protonish/runners/``` folder so that
 lsteamclient is loaded.
