@@ -9,21 +9,23 @@ let space = CGColorSpace(name: CGColorSpace.sRGB)!
 let white = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
 let coverage: CGFloat = 0.90
 
-let orbitRadiusX: CGFloat = 492
-let orbitRadiusY: CGFloat = 95
-let strokeWidth: CGFloat = 38
+// Two crossed orbits around a wine drop, with one electron on the front of an orbit
+let orbitRadiusX: CGFloat = 470
+let orbitRadiusY: CGFloat = 150
+let orbitAngles: [CGFloat] = [35, -35]
+let strokeWidth: CGFloat = 40
 let knockoutGap: CGFloat = 22
-let ringOuterRadius: CGFloat = 219
-let ringBand: CGFloat = 48
-let coreRadius: CGFloat = 137
-let orbitAngle: CGFloat = -21
-let orbitShiftY: CGFloat = -44
+let dropRadius: CGFloat = 104
+let dropShiftY: CGFloat = -40
+let electronRadius: CGFloat = 40
+let electronOrbit = 0
+let electronAngle: CGFloat = -40
 
 enum Element: String, CaseIterable {
-    case orbitBack = "Orbit Back"
-    case sphereRing = "Sphere Ring"
-    case sphereCore = "Sphere Core"
-    case orbitFront = "Orbit Front"
+    case orbitsBack = "Orbits Back"
+    case drop = "Drop"
+    case orbitsFront = "Orbits Front"
+    case electron = "Electron"
 
     var fileName: String {
         rawValue.lowercased().replacingOccurrences(of: " ", with: "-") + ".png"
@@ -31,19 +33,19 @@ enum Element: String, CaseIterable {
 
     var depth: Double {
         switch self {
-        case .orbitBack: 0.40
-        case .sphereRing: 0.70
-        case .sphereCore: 0.90
-        case .orbitFront: 1.00
+        case .orbitsBack: 0.40
+        case .drop: 0.80
+        case .orbitsFront: 0.95
+        case .electron: 1.00
         }
     }
 
     var translucency: Double {
         switch self {
-        case .orbitBack: 0.30
-        case .sphereRing: 0.35
-        case .sphereCore: 0.50
-        case .orbitFront: 0.30
+        case .orbitsBack: 0.30
+        case .drop: 0.45
+        case .orbitsFront: 0.30
+        case .electron: 0.40
         }
     }
 }
@@ -63,22 +65,13 @@ func makeContext(size: CGFloat) -> CGContext {
     return context
 }
 
-func circle(_ radius: CGFloat) -> CGRect {
-    CGRect(
-        x: center.x - radius,
-        y: center.y - radius,
-        width: radius * 2,
-        height: radius * 2
-    )
+func orbitFrame(_ angle: CGFloat) -> CGAffineTransform {
+    CGAffineTransform(translationX: center.x, y: center.y)
+        .rotated(by: angle * .pi / 180)
 }
 
-func orbitFrame() -> CGAffineTransform {
-    CGAffineTransform(translationX: center.x, y: center.y + orbitShiftY)
-        .rotated(by: orbitAngle * .pi / 180)
-}
-
-func orbitPath() -> CGPath {
-    var transform = orbitFrame()
+func orbitPath(_ angle: CGFloat) -> CGPath {
+    var transform = orbitFrame(angle)
     let box = CGRect(
         x: -orbitRadiusX,
         y: -orbitRadiusY,
@@ -88,34 +81,70 @@ func orbitPath() -> CGPath {
     return CGPath(ellipseIn: box, transform: &transform)
 }
 
-func halfPlane(front: Bool) -> CGPath {
+// The half of an orbit's plane that passes in front of the drop
+func halfPlane(_ angle: CGFloat, front: Bool) -> CGPath {
     let big = canvas * 2
     let overlap: CGFloat = 6
     let rect = front
         ? CGRect(x: -big, y: -big, width: big * 2, height: big + overlap)
         : CGRect(x: -big, y: -overlap, width: big * 2, height: big + overlap)
-    var transform = orbitFrame()
+    var transform = orbitFrame(angle)
     return CGPath(rect: rect, transform: &transform)
 }
 
-func strokeHalf(front: Bool, into context: CGContext) {
-    context.saveGState()
-    context.addPath(halfPlane(front: front))
-    context.clip()
-    context.setLineWidth(strokeWidth)
-    context.addPath(orbitPath())
-    context.strokePath()
-    context.restoreGState()
+// A teardrop: round bottom, point at the top
+func dropPath(grownBy grow: CGFloat = 0) -> CGPath {
+    let r = dropRadius + grow
+    let cx = center.x
+    let cy = center.y + dropShiftY
+    let tip = CGPoint(x: cx, y: cy + r * 2.1)
+    let path = CGMutablePath()
+    path.move(to: tip)
+    path.addCurve(
+        to: CGPoint(x: cx + r, y: cy),
+        control1: CGPoint(x: cx + r * 0.35, y: cy + r * 1.4),
+        control2: CGPoint(x: cx + r, y: cy + r * 0.75)
+    )
+    path.addArc(center: CGPoint(x: cx, y: cy), radius: r, startAngle: 0, endAngle: .pi, clockwise: true)
+    path.addCurve(
+        to: tip,
+        control1: CGPoint(x: cx - r, y: cy + r * 0.75),
+        control2: CGPoint(x: cx - r * 0.35, y: cy + r * 1.4)
+    )
+    path.closeSubpath()
+    return path
 }
 
-func cutNearHalf(from context: CGContext) {
+func electronCenter() -> CGPoint {
+    let t = electronAngle * .pi / 180
+    return CGPoint(x: orbitRadiusX * cos(t), y: orbitRadiusY * sin(t))
+        .applying(orbitFrame(orbitAngles[electronOrbit]))
+}
+
+func strokeHalves(front: Bool, into context: CGContext) {
+    for angle in orbitAngles {
+        context.saveGState()
+        context.addPath(halfPlane(angle, front: front))
+        context.clip()
+        context.setLineWidth(strokeWidth)
+        context.addPath(orbitPath(angle))
+        context.strokePath()
+        context.restoreGState()
+    }
+}
+
+func cutFrontHalves(from context: CGContext) {
     context.saveGState()
-    context.addPath(halfPlane(front: true))
-    context.clip()
     context.setBlendMode(.clear)
-    context.setLineWidth(strokeWidth + knockoutGap * 2)
-    context.addPath(orbitPath())
-    context.strokePath()
+    for angle in orbitAngles {
+        context.saveGState()
+        context.addPath(halfPlane(angle, front: true))
+        context.clip()
+        context.setLineWidth(strokeWidth + knockoutGap * 2)
+        context.addPath(orbitPath(angle))
+        context.strokePath()
+        context.restoreGState()
+    }
     context.restoreGState()
 }
 
@@ -124,23 +153,32 @@ func draw(_ element: Element, into context: CGContext) {
     context.setFillColor(white)
 
     switch element {
-    case .orbitBack:
-        strokeHalf(front: false, into: context)
+    case .orbitsBack:
+        strokeHalves(front: false, into: context)
         context.setBlendMode(.clear)
-        context.fillEllipse(in: circle(ringOuterRadius + knockoutGap))
+        context.addPath(dropPath(grownBy: knockoutGap))
+        context.fillPath()
         context.setBlendMode(.normal)
 
-    case .sphereRing:
-        context.setLineWidth(ringBand)
-        context.strokeEllipse(in: circle(ringOuterRadius - ringBand / 2))
-        cutNearHalf(from: context)
+    case .drop:
+        context.addPath(dropPath())
+        context.fillPath()
+        cutFrontHalves(from: context)
 
-    case .sphereCore:
-        context.fillEllipse(in: circle(coreRadius))
-        cutNearHalf(from: context)
+    case .orbitsFront:
+        strokeHalves(front: true, into: context)
+        let e = electronCenter()
+        let gap = electronRadius + knockoutGap
+        context.setBlendMode(.clear)
+        context.fillEllipse(in: CGRect(x: e.x - gap, y: e.y - gap, width: gap * 2, height: gap * 2))
+        context.setBlendMode(.normal)
 
-    case .orbitFront:
-        strokeHalf(front: true, into: context)
+    case .electron:
+        let e = electronCenter()
+        context.fillEllipse(in: CGRect(
+            x: e.x - electronRadius, y: e.y - electronRadius,
+            width: electronRadius * 2, height: electronRadius * 2
+        ))
     }
 }
 
