@@ -18,7 +18,8 @@ $(cut_block '^runner_id=""' '^if \[ -n ".STEAM_COMPAT_DATA_PATH" \]; then' "")"
 functions="$functions
 $(cut_block '^without_lock_fds\(\) \{' '^\}' 1)"
 np_build=fixture
-export np_build CX_ROOT CX_HOME wine_unix np_tool_dir WINELOADER WINESERVER
+np_runtime=crossover
+export np_build np_runtime CX_ROOT CX_HOME wine_unix np_tool_dir WINELOADER WINESERVER
 export STEAM_COMPAT_DATA_PATH WINEPREFIX template_dir log seed_scratch seed_building
 CX_ROOT="$work/runner"
 CX_HOME="$work/home"

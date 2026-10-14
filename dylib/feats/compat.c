@@ -297,6 +297,7 @@ typedef struct {
     char name[64];
     char build[64];
     char flavor[16];
+    char runtime[16];
     char display[96];
     char dir[640];
 } tool_entry_t;
@@ -331,27 +332,38 @@ static int is_display(const char *s) {
     return 1;
 }
 
+// Wine runtimes this build of the dylib knows how to run
+static int is_runtime(const char *s) {
+    return s && strcmp(s, "crossover") == 0;
+}
+
+// name, build, flavor, [runtime,] display. Lines without a runtime come from an app
+// that predates it and are CrossOver tools.
 static int parse_tool_line(char *line, tool_entry_t *out) {
-    char *field[4];
+    char *field[5];
     int n = 0;
     char *save = NULL;
-    for (char *tok = strtok_r(line, "\t", &save); tok && n < 4;
-         tok = strtok_r(NULL, "\t", &save))
+    char *tok = strtok_r(line, "\t", &save);
+    for (; tok && n < 5; tok = strtok_r(NULL, "\t", &save))
         field[n++] = tok;
-    if (n != 4) return 0;
+    // A sixth field is left in tok when the loop stops at five
+    if (tok || (n != 4 && n != 5)) return 0;
+    const char *runtime = n == 5 ? field[3] : "crossover";
+    const char *display = field[n - 1];
 
     if (!is_tool_name(field[0]) || !is_token(field[1], ".-")
         || (strcmp(field[2], "fex") != 0 && strcmp(field[2], "rosetta") != 0)
-        || !is_display(field[3]))
+        || !is_runtime(runtime) || !is_display(display))
         return 0;
     if (strlen(field[0]) >= sizeof(out->name) || strlen(field[1]) >= sizeof(out->build)
-        || strlen(field[3]) >= sizeof(out->display))
+        || strlen(display) >= sizeof(out->display))
         return 0;
 
     snprintf(out->name, sizeof(out->name), "%s", field[0]);
     snprintf(out->build, sizeof(out->build), "%s", field[1]);
     snprintf(out->flavor, sizeof(out->flavor), "%s", field[2]);
-    snprintf(out->display, sizeof(out->display), "%s", field[3]);
+    snprintf(out->runtime, sizeof(out->runtime), "%s", runtime);
+    snprintf(out->display, sizeof(out->display), "%s", display);
     return 1;
 }
 
@@ -477,6 +489,11 @@ static int write_tool(const tool_entry_t *tool) {
     if (write_file(path, line, 0) == 0) wrote++;
     else NP_WARN("np_compat_ensure_tool_manifest: failed to write %s", path);
 
+    snprintf(line, sizeof(line), "%s\n", tool->runtime);
+    snprintf(path, sizeof(path), "%s/runtime", tool->dir);
+    if (write_file(path, line, 0) == 0) wrote++;
+    else NP_WARN("np_compat_ensure_tool_manifest: failed to write %s", path);
+
     if (wrote > 0)
         NP_LOG("np_compat_ensure_tool_manifest: wrote %d file(s) to %s", wrote, tool->dir);
 
@@ -508,7 +525,7 @@ static void remove_tool(const char *tools_dir, const char *name) {
     char path[768];
 
     static const char *const files[] = {
-        "compatibilitytool.vdf", "toolmanifest.vdf", "run", "flavor", "build",
+        "compatibilitytool.vdf", "toolmanifest.vdf", "run", "flavor", "build", "runtime",
     };
 
     for (size_t i = 0; i < sizeof(files) / sizeof(files[0]); i++) {

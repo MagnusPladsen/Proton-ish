@@ -530,7 +530,7 @@ struct RunnerRemovalTests {
         let runners = try makeRunners(cloning: [Self.rosetta.id, Self.fex.id])
         defer { try? FileManager.default.removeItem(at: runners) }
         let fm = FileManager.default
-        let leftover = runners.appending(path: ".crossover-\(Self.rosetta.id).removing/CrossOver")
+        let leftover = runners.appending(path: ".crossover-\(Self.rosetta.id).removing/root")
         try fm.createDirectory(at: leftover, withIntermediateDirectories: true)
 
         _ = try remove(Self.rosetta.id, runners: runners)
@@ -546,7 +546,7 @@ struct RunnerRemovalTests {
         let runners = try makeRunners(cloning: [Self.rosetta.id])
         defer { try? FileManager.default.removeItem(at: runners) }
         let fm = FileManager.default
-        let leftover = runners.appending(path: ".crossover-\(Self.fex.id).removing/CrossOver")
+        let leftover = runners.appending(path: ".crossover-\(Self.fex.id).removing/root")
         try fm.createDirectory(at: leftover, withIntermediateDirectories: true)
 
         _ = try remove(Self.rosetta.id, runners: runners)
@@ -632,7 +632,8 @@ struct RunnerRemovalTests {
         let template = script.split(separator: "\n").first { $0.contains("template_dir=\"") }
         #expect(template?.contains("template_dir=\"$template_cache/$runner_id\"") == true)
         let names = ["x86_64-unix", "aarch64-unix"].map { arch in
-            expression.replacingOccurrences(of: "$np_build", with: "27.0.0.40921-fex")
+            expression.replacingOccurrences(of: "$np_runtime", with: "crossover")
+                .replacingOccurrences(of: "$np_build", with: "27.0.0.40921-fex")
                 .replacingOccurrences(of: "${wine_unix##*/}", with: arch)
         }
         #expect(SupportPaths.prefixTemplates(forBuild: "27.0.0.40921-fex", in: library).map(\.path)

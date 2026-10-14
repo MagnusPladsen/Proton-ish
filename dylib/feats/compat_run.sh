@@ -151,10 +151,15 @@ if [ -n "$np_tool_dir" ] && [ -r "$np_tool_dir/build" ]; then
   read -r np_build < "$np_tool_dir/build" || np_build=""
 fi
 case "$np_build" in *[!A-Za-z0-9.-]*) np_build="" ;; esac
+np_runtime=crossover
+if [ -n "$np_tool_dir" ] && [ -r "$np_tool_dir/runtime" ]; then
+  read -r np_runtime < "$np_tool_dir/runtime" || np_runtime=crossover
+fi
+case "$np_runtime" in ''|*[!a-z]*) np_runtime=crossover ;; esac
 np_display=$(sed -n 's/.*"display_name"[[:space:]]*"\(.*\)".*/\1/p' \
   "$np_tool_dir/compatibilitytool.vdf" 2>/dev/null | head -1) || np_display=""
 [ -n "$np_display" ] || np_display="CrossOver build ${np_build:-unknown}"
-CX_ROOT="$np_support/runners/crossover-$np_build/CrossOver"
+CX_ROOT="$np_support/runners/$np_runtime-$np_build/root"
 export CX_ROOT
 # CrossOver initializes Rosetta's Windows thread-state support even without D3DMetal.
 if [ -f "$CX_ROOT/lib64/apple_gptk/external/libd3dshared.dylib" ]; then
@@ -302,16 +307,17 @@ last_wine_build() {
   [ "$updated" = "$(stat -f %m "$CX_ROOT/share/wine/wine.inf" 2>/dev/null)" ] && return 0
   had_build=other
   had_display="another version of CrossOver"
-  for inf in "$np_support"/runners/crossover-*/CrossOver/share/wine/wine.inf; do
+  for inf in "$np_support"/runners/*-*/root/share/wine/wine.inf; do
     [ "$(stat -f %m "$inf" 2>/dev/null)" = "$updated" ] || continue
     if [ "$had_build" != other ]; then
       had_build=other
       had_display="another version of CrossOver"
       break
     fi
-    had_build=${inf#"$np_support/runners/crossover-"}
+    had_build=${inf#"$np_support/runners/"}
     had_build=${had_build%%/*}
-    had_display=$(awk -F '\t' -v b="$had_build" '$2 == b { print $4; exit }' \
+    had_build=${had_build#*-}
+    had_display=$(awk -F '\t' -v b="$had_build" '$2 == b { print $NF; exit }' \
       "$np_support/tools" 2>/dev/null) || had_display=""
   done
 }
@@ -633,7 +639,7 @@ echo "runner: build $np_build ($np_display) at $CX_ROOT" >> "$log" 2>&1 || true
 # Each CrossOver build needs its own template.
 # FEX builds need two, one for FEX/arm64 Wine and one for Rosetta/AMD64 Wine
 runner_id=""
-[ -z "$np_build" ] || runner_id="crossover-$np_build-${wine_unix##*/}"
+[ -z "$np_build" ] || runner_id="$np_runtime-$np_build-${wine_unix##*/}"
 
 in_template_env() {
   prefix="$1"

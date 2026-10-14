@@ -32,6 +32,9 @@ struct RunnerBuild: Sendable, Equatable, Identifiable {
 
     var rebuilds: [RunnerRebuild] = []
 
+    // Which Wine distribution the build comes from. Names the runner directory prefix.
+    var runtime: RuntimeKind = .crossover
+
     var id: String { flavor.map { "\(bundleVersion)-\($0)" } ?? bundleVersion }
 
     func matching(loaderSHA256 hash: String) -> RunnerBuild? {
@@ -40,7 +43,7 @@ struct RunnerBuild: Sendable, Equatable, Identifiable {
         return RunnerBuild(
             bundleVersion: bundleVersion, releaseVersion: releaseVersion, flavor: flavor,
             loaderSHA256: rebuild.loaderSHA256, cleanNtdll: rebuild.cleanNtdll,
-            patchedNtdll: rebuild.patchedNtdll, tools: tools, rebuilds: rebuilds
+            patchedNtdll: rebuild.patchedNtdll, tools: tools, rebuilds: rebuilds, runtime: runtime
         )
     }
 

@@ -125,9 +125,9 @@ enum PrefixTools {
     ) -> [String: String] {
         let root = runner.path(percentEncoded: false)
         var environment = ProcessInfo.processInfo.environment
-        environment["CX_ROOT"] = root
-        environment["CX_HOME"] = SupportPaths.applicationSupport
-            .appending(path: "CrossOver").path(percentEncoded: false)
+        for (key, value) in RuntimeKind.crossover.runtime.baseEnvironment(root: runner) {
+            environment[key] = value
+        }
         let wine = layout(runner: runner, flavor: flavor)
         environment["WINELOADER"] = wine.loader.path(percentEncoded: false)
         environment["WINESERVER"] = wine.server.path(percentEncoded: false)
@@ -150,26 +150,7 @@ enum PrefixTools {
     }
 
     static func layout(runner: URL, flavor: CompatTool.Flavor = .fex) -> WineLayout {
-        let fm = FileManager.default
-        let bin = runner.appending(path: "bin")
-        func executable(_ url: URL) -> Bool {
-            fm.isExecutableFile(atPath: url.path(percentEncoded: false))
-        }
-
-        let arm = runner.appending(path: "lib/wine/aarch64-unix")
-        let armLoader = arm.appending(path: "wine.app/Contents/MacOS/wine")
-        let armServer = bin.appending(path: "wineserver-arm64")
-        if flavor == .fex, executable(armLoader), executable(armServer) {
-            return WineLayout(loader: armLoader, server: armServer, unixDir: arm)
-        }
-
-        let unix = runner.appending(path: "lib/wine/x86_64-unix")
-        let server = bin.appending(path: "wineserver")
-        return WineLayout(
-            loader: unix.appending(path: "wine"),
-            server: executable(server) ? server : bin.appending(path: "wineserver-x86"),
-            unixDir: unix
-        )
+        RuntimeKind.crossover.runtime.layout(root: runner, flavor: flavor)
     }
 
     private static func readyLoader(

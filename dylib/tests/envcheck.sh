@@ -36,12 +36,39 @@ WINEDLLOVERRIDES="lsteamclient=n"
 eval "$overrides_line"
 is "trio outranks user" "lsteamclient=n;steamclient=n;steamclient64=n;lsteamclient=b" "$WINEDLLOVERRIDES"
 
+echo "== Runtime read from the tool directory =="
+# shellcheck disable=SC2016 # Match the literal script lines.
+runtime_read=$(sed -n '/^np_runtime=crossover$/,/^case "$np_runtime"/p' "$SRC")
+# shellcheck disable=SC2016 # Match the literal script line.
+root_line=$(grep -F 'CX_ROOT="$np_support/runners/' "$SRC")
+[ -n "$runtime_read" ] && [ -n "$root_line" ] || { echo "FAIL: runtime read or runner root not found"; exit 1; }
+rt_work=$(mktemp -d)
+np_tool_dir="$rt_work/tool"
+mkdir -p "$np_tool_dir"
+runtime_after() {
+  rm -f "$np_tool_dir/runtime"
+  [ "$1" = "<none>" ] || printf '%b' "$1" > "$np_tool_dir/runtime"
+  eval "$runtime_read"
+  printf '%s' "$np_runtime"
+}
+is "a recorded runtime is used" "highball" "$(runtime_after 'highball\n')"
+is "crossover is read as crossover" "crossover" "$(runtime_after 'crossover\n')"
+is "no runtime file means crossover" "crossover" "$(runtime_after '<none>')"
+is "an empty runtime file means crossover" "crossover" "$(runtime_after '')"
+is "a path in the runtime file cannot leave runners/" "crossover" "$(runtime_after '../x\n')"
+is "a slash in the runtime file cannot leave runners/" "crossover" "$(runtime_after 'a/b\n')"
+np_support=/S; np_runtime=crossover; np_build=26.3.0.39832
+eval "$root_line"
+is "the runner root is runners/<runtime>-<build>/root" "/S/runners/crossover-26.3.0.39832/root" "$CX_ROOT"
+rm -rf "$rt_work"
+
 echo "== Apple GPTK initialization and launcher environment =="
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 np_support="$work/Application Support/protonish"
 np_build="test"
-library="$np_support/runners/crossover-$np_build/CrossOver/lib64/apple_gptk/external/libd3dshared.dylib"
+np_runtime=crossover
+library="$np_support/runners/crossover-$np_build/root/lib64/apple_gptk/external/libd3dshared.dylib"
 init=$(sed -n '/^CX_ROOT=/,/^wine_unix=/p' "$SRC")
 # shellcheck disable=SC2016 # Match the literal launcher loop.
 forward=$(sed -n '/^for name in $(env /,/^done$/p' "$SRC")

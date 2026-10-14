@@ -147,9 +147,7 @@ enum CrossOverSource {
         unixLoader(inRoot: SupportPaths.crossOverRoot(inBundle: bundle))
     }
 
-    static func unixLoader(inRoot root: URL) -> URL {
-        root.appending(path: "lib/wine/x86_64-unix/wine")
-    }
+    static func unixLoader(inRoot root: URL) -> URL { RuntimeKind.crossover.runtime.unixLoader(inRoot: root) }
 
     static func verifyPatchInputs(root: URL, build: RunnerBuild) throws {
         for arch in WineArch.allCases {

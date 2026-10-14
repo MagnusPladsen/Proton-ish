@@ -18,16 +18,16 @@ trap 'rm -rf "$work"' EXIT
 
 np_support="$work/support"
 clone() {
-	inf="$np_support/runners/crossover-$1/CrossOver/share/wine/wine.inf"
+	inf="$np_support/runners/crossover-$1/root/share/wine/wine.inf"
 	mkdir -p "$(dirname "$inf")"
 	: > "$inf"
 	touch -t "$2" "$inf"
 }
 clone 26.3.0.39832 202607151200
 clone 27.0.0.40921-fex 202608211200
-printf 'protonish\t27.0.0.40921-fex\tfex\tCrossOver Preview (FEX)\nprotonish-26.3\t26.3.0.39832\trosetta\tCrossOver 26.3\n' \
+printf 'protonish\t27.0.0.40921-fex\tfex\tcrossover\tCrossOver Preview (FEX)\nprotonish-26.3\t26.3.0.39832\trosetta\tcrossover\tCrossOver 26.3\n' \
 	> "$np_support/tools"
-mtime() { stat -f %m "$np_support/runners/crossover-$1/CrossOver/share/wine/wine.inf"; }
+mtime() { stat -f %m "$np_support/runners/crossover-$1/root/share/wine/wine.inf"; }
 
 fails=0
 ok() { printf '  ok    %s\n' "$1"; }
@@ -44,7 +44,7 @@ launch() {
 		STEAM_COMPAT_DATA_PATH=$data
 		np_build=$build
 		np_display="display of $build"
-		CX_ROOT="$np_support/runners/crossover-$build/CrossOver"
+		CX_ROOT="$np_support/runners/crossover-$build/root"
 		log=/dev/null
 		# shellcheck disable=SC2329 # called by the extracted refusal
 		show_alert() { printf 'alert: %s\n' "$2"; }

@@ -82,9 +82,10 @@ x86_64 and i386, one Rosetta `CompatTool`.
   name prefix.
 - `write_tool` writes a `runtime` file next to `flavor` and `build`; `remove_tool`
   removes it.
-- `compat_run.sh` reads `runtime` and derives `RUNTIME_ROOT=$support/runners/<runtime>-<build>/root`.
-  Runtime-specific setup lives in two functions, `setup_crossover_env` and
-  `setup_highball_env`. Everything else in the script stays shared.
+- `compat_run.sh` reads `runtime` (default `crossover`) and derives
+  `CX_ROOT=$support/runners/<runtime>-<build>/root`. `CX_ROOT` stays a top-level assignment
+  (CrossOver reads it, and `envcheck.sh` evaluates that block). M2 adds a `case "$np_runtime"`
+  for Highball-specific setup when the second runtime exists.
 - `PrefixTools.layout` mirrors the script's layout logic for app-side Wine tools
   (winecfg, regedit, winetricks, prefix rebuild).
 
@@ -103,7 +104,9 @@ x86_64 and i386, one Rosetta `CompatTool`.
   `CrossOver/` assumptions in `SupportPaths`, `RunnerStore`, `RunnerInstaller`
   (including the `crossover-[A-Za-z0-9.-]+-(x86_64|aarch64)-unix` regex),
   `DeploymentContent`, `compat_run.sh` (`:157`, `:305`, `:636`) and `lsteamclient/build.sh`.
-- Tool names: `protonish-crossover-<build>[-fex]`, `protonish-highball-<engine-id>`.
+- Tool names: CrossOver tools keep their existing names (`protonish`, `protonish-fex`,
+  `protonish-26.3`, …) so users' per-game tool choices survive. New runtimes use
+  `protonish-<runtime>-<engine-id>`, e.g. `protonish-highball-x64-crossover26.3-r25`.
   Display name example: `Highball Wine 11 (r25)`.
 - Copies use `cp -c -R` (APFS clone) with `cp -R` fallback, as upstream.
 - Prefix and runner marker files keep their upstream names (`notproton-build`,
@@ -272,6 +275,11 @@ Each milestone leaves `main` building with all tests passing.
    Wine 11 engine, confirm loader location, entitlements, `resolve.py` output,
    `WINE_MODREF` offsets and lsteamclient ABI. If the gate fails, stop and revise this
    spec. Then sections 4 and 5.
+   M2 must also make runner bookkeeping read the runtime from the directory name: today
+   `SupportPaths.runtime(forBuild:)` looks the build up in `SupportedRunners` and falls back to
+   `crossover`, and `RunnerStore.clonedBuilds` drops the prefix. With a second runtime, a
+   Highball build that leaves `SupportedRunners` could not be removed and its templates would be
+   deleted (M1 review finding). Write the failing test first, with a real `highball-<id>` clone.
 4. **M3, NotProton migration.** Section 6.
 5. **M4, release pipeline.** Own appcast and Sparkle key, tagged signed release. Brew tap
    afterwards.

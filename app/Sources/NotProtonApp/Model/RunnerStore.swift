@@ -42,10 +42,10 @@ enum RunnerStore {
     static func clonedBuilds(in runners: URL = SupportPaths.runners) -> [String] {
         let fm = FileManager.default
         let entries = (try? fm.contentsOfDirectory(at: runners, includingPropertiesForKeys: nil)) ?? []
+        let prefixes = RuntimeKind.allCases.map { "\($0.rawValue)-" }
         return entries
             .map(\.lastPathComponent)
-            .filter { $0.hasPrefix("crossover-") }
-            .map { String($0.dropFirst("crossover-".count)) }
+            .compactMap { name in prefixes.first(where: name.hasPrefix).map { String(name.dropFirst($0.count)) } }
             .sorted()
     }
 
@@ -97,7 +97,10 @@ enum RunnerStore {
 enum CompatToolList {
 
     static func contents(_ tools: [InstalledTool]) -> String {
-        tools.map { "\($0.name)\t\($0.build)\t\($0.tool.flavor.rawValue)\t\($0.display)\n" }.joined()
+        tools.map { tool in
+            let runtime = SupportPaths.runtime(forBuild: tool.build).rawValue
+            return "\(tool.name)\t\(tool.build)\t\(tool.tool.flavor.rawValue)\t\(runtime)\t\(tool.display)\n"
+        }.joined()
     }
 
     static func installed(

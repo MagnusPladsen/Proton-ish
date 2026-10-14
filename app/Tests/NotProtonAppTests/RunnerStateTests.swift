@@ -16,7 +16,7 @@ struct RunnerStateTests {
         }
 
         func makeClone(build: String, withWine: Bool = true) throws {
-            let root = runners.appending(path: "crossover-\(build)/CrossOver")
+            let root = runners.appending(path: "crossover-\(build)/root")
             let leaf = withWine ? root.appending(path: "lib/wine") : root
             try FileManager.default.createDirectory(at: leaf, withIntermediateDirectories: true)
         }
