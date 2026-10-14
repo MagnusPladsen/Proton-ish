@@ -1,4 +1,50 @@
-# NotProton
+# Proton-ish
+
+Proton-ish brings the Steam Play experience from Linux Steam to the macOS Steam client.
+Pick a Windows game in your normal macOS Steam library, choose a compatibility tool, press Play.
+
+## Why Proton-ish exists
+
+[NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS, but it only
+supports [CrossOver](https://www.codeweavers.com/crossover), which is a paid product. Today there are
+good free and open-source Wine runtimes for the Mac, such as [Highball](https://github.com/gauthierpiarrette/highball).
+Proton-ish is adding support for those, starting with Highball (in progress, not usable yet), so nobody has to
+pay just to play the Windows games they already own. CrossOver stays fully supported.
+
+If you can afford it, please consider buying CrossOver anyway: CodeWeavers funds most of the Wine
+development that every free runtime, Highball included, is built on.
+
+## Thanks
+
+- **[CodeWeavers](https://www.codeweavers.com/)**, for maintaining and funding [Wine](https://www.winehq.org/)
+  for decades and publishing CrossOver's sources. Without them there would be no Wine on macOS.
+- **[NotProton](https://github.com/NotProtonNot/NotProton)** by NotProtonNot, for the Steam integration,
+  the macOS lsteamclient port and steam-shim. Proton-ish is a fork of NotProton; all of that work is theirs.
+- **[Highball](https://github.com/gauthierpiarrette/highball)** by Gauthier Piarrette, for a free, open-source
+  Wine runtime for Apple Silicon that makes a CrossOver-free setup possible.
+- **[Valve](https://github.com/ValveSoftware/Proton)**, for Proton, lsteamclient and steam_helper.
+
+> Proton-ish is a fork of NotProton and is **not affiliated with or endorsed by** NotProton, Valve,
+> CodeWeavers or Highball. Please report Proton-ish problems at
+> https://github.com/MagnusPladsen/Proton-ish/issues, never to those projects.
+
+## Status
+
+- Proton-ish is in early development.
+- The code on `main` is currently unmodified upstream NotProton.
+- The rebrand (own bundle ID, update feed, support directory `~/Library/Application Support/protonish/`,
+  tool names `protonish-*`) is in progress on branch
+  [`design/protonish-highball`](https://github.com/MagnusPladsen/Proton-ish/tree/design/protonish-highball).
+  See the [design spec](https://github.com/MagnusPladsen/Proton-ish/blob/design/protonish-highball/docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
+- Highball support comes after the rebrand.
+- There are no Proton-ish releases yet. Until then, use upstream
+  [NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+
+The upstream NotProton documentation follows.
+
+---
+
+## Upstream NotProton README
 
 NotProton enables the Steam Play experience from Linux Steam in the macOS Steam client.
 
