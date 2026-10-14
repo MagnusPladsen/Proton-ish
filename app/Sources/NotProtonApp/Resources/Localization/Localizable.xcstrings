@@ -1302,12 +1302,12 @@
         }
       }
     },
-    "Copying CrossOver" : {
+    "Copying the Wine runtime" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在复制 CrossOver"
+            "value" : "正在复制 Wine 运行时"
           }
         }
       }

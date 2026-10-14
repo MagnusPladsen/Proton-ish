@@ -86,4 +86,32 @@ struct HighballCloneTests {
         let engine = HighballEngine(id: "x64-new-r99", directory: base, displayName: "New", support: .unsupported)
         #expect(throws: StepFailure.self) { try RunnerInstaller.clone(from: engine, runners: base) }
     }
+
+    @Test("Setting up a Highball runner needs no CrossOver licence and lists a highball tool")
+    func prepareHighballWithoutLicence() throws {
+        let runners = try scratchDirectory("hb-prepare")
+        defer { try? FileManager.default.removeItem(at: runners) }
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))
+        try FileManager.default.createDirectory(
+            at: runners.appending(path: "highball-\(build.id)/root/lib/wine"), withIntermediateDirectories: true)
+
+        _ = try RunnerSetup.prepare(
+            build,
+            runners: runners,
+            bridge: runners.appending(path: "bridge"),
+            toolList: runners.appending(path: "tools"),
+            compatTools: runners.appending(path: "compatibilitytools.d"),
+            runScript: {
+                let script = runners.appending(path: "payload-run")
+                try Data("#!/bin/sh\n".utf8).write(to: script)
+                return script
+            },
+            verify: { _, _ in },
+            stage: { _, _, _ in [] },
+            patch: { _, _, _ in RunnerPatcher.Outcome() }
+        )
+
+        let tools = try String(contentsOf: runners.appending(path: "tools"), encoding: .utf8)
+        #expect(tools.contains("protonish-highball-x64-crossover26.3-r19\tx64-crossover26.3-r19\trosetta\thighball\tHighball Wine 11 (r19)\n"))
+    }
 }
