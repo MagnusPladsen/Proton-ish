@@ -171,4 +171,35 @@ struct RunnerPatcherTests {
             arches == RunnerPatcher.windowsBuiltins.map(\.arch) + ["aarch64-unix", "x86_64-unix"])
         #expect(RunnerPatcher.builtins(in: root).allSatisfy { $0.name.hasPrefix("lsteamclient") })
     }
+
+    @Test("Highball's bin/wine is found as the loader")
+    func binLoaderFound() throws {
+        let root = try scratchDirectory("hb-loader")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let loader = root.appending(path: "bin/wine")
+        try FileManager.default.createDirectory(at: loader.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: root.appending(path: "lib/wine/x86_64-unix"), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(filePath: "/usr/bin/true"), to: loader)
+        #expect(RunnerPatcher.unixLoaders(in: root) == [loader])
+        #expect(RunnerPatcher.unixArches(in: root) == ["x86_64-unix"])
+        #expect(RunnerPatcher.name(of: loader) == "bin/wine")
+    }
+
+    @Test("A loader with no entitlements is signed with a fresh set")
+    func unsignedLoaderGetsFreshEntitlements() throws {
+        let root = try scratchDirectory("hb-sign")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let loader = root.appending(path: "bin/wine")
+        try FileManager.default.createDirectory(at: loader.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(filePath: "/usr/bin/true"), to: loader)
+        _ = try Shell.run("/usr/bin/codesign", ["--remove-signature", loader.path(percentEncoded: false)])
+        #expect(RunnerPatcher.entitlements(of: loader) == nil)
+
+        let signed = try RunnerPatcher.grantLoaderEntitlement(root: root)
+
+        #expect(signed == ["bin/wine"])
+        let granted = try #require(RunnerPatcher.entitlements(of: loader))
+        #expect(granted.contains("com.apple.security.cs.allow-dyld-environment-variables"))
+        #expect(granted.contains("com.apple.security.cs.disable-library-validation"))
+    }
 }
