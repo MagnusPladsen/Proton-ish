@@ -149,8 +149,15 @@ enum RunnerPatcher {
             if existing?.contains(dyldEntitlement) == true,
                signatureIsValid(signingTarget(for: loader)) { continue }
 
-            // CrossOver's loaders carry entitlements to extend; Highball's ships unsigned
-            let base = existing.flatMap { $0.isEmpty ? nil : $0 } ?? freshEntitlements
+            // CrossOver's loaders carry entitlements to extend; only Highball's ships unsigned
+            guard let base = existing.flatMap({ $0.isEmpty ? nil : $0 })
+                ?? (RuntimeKind.of(runner: root) == .highball ? freshEntitlements : nil)
+            else {
+                throw StepFailure(
+                    step: step,
+                    detail: String(localized: "\(name(of: loader)) carries no entitlements to extend.")
+                )
+            }
 
             do {
                 try sign(loader, addingTo: base)
