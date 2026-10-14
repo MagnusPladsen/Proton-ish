@@ -162,7 +162,7 @@ struct StatusView: View {
     @Environment(SystemStatus.self) private var status
 
     private static let updateBlockPrompt =
-        String(localized: "Steam client updates may break NotProton. If you don't want to wait for NotProton to be updated to be compatible with future Steam versions at the cost of not getting updates to the Steam client, you can stop the Steam client from updating itself.")
+        String(localized: "Steam client updates may break Proton-ish. If you don't want to wait for Proton-ish to be updated to be compatible with future Steam versions at the cost of not getting updates to the Steam client, you can stop the Steam client from updating itself.")
 
     var body: some View {
         Group {
@@ -205,7 +205,7 @@ struct StatusView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text(
-                String(localized: "This will restore Steam itself to its original state but does not remove the support components used by NotProton.")
+                String(localized: "This will restore Steam itself to its original state but does not remove the support components used by Proton-ish.")
             )
         }
         .confirmationDialog(
@@ -223,7 +223,7 @@ struct StatusView: View {
             Text("CrossOver itself is not removed.")
         }
         .confirmationDialog(
-            String(localized: "Remove everything NotProton has created?"),
+            String(localized: "Remove everything Proton-ish has created?"),
             isPresented: asking(.removeEverything),
             titleVisibility: .visible
         ) {
@@ -246,7 +246,7 @@ struct StatusView: View {
         } message: {
             Text(
                 CrossOverLicense.notActivatedAdvice
-                    + String(localized: " NotProton can be deployed, but the CrossOver compatibility tool cannot be installed without a valid license.")
+                    + String(localized: " Proton-ish can be deployed, but the CrossOver compatibility tool cannot be installed without a valid license.")
             )
         }
         .task { if status.snapshot == nil { await status.refresh() } }
@@ -374,7 +374,7 @@ struct StatusView: View {
             )
             StatusRow(
                 title: String(localized: "Remove Everything"),
-                value: String(localized: "Remove NotProton and restore Steam to its original state."),
+                value: String(localized: "Remove Proton-ish and restore Steam to its original state."),
                 action: StatusAction(
                     label: String(localized: "Remove"),
                     role: .destructive,
@@ -395,7 +395,7 @@ struct StatusView: View {
         StatusAction(
             label: label,
             isProminent: prominent,
-            help: String(localized: "Install NotProton into Steam."),
+            help: String(localized: "Install Proton-ish into Steam."),
             isEnabled: status.canInstall
         ) {
             Task { await status.requestInstall() }
@@ -433,22 +433,22 @@ struct StatusView: View {
             }
             deploymentRow(.installed(version: version), payload: payload)
         case .newerInstalled:
-            StatusRow(title: "NotProton", value: String(localized: "A newer build is installed."), tone: .neutral,
-                      detail: String(localized: "Use the newer NotProton app to update or repair the installed files."))
+            StatusRow(title: "Proton-ish", value: String(localized: "A newer build is installed."), tone: .neutral,
+                      detail: String(localized: "Use the newer Proton-ish app to update or repair the installed files."))
         case .unavailable(let reason):
-            StatusRow(title: "NotProton", value: String(localized: "Could not check installed files."), tone: .warning, detail: reason)
+            StatusRow(title: "Proton-ish", value: String(localized: "Could not check installed files."), tone: .warning, detail: reason)
         case .update(let files):
-            StatusRow(title: "NotProton", value: String(localized: "Update available."), tone: .warning,
+            StatusRow(title: "Proton-ish", value: String(localized: "Update available."), tone: .warning,
                       detail: String(localized: "This app includes newer files than those installed for Steam."),
                       action: installAction(prominent: true, label: String(localized: "Update")))
                 .help(files.joined(separator: "\n"))
         case .repair(let files):
-            StatusRow(title: "NotProton", value: String(localized: "Installed files differ from this build."), tone: .warning,
+            StatusRow(title: "Proton-ish", value: String(localized: "Installed files differ from this build."), tone: .warning,
                       detail: String(localized: "Restore the files included with this app."),
                       action: installAction(prominent: true, label: String(localized: "Repair")))
                 .help(files.joined(separator: "\n"))
         case .unrecorded(let files):
-            StatusRow(title: "NotProton", value: String(localized: "Update available."), tone: .warning,
+            StatusRow(title: "Proton-ish", value: String(localized: "Update available."), tone: .warning,
                       detail: String(localized: "This app includes updated files for Steam."),
                       action: installAction(prominent: true, label: String(localized: "Update")))
                 .help(files.joined(separator: "\n"))
@@ -459,10 +459,10 @@ struct StatusView: View {
     private func deploymentRow(_ deployment: SteamDeployment, payload: PayloadState) -> some View {
         switch deployment {
         case .steamMissing:
-            StatusRow(title: "NotProton", value: String(localized: "Steam not found."), tone: .bad)
+            StatusRow(title: "Proton-ish", value: String(localized: "Steam not found."), tone: .bad)
         case .notInstalled:
             StatusRow(
-                title: "NotProton",
+                title: "Proton-ish",
                 value: String(localized: "Not installed."),
                 tone: .neutral,
                 action: installAction(prominent: true)
@@ -470,13 +470,13 @@ struct StatusView: View {
         case .installed(let version):
             if payload.isSteamComplete {
                 StatusRow(
-                    title: "NotProton",
+                    title: "Proton-ish",
                     value: String(localized: "Installed") + (version.map { " (\($0))" } ?? ""),
                     tone: .ok
                 )
             } else {
                 StatusRow(
-                    title: "NotProton",
+                    title: "Proton-ish",
                     value: String(localized: "Steam integration needs repair."),
                     tone: .warning,
                     detail: steamRepairDetail(payload),
@@ -485,17 +485,17 @@ struct StatusView: View {
             }
         case .outdated(_, let bundled):
             StatusRow(
-                title: "NotProton",
+                title: "Proton-ish",
                 value: String(localized: "Update available (\(bundled))."),
                 tone: .warning,
                 action: installAction(prominent: true)
             )
         case .foreign:
             StatusRow(
-                title: "NotProton",
+                title: "Proton-ish",
                 value: String(localized: "Another dylib is present."),
                 tone: .warning,
-                detail: String(localized: "Repair your Steam install before installing NotProton.")
+                detail: String(localized: "Repair your Steam install before installing Proton-ish.")
             )
         }
     }
@@ -505,11 +505,11 @@ struct StatusView: View {
             title: String(localized: "Block Steam client updates"),
             value: blocked
                 ? String(localized: "The Steam client will not update itself.")
-                : String(localized: "A Steam client update may break NotProton."),
+                : String(localized: "A Steam client update may break Proton-ish."),
             toggle: blockUpdates
         )
         .disabled(!status.isIdle)
-        .help("Steam client updates may break NotProton.")
+        .help("Steam client updates may break Proton-ish.")
     }
 
     private var blockUpdates: Binding<Bool> {
@@ -690,7 +690,7 @@ struct StatusView: View {
         StatusAction(
             label: label,
             role: .destructive,
-            help: String(localized: "Delete NotProton's copy of this build."),
+            help: String(localized: "Delete Proton-ish's copy of this build."),
             isEnabled: status.canInstall
         ) {
             status.requestBuildRemoval(build)
@@ -716,11 +716,11 @@ struct StatusView: View {
     @ViewBuilder
     private func componentsSection(_ payload: PayloadState) -> some View {
         if let problem = payload.manifestProblem {
-            Section("NotProton Components") {
+            Section("Proton-ish Components") {
                 StatusRow(title: String(localized: "Components"), value: String(localized: "Component list unreadable."), tone: .bad, detail: problem)
             }
         } else if payload.isComplete {
-            Section("NotProton Components") {
+            Section("Proton-ish Components") {
                 StatusRow(
                     title: String(localized: "Components"), value: String(localized: "Ready."), tone: .ok,
                     trailing: status.bridgeCopyBytes > 0
@@ -728,11 +728,11 @@ struct StatusView: View {
                 )
             }
         } else if payload.isEmpty {
-            Section("NotProton Components") {
+            Section("Proton-ish Components") {
                 StatusRow(title: String(localized: "Components"), value: String(localized: "Not yet deployed."), tone: .neutral)
             }
         } else {
-            Section("NotProton Components") {
+            Section("Proton-ish Components") {
                 if !payload.missing.isEmpty {
                     let names = payload.missing.map(\.path).joined(separator: ", ")
                     StatusRow(

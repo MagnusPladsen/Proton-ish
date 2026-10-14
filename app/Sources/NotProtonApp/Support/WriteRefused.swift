@@ -34,9 +34,9 @@ enum Remedy: Hashable {
 
     var advice: String {
         switch self {
-        case .appManagement: String(localized: "NotProton needs the App Management permission.")
+        case .appManagement: String(localized: "Proton-ish needs the App Management permission.")
         case .otherAccount:
-            String(localized: "Steam was installed by another account on this Mac. Only that account can modify it. Log in to macOS with that account to reinstall NotProton.")
+            String(localized: "Steam was installed by another account on this Mac. Only that account can modify it. Log in to macOS with that account to reinstall Proton-ish.")
         case .ownership: String(localized: "Check permissions, make sure your user owns the folder.")
         }
     }

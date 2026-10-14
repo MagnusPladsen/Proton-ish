@@ -308,7 +308,7 @@ final class SystemStatus {
         if SupportPaths.Steam.isUnreachable(current) {
             let alert = NSAlert()
             alert.messageText = String(localized: "Steam at \(current.path(percentEncoded: false)) isn't connected.")
-            alert.informativeText = String(localized: "If NotProton is installed there, it will stay installed. Continue anyway?")
+            alert.informativeText = String(localized: "If Proton-ish is installed there, it will stay installed. Continue anyway?")
             alert.addButton(withTitle: String(localized: "Continue Anyway"))
             alert.addButton(withTitle: String(localized: "Cancel"))
             guard alert.runModal() == .alertFirstButtonReturn else { return }
@@ -344,11 +344,11 @@ final class SystemStatus {
             return String(localized: "\(picked.lastPathComponent) is not Steam.")
         }
         guard !picked.path(percentEncoded: false).contains(":") else {
-            return String(localized: "NotProton cannot use Steam from a folder with a colon in its name.")
+            return String(localized: "Proton-ish cannot use Steam from a folder with a colon in its name.")
         }
         let deployed = SupportPaths.Steam.deployedDylib(inBundle: current).path(percentEncoded: false)
         if let insert, insert.split(separator: ":").contains(Substring(deployed)) {
-            return String(localized: "NotProton is installed in \(current.path(percentEncoded: false)). Use Repair Steam to remove it before choosing another copy of Steam.")
+            return String(localized: "Proton-ish is installed in \(current.path(percentEncoded: false)). Use Repair Steam to remove it before choosing another copy of Steam.")
         }
         return nil
     }
@@ -454,7 +454,7 @@ final class SystemStatus {
             }
         }.value
         guard !running else {
-            throw StepFailure(step: SteamInstaller.step, detail: String(localized: "A game or Wine tool is running. Quit it before updating NotProton."))
+            throw StepFailure(step: SteamInstaller.step, detail: String(localized: "A game or Wine tool is running. Quit it before updating Proton-ish."))
         }
     }
 
@@ -466,7 +466,7 @@ final class SystemStatus {
         snapshot?.installContent = content
         guard !content.blocksInstallation else {
             throw StepFailure(step: SteamInstaller.step,
-                              detail: String(localized: "Installation is blocked. Refresh Status and use the NotProton app that installed this build."))
+                              detail: String(localized: "Installation is blocked. Refresh Status and use the Proton-ish app that installed this build."))
         }
     }
 
@@ -478,7 +478,7 @@ final class SystemStatus {
                 try SteamInstaller.run(holdingInstallationLock: true, report: { progress($0.label) })
             }.value
 
-            var parts = [String(localized: "NotProton successfully installed.")]
+            var parts = [String(localized: "Proton-ish successfully installed.")]
             if result.stoppedClient { parts.append(Self.restartHint) }
             let install = usableCrossOver
             let state = await Task.detached(priority: .userInitiated) {
@@ -563,8 +563,8 @@ final class SystemStatus {
 
             if let partial = result.partialRemoval { return partial }
             return result.steamNeedsRedownload
-                ? String(localized: "NotProton has been removed. Steam could not be restored. Reinstall Steam from steampowered.com before using it again.")
-                : String(localized: "NotProton has been removed.")
+                ? String(localized: "Proton-ish has been removed. Steam could not be restored. Reinstall Steam from steampowered.com before using it again.")
+                : String(localized: "Proton-ish has been removed.")
         }
     }
 

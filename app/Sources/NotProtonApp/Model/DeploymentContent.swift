@@ -138,7 +138,7 @@ enum DeploymentContent {
             hashes != deployed
         {
             throw StepFailure(step: String(localized: "Check installed files"),
-                              detail: String(localized: "Steam's installed dylib does not match this account's build record. Finish or repair its installation with the NotProton app that last installed it."))
+                              detail: String(localized: "Steam's installed dylib does not match this account's build record. Finish or repair its installation with the Proton-ish app that last installed it."))
         }
         return bundled.isNewer(than: installed) ? .update(differences) : .repair(differences)
     }

@@ -339,14 +339,14 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "for(let i=0;i<A.length;i+=20)await Promise.all(A.slice(i,i+20).map(async a=>{const id=a.appid;" \
     "const t=await Promise.race([window.appDetailsStore.RequestAppDetails(id)," \
     "new Promise(r=>setTimeout(r,5e3))]);" \
-    "if(!t){console.warn(\"NotProton: no details for app \"+id+\", its launch options were not moved\");return}" \
+    "if(!t){console.warn(\"Proton-ish: no details for app \"+id+\", its launch options were not moved\");return}" \
     "if(!(id<2147483648&&(t.vecPlatforms||[]).indexOf(\"osx\")>=0&&!t.strCompatToolName)){" \
     "const r=M(t.strLaunchOptions||\"\");" \
     "if(r!==null){SteamClient.Apps.SetAppLaunchOptions(id,r);n++;" \
-    "console.log(\"NotProton: moved the launch options of app \"+id)}}}));" \
-    "console.log(\"NotProton: checked the launch options of \"+A.length+\" apps, moved \"+n);" \
+    "console.log(\"Proton-ish: moved the launch options of app \"+id)}}}));" \
+    "console.log(\"Proton-ish: checked the launch options of \"+A.length+\" apps, moved \"+n);" \
     "localStorage.setItem(K,\"1\")" \
-    "}catch(e){console.error(\"NotProton: launch options migration failed\",e)}})()"
+    "}catch(e){console.error(\"Proton-ish: launch options migration failed\",e)}})()"
 
 static const np_gate_t g_gates_forcetool[] = {
     // SteamPlay settings section
