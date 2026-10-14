@@ -4,6 +4,15 @@ Proton-ish is a fork of [NotProton](https://github.com/NotProtonNot/NotProton) t
 runtimes (Highball first) next to CrossOver. Contributions are welcome here. Please do not send
 Proton-ish changes or non-CrossOver issues to the upstream NotProton project, which does not accept them.
 
+## Branches and releases
+
+- Work on a branch, never directly on `main`.
+- Open a pull request into `main`. Merging it is what ships: when the merge bumps the version in
+  `dylib/version.h`, the release workflow builds, signs the update feed and publishes the release.
+  A merge without a version bump releases nothing.
+- The pull request description becomes the release notes, so write it for players.
+- A version with a suffix (`0.1.0-beta.3`) is published as a pre-release.
+
 ## Guidelines
 
 1. Write pull request descriptions by hand where you can. Short and clear beats long.

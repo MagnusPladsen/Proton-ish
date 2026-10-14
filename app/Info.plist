@@ -36,7 +36,7 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
-	<string>https://github.com/MagnusPladsen/Proton-ish/releases/latest/download/appcast.xml</string>
+	<string>https://github.com/MagnusPladsen/Proton-ish/releases/download/update-feed/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>79PzyxFS2reMeH0l3dRQkuWZwTSKX7ypBIcdQqBUSyQ=</string>
 </dict>
