@@ -109,3 +109,25 @@ jobs:
             --title "Update feed" --notes "Sparkle feed read by Proton-ish. Not a release; download builds from the releases above." \
             --prerelease --latest=false
           gh release upload update-feed release/appcast.xml --clobber
+
+      # Needs TAP_TOKEN: a fine-grained token with Contents write access to MagnusPladsen/homebrew-tap
+      - name: Update the Homebrew cask
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "TAP_TOKEN is not set, leaving the Homebrew cask alone"
+            exit 0
+          fi
+          sha=$(shasum -a 256 release/Proton-ish.zip | cut -d' ' -f1)
+          git clone -q --depth 1 "https://x-access-token:${TAP_TOKEN}@github.com/MagnusPladsen/homebrew-tap.git" tap
+          sed -i '' -e "s/^  version \".*\"/  version \"$VERSION\"/" -e "s/^  sha256 \".*\"/  sha256 \"$sha\"/" tap/Casks/proton-ish.rb
+          if git -C tap diff --quiet; then
+            echo "The cask already offers $VERSION"
+            exit 0
+          fi
+          git -C tap config user.name "github-actions[bot]"
+          git -C tap config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C tap commit -q -am "Update proton-ish to $VERSION"
+          git -C tap push -q

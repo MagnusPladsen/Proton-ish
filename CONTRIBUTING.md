@@ -12,6 +12,7 @@ Proton-ish changes or non-CrossOver issues to the upstream NotProton project, wh
   A merge without a version bump releases nothing.
 - The pull request description becomes the release notes, so write it for players.
 - A version with a suffix (`0.1.0-beta.3`) is published as a pre-release.
+- The release also bumps the `proton-ish` cask in [MagnusPladsen/homebrew-tap](https://github.com/MagnusPladsen/homebrew-tap) (needs the `TAP_TOKEN` secret).
 
 ## Guidelines
 
