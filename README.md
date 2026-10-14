@@ -62,6 +62,7 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 - 2026-10-14: Highball support: set up Highball's Wine 11 engine (`x64-crossover26.3-r19`) as a Steam Play compatibility tool.
 - 2026-10-14: Steam is signed with a local certificate so it keeps its macOS permissions across updates; Wine's server directory is fixed when another tool left it open.
 - 2026-10-14: First pre-release, 0.1.0-beta.1.
+- 2026-10-14: 0.1.0-beta.2: the signing certificate moves to Proton-ish's own keychain, so installing no longer asks for your password.
 
 ## Installing a test build
 
@@ -71,9 +72,10 @@ Pre-releases are on the [Releases page](https://github.com/MagnusPladsen/Proton-
 2. The app is not notarized (that needs a paid Apple developer account), so macOS blocks the first launch.
    Open it once, then allow it under **System Settings → Privacy & Security → Open Anyway**.
 3. Grant **App Management** when asked (Proton-ish modifies the Steam app), then click **Install**.
-4. The first install creates a "Proton-ish Local Signing" certificate in your login keychain and signs Steam
-   with it, so Steam keeps its Accessibility permission across Proton-ish updates. macOS may ask once whether
-   `codesign` may use it: choose **Always Allow**.
+4. The first install creates a "Proton-ish Local Signing" certificate in Proton-ish's own keychain
+   (`~/Library/Application Support/protonish/signing.keychain-db`) and signs Steam with it, so Steam keeps its
+   Accessibility permission across Proton-ish updates. No password prompt: Proton-ish holds that keychain's password.
+   Remove Everything deletes it again.
 5. Follow "Using Highball" above. Updates arrive through **Proton-ish → Check for Updates…**.
 
 Please report problems at https://github.com/MagnusPladsen/Proton-ish/issues with the game's `protonish-run.log`.
