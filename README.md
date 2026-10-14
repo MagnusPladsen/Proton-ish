@@ -63,6 +63,7 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 - 2026-10-14: Steam is signed with a local certificate so it keeps its macOS permissions across updates; Wine's server directory is fixed when another tool left it open.
 - 2026-10-14: First pre-release, 0.1.0-beta.1.
 - 2026-10-14: 0.1.0-beta.2: the signing certificate moves to Proton-ish's own keychain, so installing no longer asks for your password.
+- 2026-10-14: "Check for Updates" works for pre-releases (fixed feed address). Releases are published automatically when a version is merged into main.
 
 ## Installing a test build
 
