@@ -12,14 +12,14 @@ body:
     id: runtime
     attributes:
       label: Wine runtime
-      options: [CrossOver, Other]
+      options: [CrossOver, Highball, Other]
     validations:
       required: true
   - type: input
     id: runtime_version
     attributes:
       label: Runtime version / engine id
-      placeholder: "CrossOver 26.3"
+      placeholder: "CrossOver 26.3, or Highball x64-crossover26.3-r19"
     validations:
       required: true
   - type: input
