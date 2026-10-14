@@ -99,6 +99,10 @@ seedcheck:
 	@if [ ! -f dylib/tests/seedcheck.sh ]; then $(call SKIP,seedcheck,dylib/tests/seedcheck.sh); exit 0; fi; \
 	sh dylib/tests/seedcheck.sh dylib/feats/compat_run.sh
 
+.PHONY: brandcheck
+brandcheck:
+	@sh dylib/tests/brandcheck.sh
+
 envcheck:
 	@if [ ! -f dylib/tests/envcheck.sh ]; then $(call SKIP,envcheck,dylib/tests/envcheck.sh); exit 0; fi; \
 	sh dylib/tests/envcheck.sh dylib/feats/compat_run.sh

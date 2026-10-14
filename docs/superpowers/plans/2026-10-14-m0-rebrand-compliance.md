@@ -832,6 +832,19 @@ Replace the brew line (`README.md:22`, `brew install --cask notprotonnot/notprot
 ```
 Replace `~/Library/Application Support/notproton/` at `README.md:45` with `~/Library/Application Support/protonish/`.
 
+Add this section directly after the "Changes from upstream" section (before the `---` that introduces the upstream documentation):
+```markdown
+## Building from source
+
+- Xcode 27 (the same toolchain upstream CI uses); older Xcode versions fail to type-check the app.
+- `brew install shellcheck node` for the lint and panel checks.
+- `make dobby && make all && make app-tests` builds the dylib and runs the Swift tests;
+  `make bridge fonts app` builds the full `out/Proton-ish.app` (the bridge step compiles a Wine tree and takes a while).
+- `make brandcheck` must stay clean: it fails if an upstream NotProton identifier slips back in.
+```
+
+Every later milestone (M1–M4) adds its own line to "Changes from upstream" and updates any README section it affects.
+
 - [ ] **Step 3: NOTICE**
 
 Append to `NOTICE`:
