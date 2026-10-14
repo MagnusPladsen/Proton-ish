@@ -228,7 +228,7 @@ struct SupportPathTests {
         #expect(SupportPaths.toolList.path(percentEncoded: false)
             .hasSuffix("/protonish/tools"))
         #expect(SupportPaths.Steam.deployedDylib.path(percentEncoded: false)
-            == "/Applications/Steam.app/Contents/MacOS/notproton.dylib")
+            == "/Applications/Steam.app/Contents/MacOS/protonish.dylib")
         #expect(SupportPaths.Steam.infoPlist.path(percentEncoded: false)
             == "/Applications/Steam.app/Contents/Info.plist")
     }

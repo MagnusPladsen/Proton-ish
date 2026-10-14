@@ -268,7 +268,7 @@ enum SteamInstaller {
     static func needsPatching(plist: URL, dylib: URL, shipping: URL, app: URL) throws -> Bool {
         let deployed = SteamBundle.currentInsert(at: plist) == dylib.path(percentEncoded: false)
             && SteamBundle.currentControllerBlock(at: plist) == SteamBundle.controllerBlockValue
-        let file = DeploymentContent.File(source: shipping, destination: dylib, name: "notproton.dylib", allowsResigning: true)
+        let file = DeploymentContent.File(source: shipping, destination: dylib, name: SupportPaths.dylibName, allowsResigning: true)
         if deployed, try file.matches() {
             AppLog.note("install: Steam already carries this dylib, installing for this account only")
             return false

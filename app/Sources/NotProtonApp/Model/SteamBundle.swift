@@ -18,7 +18,7 @@ enum SteamBundle {
     static let controllerBlockKey = "SDL_JOYSTICK_BLACKLIST_DEVICES"
     static let controllerBlockValue = "0x05ac/0x0004"
 
-    static let plistBackupName = "Info.plist.before-notproton"
+    static let plistBackupName = "Info.plist.before-protonish"
     static let environmentKey = "LSEnvironment"
 
     static var isPresent: Bool {
