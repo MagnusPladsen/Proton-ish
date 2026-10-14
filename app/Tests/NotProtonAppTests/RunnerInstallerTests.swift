@@ -30,7 +30,7 @@ struct RunnerInstallerTests {
         try RunnerInstaller.copyPayload(from: source, to: target)
 
         #expect(FileManager.default.fileExists(
-            atPath: target.appending(path: "CrossOver/lib/wine").path(percentEncoded: false)
+            atPath: target.appending(path: "root/lib/wine").path(percentEncoded: false)
         ))
 
         // The check the setup path runs next has to agree, because that is where a wrongly
@@ -209,7 +209,7 @@ struct RunnerInstallerTests {
 
         let version = SupportedRunners.all[0].bundleVersion
         try FileManager.default.createDirectory(
-            at: runners.appending(path: "crossover-\(version)/CrossOver/lib/wine"),
+            at: runners.appending(path: "crossover-\(version)/root/lib/wine"),
             withIntermediateDirectories: true
         )
 

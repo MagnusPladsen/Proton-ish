@@ -178,7 +178,7 @@ enum DeploymentContent {
                 let path = "\(builtin.arch)/\(builtin.name)"
                 if let entry = bridgePayload.sources.first(where: { $0.bridgePaths.contains(path) }) {
                     files.append(File(source: entry.source, destination: root.appending(path: "lib/wine/\(path)"),
-                                      name: "crossover-\(build)/\(path)"))
+                                      name: "\(SupportPaths.runnerRoot(forBuild: build, runners: runners).lastPathComponent)/\(path)"))
                 }
             }
         }
@@ -219,7 +219,7 @@ enum DeploymentContent {
             for (arch, hash) in build.patchedNtdll {
                 let file = SupportPaths.clonedRoot(forBuild: build.id, runners: runners)
                     .appending(path: "lib/wine/\(arch.rawValue)/ntdll.dll")
-                files.append((file, hash, "crossover-\(build.id)/\(arch.rawValue)/ntdll.dll"))
+                files.append((file, hash, "\(build.runtime.rawValue)-\(build.id)/\(arch.rawValue)/ntdll.dll"))
                 files.append((NtdllPatcher.stagedCopy(of: arch, build: build.id, in: bridge), hash,
                               "bridge/wine/\(build.id)/\(arch.rawValue)/ntdll.dll"))
             }

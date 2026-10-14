@@ -42,10 +42,10 @@ enum RunnerStore {
     static func clonedBuilds(in runners: URL = SupportPaths.runners) -> [String] {
         let fm = FileManager.default
         let entries = (try? fm.contentsOfDirectory(at: runners, includingPropertiesForKeys: nil)) ?? []
+        let prefixes = RuntimeKind.allCases.map { "\($0.rawValue)-" }
         return entries
             .map(\.lastPathComponent)
-            .filter { $0.hasPrefix("crossover-") }
-            .map { String($0.dropFirst("crossover-".count)) }
+            .compactMap { name in prefixes.first(where: name.hasPrefix).map { String(name.dropFirst($0.count)) } }
             .sorted()
     }
 

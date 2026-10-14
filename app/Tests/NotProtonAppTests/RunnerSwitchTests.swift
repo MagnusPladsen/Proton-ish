@@ -530,7 +530,7 @@ struct RunnerRemovalTests {
         let runners = try makeRunners(cloning: [Self.rosetta.id, Self.fex.id])
         defer { try? FileManager.default.removeItem(at: runners) }
         let fm = FileManager.default
-        let leftover = runners.appending(path: ".crossover-\(Self.rosetta.id).removing/CrossOver")
+        let leftover = runners.appending(path: ".crossover-\(Self.rosetta.id).removing/root")
         try fm.createDirectory(at: leftover, withIntermediateDirectories: true)
 
         _ = try remove(Self.rosetta.id, runners: runners)
@@ -546,7 +546,7 @@ struct RunnerRemovalTests {
         let runners = try makeRunners(cloning: [Self.rosetta.id])
         defer { try? FileManager.default.removeItem(at: runners) }
         let fm = FileManager.default
-        let leftover = runners.appending(path: ".crossover-\(Self.fex.id).removing/CrossOver")
+        let leftover = runners.appending(path: ".crossover-\(Self.fex.id).removing/root")
         try fm.createDirectory(at: leftover, withIntermediateDirectories: true)
 
         _ = try remove(Self.rosetta.id, runners: runners)
