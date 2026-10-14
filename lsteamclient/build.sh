@@ -66,7 +66,7 @@ TREE=${TREE:-$repo/build/lsteamclient}
 # tree, and the installed app has to stay stock: it is the only clean copy on the
 # machine and it is what the clone and the ntdll patcher are both taken from.
 if [ -z "${CX_ROOT:-}" ]; then
-	for clone in "$HOME/Library/Application Support/notproton/runners"/crossover-*/CrossOver; do
+	for clone in "$HOME/Library/Application Support/protonish/runners"/crossover-*/CrossOver; do
 		[ -d "$clone" ] || continue
 		if [ -n "${CX_ROOT:-}" ]; then
 			echo "==> more than one runner clone is set up, set CX_ROOT to one of them" >&2
@@ -75,8 +75,8 @@ if [ -z "${CX_ROOT:-}" ]; then
 		CX_ROOT=$clone
 	done
 fi
-CX_ROOT=${CX_ROOT:-$HOME/Library/Application Support/notproton/runners/(none set up)}
-BRIDGE_DIR=${BRIDGE_DIR:-$HOME/Library/Application Support/notproton/bridge}
+CX_ROOT=${CX_ROOT:-$HOME/Library/Application Support/protonish/runners/(none set up)}
+BRIDGE_DIR=${BRIDGE_DIR:-$HOME/Library/Application Support/protonish/bridge}
 
 install=0
 do_pe=1

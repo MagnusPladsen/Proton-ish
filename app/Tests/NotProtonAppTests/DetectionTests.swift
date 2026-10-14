@@ -219,14 +219,14 @@ struct SupportPathTests {
     @Test("Paths match what the dylib and the run script use")
     func pathsAreStable() {
         let support = SupportPaths.support.path(percentEncoded: false)
-        #expect(support.hasSuffix("/Library/Application Support/notproton"))
+        #expect(support.hasSuffix("/Library/Application Support/protonish"))
 
         #expect(SupportPaths.signatures.path(percentEncoded: false)
-            .hasSuffix("/notproton/signatures/macos.arm64"))
+            .hasSuffix("/protonish/signatures/macos.arm64"))
         #expect(SupportPaths.overlayShim.path(percentEncoded: false)
-            .hasSuffix("/notproton/overlay-shim.dylib"))
+            .hasSuffix("/protonish/overlay-shim.dylib"))
         #expect(SupportPaths.toolList.path(percentEncoded: false)
-            .hasSuffix("/notproton/tools"))
+            .hasSuffix("/protonish/tools"))
         #expect(SupportPaths.Steam.deployedDylib.path(percentEncoded: false)
             == "/Applications/Steam.app/Contents/MacOS/notproton.dylib")
         #expect(SupportPaths.Steam.infoPlist.path(percentEncoded: false)

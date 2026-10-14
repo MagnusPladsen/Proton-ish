@@ -18,7 +18,7 @@ set -eu
 
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/.." && pwd)"
-BRIDGE_DIR="${BRIDGE_DIR:-$HOME/Library/Application Support/notproton/bridge}"
+BRIDGE_DIR="${BRIDGE_DIR:-$HOME/Library/Application Support/protonish/bridge}"
 WORK="${WORK:-$repo/scratch/valve-fetch}"
 MANIFEST="${MANIFEST:-$repo/app/Sources/NotProtonApp/Resources/valve-packages.manifest}"
 [ -f "$MANIFEST" ] || { echo "==> no package manifest at $MANIFEST" >&2; exit 1; }

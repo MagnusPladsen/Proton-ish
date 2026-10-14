@@ -333,7 +333,7 @@ struct RunnerPrepareTests {
         )
         let run = runners.appending(path: "compatibilitytools.d/notproton/run")
         try atomicReplace(
-            run, with: Data("CX_ROOT=\"$HOME/Library/Application Support/notproton/runners/current\"\n".utf8),
+            run, with: Data("CX_ROOT=\"$HOME/Library/Application Support/protonish/runners/current\"\n".utf8),
             step: "test"
         )
 

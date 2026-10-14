@@ -1,10 +1,10 @@
-// Path construction for the NotProton support directory and Steam
+// Path construction for the Proton-ish support directory and Steam
 
 import Foundation
 
 enum SupportPaths {
 
-    static let supportDirName = "notproton"
+    static let supportDirName = "protonish"
     static let dylibName = "notproton.dylib"
 
     static var home: URL {
@@ -15,7 +15,7 @@ enum SupportPaths {
         home.appending(path: "Library/Application Support")
     }
 
-    // ~/Library/Application Support/notproton
+    // ~/Library/Application Support/protonish
     static var support: URL {
         applicationSupport.appending(path: supportDirName)
     }

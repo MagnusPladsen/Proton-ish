@@ -18,7 +18,7 @@ with tempfile.TemporaryDirectory(prefix="np-shortcut-icons-") as temporary:
     desktop_icon = root / "Desktop/Game.app/Contents/Resources/shortcut.icns"
     desktop_icon.write_bytes(b"user icon")
 
-    support = root / "Library/Application Support/notproton"
+    support = root / "Library/Application Support/protonish"
     support.mkdir(parents=True)
     (support / "appinfo").write_text("#!/bin/sh\nprintf 'name=Game\\nicon=abc123\\n'\n")
     (support / "iconmaker").write_text(

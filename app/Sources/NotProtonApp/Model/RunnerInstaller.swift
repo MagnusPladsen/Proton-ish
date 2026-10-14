@@ -1,4 +1,4 @@
-// Clones CrossOver's Wine runtime into ~/Library/Application Support/notproton/runners
+// Clones CrossOver's Wine runtime into ~/Library/Application Support/protonish/runners
 
 import Darwin
 import Foundation
