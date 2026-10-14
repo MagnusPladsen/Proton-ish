@@ -67,4 +67,15 @@ struct WineRuntimeTests {
             #expect(a.loader == b.loader && a.server == b.server && a.unixDir == b.unixDir)
         }
     }
+
+    @Test("The run script builds the runner root the same way the app does")
+    func runScriptRootMatchesApp() throws {
+        let repo = URL(filePath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let script = try String(contentsOf: repo.appending(path: "dylib/feats/compat_run.sh"), encoding: .utf8)
+        #expect(script.contains("CX_ROOT=\"$np_support/runners/$np_runtime-$np_build/\(SupportPaths.clonedFolder)\""))
+        let root = SupportPaths.clonedRoot(forBuild: "26.3.0.39832", runners: URL(filePath: "/S/runners"))
+        #expect(root.path(percentEncoded: false) == "/S/runners/\(RuntimeKind.crossover.rawValue)-26.3.0.39832/\(SupportPaths.clonedFolder)")
+    }
 }
