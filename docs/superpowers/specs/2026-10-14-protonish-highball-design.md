@@ -275,6 +275,11 @@ Each milestone leaves `main` building with all tests passing.
    Wine 11 engine, confirm loader location, entitlements, `resolve.py` output,
    `WINE_MODREF` offsets and lsteamclient ABI. If the gate fails, stop and revise this
    spec. Then sections 4 and 5.
+   M2 must also make runner bookkeeping read the runtime from the directory name: today
+   `SupportPaths.runtime(forBuild:)` looks the build up in `SupportedRunners` and falls back to
+   `crossover`, and `RunnerStore.clonedBuilds` drops the prefix. With a second runtime, a
+   Highball build that leaves `SupportedRunners` could not be removed and its templates would be
+   deleted (M1 review finding). Write the failing test first, with a real `highball-<id>` clone.
 4. **M3, NotProton migration.** Section 6.
 5. **M4, release pipeline.** Own appcast and Sparkle key, tagged signed release. Brew tap
    afterwards.
