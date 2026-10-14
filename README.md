@@ -28,6 +28,14 @@ development that every free runtime, Highball included, is built on.
 > CodeWeavers or Highball. Please report Proton-ish problems at
 > https://github.com/MagnusPladsen/Proton-ish/issues, never to those projects.
 
+## Status
+
+Proton-ish is in early development and has **no releases yet**. The rebrand (milestone M0: own bundle ID,
+update feed, support directory `~/Library/Application Support/protonish/`, tool names `protonish-*`) is done;
+Highball support is next. Until the first Proton-ish release, use
+[upstream NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
+
 ## Changes from upstream
 
 - 2026-10-14: Rebranded to Proton-ish (bundle ID `com.magnuspladsen.protonish`, support
