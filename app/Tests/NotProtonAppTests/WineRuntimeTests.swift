@@ -78,4 +78,31 @@ struct WineRuntimeTests {
         let root = SupportPaths.clonedRoot(forBuild: "26.3.0.39832", runners: URL(filePath: "/S/runners"))
         #expect(root.path(percentEncoded: false) == "/S/runners/\(RuntimeKind.crossover.rawValue)-26.3.0.39832/\(SupportPaths.clonedFolder)")
     }
+
+    @Test("Highball's loader and server live in bin, its unix libraries in lib/wine")
+    func highballLayout() {
+        let root = URL(filePath: "/R/root")
+        let runtime = RuntimeKind.highball.runtime
+        #expect(runtime.unixLoader(inRoot: root).path(percentEncoded: false) == "/R/root/bin/wine")
+        let layout = runtime.layout(root: root, flavor: .fex)
+        #expect(layout.loader.path(percentEncoded: false) == "/R/root/bin/wine")
+        #expect(layout.server.path(percentEncoded: false) == "/R/root/bin/wineserver")
+        #expect(layout.unixDir.path(percentEncoded: false) == "/R/root/lib/wine/x86_64-unix")
+        #expect(runtime.accessStatus(root: root).licensed)
+    }
+
+    @Test("runtime.env keeps only plain KEY=VALUE lines")
+    func envFileParsing() {
+        let parsed = HighballRuntime.parseEnvFile("""
+        DYLD_FALLBACK_LIBRARY_PATH=/R/root/frameworks
+        WINEDEBUG=fixme-all
+        # comment
+        lower=no
+        BAD KEY=no
+        $(touch /tmp/x)=no
+        GST_PLUGIN_PATH=/a b/c
+        """)
+        #expect(parsed == ["DYLD_FALLBACK_LIBRARY_PATH": "/R/root/frameworks", "WINEDEBUG": "fixme-all",
+                           "GST_PLUGIN_PATH": "/a b/c"])
+    }
 }

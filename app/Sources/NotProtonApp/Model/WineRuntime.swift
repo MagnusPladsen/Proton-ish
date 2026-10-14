@@ -4,6 +4,7 @@ import Foundation
 
 enum RuntimeKind: String, Sendable, CaseIterable {
     case crossover
+    case highball
 }
 
 // What differs between Wine distributions: where things live, the environment they need,
@@ -20,6 +21,7 @@ extension RuntimeKind {
     var runtime: any WineRuntime {
         switch self {
         case .crossover: CrossOverRuntime()
+        case .highball: HighballRuntime()
         }
     }
 }
@@ -63,5 +65,39 @@ struct CrossOverRuntime: WineRuntime {
 
     func accessStatus(root: URL) -> CrossOverLicense.Status {
         CrossOverLicense.check(crossOverRoot: root)
+    }
+}
+
+// Highball's engine copied flat into root: bin/wine is the loader and there is no licence
+struct HighballRuntime: WineRuntime {
+    var kind: RuntimeKind { .highball }
+
+    func unixLoader(inRoot root: URL) -> URL { root.appending(path: "bin/wine") }
+
+    func layout(root: URL, flavor: CompatTool.Flavor) -> PrefixTools.WineLayout {
+        PrefixTools.WineLayout(
+            loader: root.appending(path: "bin/wine"),
+            server: root.appending(path: "bin/wineserver"),
+            unixDir: root.appending(path: "lib/wine/x86_64-unix")
+        )
+    }
+
+    func baseEnvironment(root: URL) -> [String: String] {
+        let file = (try? String(contentsOf: root.appending(path: "runtime.env"), encoding: .utf8)) ?? ""
+        return Self.parseEnvFile(file).merging(["CX_FWD_COMPAT_GL_CTX": "1", "WINEUSERNAME": "steamuser"]) { _, fixed in fixed }
+    }
+
+    func accessStatus(root: URL) -> CrossOverLicense.Status {
+        CrossOverLicense.Status(licensed: true, detail: "", diagnostic: "highball: no licence")
+    }
+
+    static func parseEnvFile(_ text: String) -> [String: String] {
+        var env: [String: String] = [:]
+        for line in text.split(separator: "\n", omittingEmptySubsequences: true) {
+            guard line.wholeMatch(of: #/[A-Z_][A-Z0-9_]*=.*/#) != nil,
+                  let eq = line.firstIndex(of: "=") else { continue }
+            env[String(line[..<eq])] = String(line[line.index(after: eq)...])
+        }
+        return env
     }
 }
