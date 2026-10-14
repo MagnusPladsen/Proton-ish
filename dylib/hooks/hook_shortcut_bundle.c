@@ -76,7 +76,7 @@ void np_hooks_shortcut_bundle_bind(const struct mach_header_64 *steamui) {
         return;
     }
     snprintf(g_client, sizeof(g_client), "%.*s", (int)(slash - info.dli_fname), info.dli_fname);
-    g_queue = dispatch_queue_create("com.notproton.shortcut-bundle", DISPATCH_QUEUE_SERIAL);
+    g_queue = dispatch_queue_create("com.protonish.shortcut-bundle", DISPATCH_QUEUE_SERIAL);
 }
 
 static uint64_t np_shortcut_create(void *app, uint64_t desktop, uint64_t unused) {

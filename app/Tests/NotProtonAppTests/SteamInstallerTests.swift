@@ -226,7 +226,7 @@ struct SteamInstallerTests {
         try Shell.check("/usr/bin/xattr", [
             "-wx", "com.apple.FinderInfo", "0000000000000000040000000000000000000000000000000000000000000000", app,
         ])
-        try Shell.check("/usr/bin/xattr", ["-w", "com.notproton.keep", "1", app])
+        try Shell.check("/usr/bin/xattr", ["-w", "com.protonish.keep", "1", app])
         #expect(!(try Shell.run("/usr/bin/codesign", ["-f", "-s", "-", app])).succeeded)
 
         _ = try install(fixture)
@@ -236,7 +236,7 @@ struct SteamInstallerTests {
         let left = try Shell.run("/usr/bin/xattr", ["-lr", app]).stdout
         #expect(!left.contains("com.apple.FinderInfo"))
         #expect(!left.contains("com.apple.ResourceFork"))
-        #expect(left.contains("com.notproton.keep"))
+        #expect(left.contains("com.protonish.keep"))
     }
 
     @Test("An insert belonging to something else stops the install and is left alone")

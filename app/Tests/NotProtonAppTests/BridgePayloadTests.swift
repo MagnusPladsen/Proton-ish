@@ -184,7 +184,7 @@ struct BridgePayloadTests {
         )
         let attribute = Data("metadata".utf8)
         let setResult = attribute.withUnsafeBytes {
-            setxattr(source.path(percentEncoded: false), "com.notproton.test", $0.baseAddress, $0.count, 0, 0)
+            setxattr(source.path(percentEncoded: false), "com.protonish.test", $0.baseAddress, $0.count, 0, 0)
         }
         #expect(setResult == 0)
 
@@ -197,7 +197,7 @@ struct BridgePayloadTests {
         #expect(attributes[.posixPermissions] as? Int == 0o751)
         var copiedAttribute = Data(count: attribute.count)
         let readCount = copiedAttribute.withUnsafeMutableBytes {
-            getxattr(destination.path(percentEncoded: false), "com.notproton.test", $0.baseAddress, $0.count, 0, 0)
+            getxattr(destination.path(percentEncoded: false), "com.protonish.test", $0.baseAddress, $0.count, 0, 0)
         }
         #expect(readCount == attribute.count)
         #expect(copiedAttribute == attribute)

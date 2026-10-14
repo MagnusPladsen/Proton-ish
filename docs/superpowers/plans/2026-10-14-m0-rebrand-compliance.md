@@ -808,13 +808,33 @@ Replace lines 1-3 of `README.md` (the `# NotProton` title and the one-line descr
 ```markdown
 # Proton-ish
 
-Proton-ish brings the Steam Play experience from Linux Steam to the macOS Steam client,
-using CrossOver or (coming soon) the free Highball Wine runtime.
+Proton-ish brings the Steam Play experience from Linux Steam to the macOS Steam client.
+Pick a Windows game in your normal macOS Steam library, choose a compatibility tool, press Play.
 
-> **Proton-ish is a fork of [NotProton](https://github.com/NotProtonNot/NotProton) by NotProtonNot.**
-> All credit for the Steam integration, the lsteamclient port and steam-shim goes to upstream.
-> Proton-ish is not affiliated with or endorsed by NotProton, Valve, CodeWeavers or Highball.
-> Please report Proton-ish problems at https://github.com/MagnusPladsen/Proton-ish/issues, not upstream.
+## Why Proton-ish exists
+
+[NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS, but it only
+supports [CrossOver](https://www.codeweavers.com/crossover), which is a paid product. Today there are
+good free and open-source Wine runtimes for the Mac, such as [Highball](https://github.com/gauthierpiarrette/highball).
+Proton-ish adds support for those, so nobody has to pay just to play the Windows games they already own.
+CrossOver stays fully supported.
+
+If you can afford it, please consider buying CrossOver anyway: CodeWeavers funds most of the Wine
+development that every free runtime, Highball included, is built on.
+
+## Thanks
+
+- **[CodeWeavers](https://www.codeweavers.com/)**, for maintaining and funding [Wine](https://www.winehq.org/)
+  for decades and publishing CrossOver's sources. Without them there would be no Wine on macOS.
+- **[NotProton](https://github.com/NotProtonNot/NotProton)** by NotProtonNot, for the Steam integration,
+  the macOS lsteamclient port and steam-shim. Proton-ish is a fork of NotProton; all of that work is theirs.
+- **[Highball](https://github.com/gauthierpiarrette/highball)** by Gauthier Piarrette, for a free, open-source
+  Wine runtime for Apple Silicon that makes a CrossOver-free setup possible.
+- **[Valve](https://github.com/ValveSoftware/Proton)**, for Proton, lsteamclient and steam_helper.
+
+> Proton-ish is a fork of NotProton and is **not affiliated with or endorsed by** NotProton, Valve,
+> CodeWeavers or Highball. Please report Proton-ish problems at
+> https://github.com/MagnusPladsen/Proton-ish/issues, never to those projects.
 
 ## Changes from upstream
 
@@ -826,6 +846,9 @@ to the upstream project itself.
 
 ---
 ```
+Note: the brandcheck `docs` section greps for the exact phrases `fork of NotProton` and `not affiliated`;
+the text above contains both (the latter inside `**not affiliated with or endorsed by**`, which still matches).
+
 Replace the brew line (`README.md:22`, `brew install --cask notprotonnot/notproton/notproton`) with:
 ```markdown
 **Homebrew:** not available yet for Proton-ish.
