@@ -354,6 +354,12 @@ struct StatusView: View {
                 }
             }
 
+            Section {
+                highballSection(snapshot)
+            } header: {
+                Text("Highball")
+            }
+
             componentsSection(snapshot.payload)
 
             dangerSection
@@ -568,6 +574,68 @@ struct StatusView: View {
                 ) { Task { await status.requestCompatibilityTool() } }
             )
         }
+    }
+
+    @ViewBuilder
+    private func highballSection(_ snapshot: StatusSnapshot) -> some View {
+        if snapshot.highball.isEmpty {
+            StatusRow(
+                title: "Highball",
+                value: String(localized: "Not found. Install Highball from gethighball.com."),
+                tone: .neutral
+            )
+        }
+        ForEach(snapshot.highball) { engine in
+            highballRow(engine, snapshot: snapshot)
+        }
+        ForEach(SystemStatus.highballOrphans(snapshot.orphanedRunners), id: \.self) { build in
+            StatusRow(
+                title: build,
+                value: String(localized: "No longer supported"),
+                tone: .neutral,
+                trailing: buildSize(build),
+                action: removeCopyAction(build, label: String(localized: "Remove\u{2026}"))
+            )
+        }
+        if let notice = SystemStatus.highballNotice(engines: snapshot.highball) {
+            StatusRow(title: String(localized: "Compatibility Tool"), value: notice, tone: .warning)
+        }
+    }
+
+    private func highballRow(_ engine: HighballEngine, snapshot: StatusSnapshot) -> StatusRow {
+        guard case .supported(let build) = engine.support else {
+            return StatusRow(title: engine.displayName, value: String(localized: "Not supported yet"),
+                             tone: .neutral, detail: engine.id)
+        }
+        let copy = SystemStatus.highballCopy(build.id, installed: snapshot.installedRunners, runner: snapshot.runner)
+        let value: String = switch copy {
+        case .notSetUp: String(localized: "Not set up")
+        case .ready: String(localized: "Ready")
+        case .needsRepair: String(localized: "Patched components are missing.")
+        }
+        let tone: StatusTone = switch copy {
+        case .notSetUp: .info
+        case .ready: .ok
+        case .needsRepair: .warning
+        }
+        let label: String = switch copy {
+        case .notSetUp: String(localized: "Set Up")
+        case .ready: String(localized: "Reinstall")
+        case .needsRepair: String(localized: "Repair")
+        }
+        return StatusRow(
+            title: engine.displayName,
+            value: value,
+            tone: tone,
+            detail: engine.id,
+            trailing: copy == .notSetUp ? nil : buildSize(build.id),
+            action: StatusAction(
+                label: label,
+                isProminent: copy != .ready,
+                isEnabled: status.canInstall
+            ) { Task { await status.setUpHighball(engine, replacingExisting: copy == .ready) } },
+            menu: copy == .notSetUp ? [] : [removeCopyAction(build.id, label: String(localized: "Remove Copy\u{2026}"))]
+        )
     }
 
     private func crossOverValue(_ row: CrossOverRow) -> String {

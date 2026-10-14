@@ -50,12 +50,17 @@ enum SupportPaths {
     // Runner clones live in runners/<runtime>-<build>/root
     static let clonedFolder = "root"
 
-    static func runtime(forBuild build: String) -> RuntimeKind {
-        SupportedRunners.build(id: build)?.runtime ?? .crossover
+    // A clone's directory names its runtime, so a build that left SupportedRunners is still found
+    static func runtime(forBuild build: String, runners: URL = SupportPaths.runners) -> RuntimeKind {
+        let fm = FileManager.default
+        if let kind = RuntimeKind.allCases.first(where: {
+            fm.fileExists(atPath: runners.appending(path: "\($0.rawValue)-\(build)").path(percentEncoded: false))
+        }) { return kind }
+        return SupportedRunners.build(id: build)?.runtime ?? .crossover
     }
 
     static func runnerRoot(forBuild build: String, runners: URL = SupportPaths.runners) -> URL {
-        runners.appending(path: "\(runtime(forBuild: build).rawValue)-\(build)")
+        runners.appending(path: "\(runtime(forBuild: build, runners: runners).rawValue)-\(build)")
     }
 
     static func crossOverRoot(inBundle bundle: URL) -> URL {

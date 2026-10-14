@@ -25,6 +25,7 @@ struct StatusSnapshot: Sendable {
     var orphanedRunners: [String] = []
     var damagedRunners: [String] = []
     var installContent: DeploymentContent.Status = .unchecked
+    var highball: [HighballEngine] = []
 
     static func capture(bundledVersion: String) -> StatusSnapshot {
         let installs = CrossOverSource.discover()
@@ -47,7 +48,8 @@ struct StatusSnapshot: Sendable {
             installedRunners: installed,
             orphanedRunners: RunnerStore.orphanedClones(),
             damagedRunners: RunnerStore.damagedClones(),
-            installContent: DeploymentContent.current(version: bundledVersion)
+            installContent: DeploymentContent.current(version: bundledVersion),
+            highball: HighballSource.discover()
         )
     }
 }
@@ -144,13 +146,15 @@ final class SystemStatus {
         guard let snapshot else { return [] }
         var unpatched: [String] = []
         if case .unpatched(let builds, _) = snapshot.runner { unpatched = builds }
+        // Highball runners have their own section
+        let isCrossOver = { (build: String) in SupportPaths.runtime(forBuild: build) == .crossover }
         return CrossOverRow.rows(
             installs: snapshot.crossOver,
             licenses: snapshot.crossOverLicense,
-            installed: snapshot.installedRunners,
-            damaged: snapshot.damagedRunners,
-            orphaned: snapshot.orphanedRunners,
-            unpatched: unpatched
+            installed: snapshot.installedRunners.filter { $0.runtime == .crossover },
+            damaged: snapshot.damagedRunners.filter(isCrossOver),
+            orphaned: snapshot.orphanedRunners.filter(isCrossOver),
+            unpatched: unpatched.filter(isCrossOver)
         )
     }
 
@@ -428,6 +432,43 @@ final class SystemStatus {
 
             return runnerOutcome(result)
         }
+    }
+
+    func setUpHighball(_ engine: HighballEngine, replacingExisting: Bool = false) async {
+        await perform(from: RunnerSetup.Phase.cloning.label) { progress in
+            let lock = try DeploymentContent.acquireInstallationLock()
+            defer { lock.release() }
+            try await requireInstallableContent()
+            let result = try await Task.detached(priority: .userInitiated) {
+                try RunnerSetup.run(from: engine, replacingExisting: replacingExisting) {
+                    progress($0.label)
+                }
+            }.value
+
+            return runnerOutcome(result)
+        }
+    }
+
+    enum HighballCopy: Sendable, Equatable { case notSetUp, ready, needsRepair }
+
+    nonisolated static func highballCopy(_ build: String, installed: [RunnerBuild], runner: RunnerState) -> HighballCopy {
+        guard installed.contains(where: { $0.id == build }) else { return .notSetUp }
+        if case .unpatched(let builds, _) = runner, builds.contains(build) { return .needsRepair }
+        return .ready
+    }
+
+    // Copies left behind when their build is no longer supported, so they can still be removed
+    nonisolated static func highballOrphans(_ orphaned: [String], runners: URL = SupportPaths.runners) -> [String] {
+        orphaned.filter { SupportPaths.runtime(forBuild: $0, runners: runners) == .highball }
+    }
+
+    // What the Highball section says when no engine can be set up
+    nonisolated static func highballNotice(engines: [HighballEngine]) -> String? {
+        guard !engines.isEmpty, !engines.contains(where: \.isUsable) else { return nil }
+        if let newer = engines.first(where: { $0.id.hasPrefix("x64-crossover") }) {
+            return String(localized: "Highball engine \(newer.id) isn't supported yet.")
+        }
+        return String(localized: "Proton-ish needs Highball's Wine 11 engine. Switch an environment to Wine 11 in its settings in Highball.")
     }
 
     func fetchValveBinaries() async {

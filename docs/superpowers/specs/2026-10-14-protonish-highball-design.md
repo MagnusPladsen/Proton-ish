@@ -133,9 +133,16 @@ Scan `engines/*/manifest.json`. An engine whose loader hash matches a pinned
 
 ### 4.2 Copy
 
-Clone `engine/`, `frameworks/`, `renderers/` and `manifest.json` into
-`runners/.highball-<id>.new/root`, then rename to `runners/highball-<id>/root`. Run
-`scrubDownloadMarkers` (removes `com.apple.quarantine`, `com.apple.provenance`).
+Copy the contents of `engines/<id>/engine/` flat into `runners/.highball-<id>.new/root`, so
+`root/lib/wine/...` has the same shape as a CrossOver clone and the shared patching, builtin
+and bridge code works unchanged. Copy `frameworks/`, `renderers/` and `manifest.json` next to
+it, write `root/runtime.env` from the manifest's `baseEnv` (with `${frameworks}` expanded),
+then rename to `runners/highball-<id>/root`. Run `scrubDownloadMarkers` (removes
+`com.apple.quarantine`, `com.apple.provenance`).
+
+The engine ships two loaders: `bin/wine` (unsigned launcher, used as the build's identity hash)
+and `lib/wine/x86_64-unix/wine` (the real loader). Games run the latter, exactly as with
+CrossOver, and it is the one that gets the entitlements (implemented in M2a).
 
 ### 4.3 Verify
 

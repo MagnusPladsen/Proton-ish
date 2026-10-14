@@ -140,7 +140,7 @@ enum RunnerPatcher {
         return installed
     }
 
-    private static func grantLoaderEntitlement(root: URL) throws -> [String] {
+    static func grantLoaderEntitlement(root: URL) throws -> [String] {
         var signed: [String] = []
 
         for loader in unixLoaders(in: root) {
@@ -149,7 +149,10 @@ enum RunnerPatcher {
             if existing?.contains(dyldEntitlement) == true,
                signatureIsValid(signingTarget(for: loader)) { continue }
 
-            guard let existing, !existing.isEmpty else {
+            // CrossOver's loaders carry entitlements to extend; only Highball's ships unsigned
+            guard let base = existing.flatMap({ $0.isEmpty ? nil : $0 })
+                ?? (RuntimeKind.of(runner: root) == .highball ? freshEntitlements : nil)
+            else {
                 throw StepFailure(
                     step: step,
                     detail: String(localized: "\(name(of: loader)) carries no entitlements to extend.")
@@ -157,7 +160,7 @@ enum RunnerPatcher {
             }
 
             do {
-                try sign(loader, addingTo: existing)
+                try sign(loader, addingTo: base)
             } catch {
                 restoreClean(loader)
                 throw error
@@ -173,22 +176,39 @@ enum RunnerPatcher {
         let wine = root.appending(path: "lib/wine")
         let entries = (try? fm.contentsOfDirectory(at: wine, includingPropertiesForKeys: nil)) ?? []
 
-        return entries
+        let inUnix = entries
             .filter { $0.lastPathComponent.hasSuffix("-unix") }
             .flatMap { [$0.appending(path: "wine"), $0.appending(path: "wine.app/Contents/MacOS/wine")] }
             .filter { fm.fileExists(atPath: $0.path(percentEncoded: false)) }
             .sorted { $0.path < $1.path }
+        if !inUnix.isEmpty { return inUnix }
+        // Highball keeps its loader in bin, next to wineserver
+        let bin = root.appending(path: "bin/wine")
+        return fm.fileExists(atPath: bin.path(percentEncoded: false)) ? [bin] : []
     }
+
+    // For a loader that ships unsigned: sign() adds the dyld entitlement to this, and library
+    // validation is off so the unsigned dylibs Highball injects still load
+    static let freshEntitlements = """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+    \t<key>com.apple.security.cs.disable-library-validation</key>
+    \t<true/>
+    </dict>
+    </plist>
+    """
 
     static func name(of loader: URL) -> String {
         let parts = loader.pathComponents
         guard let arch = parts.lastIndex(where: { $0.hasSuffix("-unix") }) else {
-            return loader.lastPathComponent
+            return parts.dropLast().last == "bin" ? "bin/\(loader.lastPathComponent)" : loader.lastPathComponent
         }
         return parts[arch...].joined(separator: "/")
     }
 
-    private static func entitlements(of loader: URL) -> String? {
+    static func entitlements(of loader: URL) -> String? {
         guard let result = try? Shell.run(
             "/usr/bin/codesign", ["-d", "--entitlements", ":-", loader.path(percentEncoded: false)]
         ), result.status == 0 else { return nil }

@@ -334,7 +334,7 @@ static int is_display(const char *s) {
 
 // Wine runtimes this build of the dylib knows how to run
 static int is_runtime(const char *s) {
-    return s && strcmp(s, "crossover") == 0;
+    return s && (strcmp(s, "crossover") == 0 || strcmp(s, "highball") == 0);
 }
 
 // name, build, flavor, [runtime,] display. Lines without a runtime come from an app

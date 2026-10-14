@@ -1,7 +1,7 @@
 # Contributing to Proton-ish
 
-Proton-ish is a fork of [NotProton](https://github.com/NotProtonNot/NotProton) that is working on
-support for free Wine runtimes (Highball first, in progress) next to CrossOver. Contributions are welcome here. Please do not send
+Proton-ish is a fork of [NotProton](https://github.com/NotProtonNot/NotProton) that adds free Wine
+runtimes (Highball first) next to CrossOver. Contributions are welcome here. Please do not send
 Proton-ish changes or non-CrossOver issues to the upstream NotProton project, which does not accept them.
 
 ## Guidelines

@@ -14,8 +14,12 @@ struct RunnerPatcherTests {
         }) else { return nil }
         let live = SupportPaths.clonedRoot(forBuild: build.id)
 
+        // Keep the <runtime>-<build>/root shape: the runtime is read from it
         let scratch = URL(filePath: NSTemporaryDirectory())
             .appending(path: "notproton-runner-\(UUID().uuidString)")
+            .appending(path: live.deletingLastPathComponent().lastPathComponent)
+            .appending(path: SupportPaths.clonedFolder)
+        try FileManager.default.createDirectory(at: scratch.deletingLastPathComponent(), withIntermediateDirectories: true)
         let copied = try Shell.run("/bin/cp", [
             "-c", "-R", live.path(percentEncoded: false), scratch.path(percentEncoded: false),
         ])
@@ -170,5 +174,72 @@ struct RunnerPatcherTests {
         #expect(
             arches == RunnerPatcher.windowsBuiltins.map(\.arch) + ["aarch64-unix", "x86_64-unix"])
         #expect(RunnerPatcher.builtins(in: root).allSatisfy { $0.name.hasPrefix("lsteamclient") })
+    }
+
+    @Test("Highball's bin/wine is found as the loader")
+    func binLoaderFound() throws {
+        let root = try scratchDirectory("hb-loader")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let loader = root.appending(path: "bin/wine")
+        try FileManager.default.createDirectory(at: loader.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: root.appending(path: "lib/wine/x86_64-unix"), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(filePath: "/usr/bin/true"), to: loader)
+        #expect(RunnerPatcher.unixLoaders(in: root) == [loader])
+        #expect(RunnerPatcher.unixArches(in: root) == ["x86_64-unix"])
+        #expect(RunnerPatcher.name(of: loader) == "bin/wine")
+    }
+
+    @Test("A Highball loader with no entitlements is signed with a fresh set")
+    func unsignedLoaderGetsFreshEntitlements() throws {
+        let base = try scratchDirectory("hb-sign")
+        defer { try? FileManager.default.removeItem(at: base) }
+        let root = base.appending(path: "runners/highball-x64-test-r1/root")
+        let loader = root.appending(path: "bin/wine")
+        try FileManager.default.createDirectory(at: loader.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(filePath: "/usr/bin/true"), to: loader)
+        _ = try Shell.run("/usr/bin/codesign", ["--remove-signature", loader.path(percentEncoded: false)])
+        #expect(RunnerPatcher.entitlements(of: loader) == nil)
+
+        let signed = try RunnerPatcher.grantLoaderEntitlement(root: root)
+
+        #expect(signed == ["bin/wine"])
+        let granted = try #require(RunnerPatcher.entitlements(of: loader))
+        #expect(granted.contains("com.apple.security.cs.allow-dyld-environment-variables"))
+        #expect(granted.contains("com.apple.security.cs.disable-library-validation"))
+    }
+
+    // The real r19 engine ships both: bin/wine (launcher, the build's identity) and the real loader
+    @Test("With both Highball loaders, the real one is signed and the launcher stays untouched")
+    func realLayoutSignsTheUnixLoader() throws {
+        let base = try scratchDirectory("hb-both")
+        defer { try? FileManager.default.removeItem(at: base) }
+        let root = base.appending(path: "runners/highball-x64-test-r1/root")
+        let launcher = root.appending(path: "bin/wine")
+        let loader = root.appending(path: "lib/wine/x86_64-unix/wine")
+        for binary in [launcher, loader] {
+            try FileManager.default.createDirectory(at: binary.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: URL(filePath: "/usr/bin/true"), to: binary)
+            _ = try Shell.run("/usr/bin/codesign", ["--remove-signature", binary.path(percentEncoded: false)])
+        }
+        let before = try #require(Digest.sha256IfPresent(launcher))
+
+        #expect(RunnerPatcher.unixLoaders(in: root).map { $0.resolvingSymlinksInPath().path } == [loader.resolvingSymlinksInPath().path])
+        #expect(try RunnerPatcher.grantLoaderEntitlement(root: root) == ["x86_64-unix/wine"])
+
+        #expect(Digest.sha256IfPresent(launcher) == before)
+        #expect(RunnerPatcher.entitlements(of: loader)?.contains("com.apple.security.cs.allow-dyld-environment-variables") == true)
+    }
+
+    @Test("A CrossOver loader without entitlements is refused, not given a fresh set")
+    func crossOverLoaderNeverGetsFreshEntitlements() throws {
+        let base = try scratchDirectory("cx-sign")
+        defer { try? FileManager.default.removeItem(at: base) }
+        let root = base.appending(path: "runners/crossover-26.3.0.39832/root")
+        let loader = root.appending(path: "lib/wine/x86_64-unix/wine")
+        try FileManager.default.createDirectory(at: loader.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(filePath: "/usr/bin/true"), to: loader)
+        _ = try Shell.run("/usr/bin/codesign", ["--remove-signature", loader.path(percentEncoded: false)])
+
+        #expect(throws: StepFailure.self) { try RunnerPatcher.grantLoaderEntitlement(root: root) }
     }
 }

@@ -175,6 +175,28 @@ if [ "$np_flavor" = rosetta ] || [ ! -x "$WINELOADER" ] || [ ! -x "$WINESERVER" 
   WINESERVER="$CX_ROOT/bin/wineserver"
   [ -x "$WINESERVER" ] || WINESERVER="$CX_ROOT/bin/wineserver-x86"
 fi
+# Highball: server in bin, engine environment from runtime.env, DXMT, Proton's user name
+if [ "$np_runtime" = highball ]; then
+  wine_unix="$CX_ROOT/lib/wine/x86_64-unix"
+  WINELOADER="$wine_unix/wine"
+  WINESERVER="$CX_ROOT/bin/wineserver"
+  # Letters are spelled out: bracket ranges follow the locale and would let lowercase through
+  np_hb_keys=""
+  if [ -r "$CX_ROOT/runtime.env" ]; then
+    while IFS= read -r np_env_line || [ -n "$np_env_line" ]; do
+      case "$np_env_line" in *=*) ;; *) continue ;; esac
+      np_env_key=${np_env_line%%=*}
+      case "$np_env_key" in
+        ''|[0123456789]*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*) continue ;;
+      esac
+      # A launch option the user set wins over the engine's default
+      printenv "$np_env_key" > /dev/null 2>&1 || export "$np_env_key=${np_env_line#*=}"
+      np_hb_keys="$np_hb_keys $np_env_key"
+    done < "$CX_ROOT/runtime.env"
+  fi
+  [ ! -d "$CX_ROOT/renderers/dxmt/wine" ] || export WINEDLLPATH_PREPEND="$CX_ROOT/renderers/dxmt/wine"
+  export CX_FWD_COMPAT_GL_CTX=1 WINEUSERNAME=steamuser
+fi # highball
 export WINELOADER WINESERVER
 
 np_dropped=""
@@ -1390,6 +1412,12 @@ if [ -n "\$STEAM_DYLD_INSERT_LIBRARIES" ]; then
     export DYLD_INSERT_LIBRARIES="\$STEAM_DYLD_INSERT_LIBRARIES"
   fi
 fi
+# dyld drops DYLD_* on the way through /bin/sh, so the engine's library paths are set here
+if [ -r "$CX_ROOT/runtime.env" ]; then
+  while IFS= read -r line || [ -n "\$line" ]; do
+    case "\$line" in DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export "\$line" ;; esac
+  done < "$CX_ROOT/runtime.env"
+fi
 [ -n "\$NOTPROTON_GAME_CWD" ] && cd "\$NOTPROTON_GAME_CWD"
 "$WINELOADER" "\$@"
 exit \$?
@@ -1496,6 +1524,15 @@ for name in $(env | LC_ALL=C sed -nE 's/^(CX_APPLEGPTK_LIBD3DSHARED_PATH|Steam[A
   # shellcheck disable=SC2154 # eval assigns value on the line above
   set -- --env "$name=$value" "$@"
 done
+# Highball: forward the engine environment, LaunchServices passes only what is named here
+if [ "$np_runtime" = highball ]; then
+  for name in WINEUSERNAME WINEDLLPATH_PREPEND CX_FWD_COMPAT_GL_CTX $np_hb_keys; do
+    case "$name" in DYLD_*) continue ;; esac
+    eval "value=\${$name-}"
+    [ -n "$value" ] || continue
+    set -- --env "$name=$value" "$@"
+  done
+fi # highball forward
 set -- \
   --env CX_ROOT="$CX_ROOT" \
   --env CX_HOME="$CX_HOME" \

@@ -239,6 +239,7 @@ static void tool_list_cases(void) {
           "protonish-fex-41069\t27.0.0.41069-fex\tfex\tcrossover\tCrossOver Preview 41069 (FEX)\n"
           "protonish-fex-rosetta\t27.0.0.40921-fex\trosetta\tcrossover\tCrossOver Preview (Rosetta)\n"
           "protonish-26.3\t26.3.0.39832\trosetta\tCrossOver 26.3\n"
+          "protonish-highball-x64-crossover26.3-r19\tx64-crossover26.3-r19\trosetta\thighball\tHighball Wine 11 (r19)\n"
           "protonish\t26.3.0.39832\trosetta\tcrossover\tDuplicate\n"
           "proton-other\t1\trosetta\tcrossover\tForeign\n"
           "protonish-x\t1\tarm\tcrossover\tBad flavor\n"
@@ -252,7 +253,9 @@ static void tool_list_cases(void) {
     int kept = np_compat_load_tool_list(path, "/tools");
     unlink(path);
 
-    check(kept == 4, "only well-formed, unique, protonish-named lines are kept");
+    check(kept == 5, "only well-formed, unique, protonish-named lines are kept");
+    check(strcmp(g_tools[4].runtime, "highball") == 0
+          && strcmp(g_tools[4].build, "x64-crossover26.3-r19") == 0, "a highball tool keeps its runtime");
     check(strcmp(g_tools[0].name, "protonish") == 0
           && strcmp(g_tools[0].flavor, "fex") == 0, "the first line stays first");
     check(strcmp(g_tools[3].build, "26.3.0.39832") == 0

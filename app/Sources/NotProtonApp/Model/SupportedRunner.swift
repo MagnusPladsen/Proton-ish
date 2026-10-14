@@ -240,6 +240,25 @@ enum SupportedRunners {
                 CompatTool(name: "protonish-fex-rosetta-41069", flavor: .rosetta, display: "CrossOver 2026 10 06-ARM64 - Rosetta"),
             ]
         ),
+        RunnerBuild(
+            bundleVersion: "x64-crossover26.3-r19",
+            releaseVersion: "r19",
+            flavor: nil,
+            loaderSHA256: "b1972c4fde25357a253fd952c73e0759d39721c0d1a06716bc3c8ae231ec93e0",
+            cleanNtdll: [
+                .x86_64Windows: "6fc64ddf477780ea949cf3b02ce5d6bc147da596c9feb9f7379d3ea7f55433ca",
+                .i386Windows: "e0c057cfd6d12bb62df58b7f71cfcf9a07704b4ffd1095442e784eea3f3f0bd2",
+            ],
+            patchedNtdll: [
+                .x86_64Windows: "1238348ffd41f25a03d8dc5d0b019e6fffa789069fc15481fb30ed4fc75043bc",
+                .i386Windows: "836c05b939fcb56022f14476ce6e25ea71574a3287d1dda70f141b2a564e4da7",
+            ],
+            tools: [
+                CompatTool(name: "protonish-highball-x64-crossover26.3-r19", flavor: .rosetta,
+                           display: "Highball Wine 11 (r19)"),
+            ],
+            runtime: .highball
+        ),
     ]
 
     static func build(loaderSHA256 hash: String) -> RunnerBuild? {

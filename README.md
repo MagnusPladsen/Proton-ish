@@ -8,8 +8,8 @@ Pick a Windows game in your normal macOS Steam library, choose a compatibility t
 [NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS, but it only
 supports [CrossOver](https://www.codeweavers.com/crossover), which is a paid product. Today there are
 good free and open-source Wine runtimes for the Mac, such as [Highball](https://github.com/gauthierpiarrette/highball).
-Proton-ish is adding support for those, starting with Highball (in progress, not usable yet), so nobody has to
-pay just to play the Windows games they already own. CrossOver stays fully supported.
+Proton-ish adds support for those, starting with Highball's Wine 11 engine, so nobody has to pay just to
+play the Windows games they already own. CrossOver stays fully supported.
 
 If you can afford it, please consider buying CrossOver anyway: CodeWeavers funds most of the Wine
 development that every free runtime, Highball included, is built on.
@@ -30,10 +30,26 @@ development that every free runtime, Highball included, is built on.
 
 ## Status
 
-Proton-ish is in early development and has **no releases yet**. The rebrand (milestone M0: own bundle ID,
-update feed, support directory `~/Library/Application Support/protonish/`, tool names `protonish-*`) is done;
-Highball support is next. Until the first Proton-ish release, use
+Proton-ish is in early development and has **no releases yet**. Highball support works: a Windows game
+(Emberward) launched from the macOS Steam client through Highball's free Wine 11 engine (`x64-crossover26.3-r19`)
+on an Apple Silicon Mac, with Steam sign-in and the overlay working. That is one game on one Mac so far; expect
+rough edges. Until the first release, build it from source (below) or use
 [upstream NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+
+![Emberward running from macOS Steam through Proton-ish and Highball's Wine 11 engine](docs/screenshots/emberward-running-highball.png)
+
+![Steam's Compatibility settings with "Highball Wine 11 (r19)" selected as the compatibility tool](docs/screenshots/steam-compatibility-highball.png)
+
+## Using Highball
+
+1. Install [Highball](https://github.com/gauthierpiarrette/highball). In Highball, open an environment's settings and
+   set **Advanced → Engine** to `x64-crossover26.3-r19` (Wine 11). Wine 10 engines are not supported yet.
+2. Open Proton-ish and allow it under **System Settings → Privacy & Security → App Management** (it modifies the
+   Steam app). Click **Install** on the Status screen, then **Set Up** next to the engine in the Highball section.
+3. Restart Steam. In a Windows game's **Properties → Compatibility**, choose **Highball Wine 11 (r19)** and press Play.
+
+Only Windows games go through a compatibility tool. Games with a native macOS version run as normal macOS apps;
+to run the Windows version of such a game instead, force a compatibility tool in its Compatibility settings.
 Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
 
 ## Changes from upstream
@@ -43,6 +59,7 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 - 2026-10-14: New app icon (two crossed orbits around a wine drop), replacing upstream's artwork.
 - 2026-10-14: Internal groundwork for more Wine runtimes: runners now live in
   `runners/<runtime>-<build>/root/`, and compatibility tools record their runtime. No change for CrossOver users.
+- 2026-10-14: Highball support: set up Highball's Wine 11 engine (`x64-crossover26.3-r19`) as a Steam Play compatibility tool.
 
 ## Building from source
 
