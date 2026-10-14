@@ -58,7 +58,7 @@ enum ValveFetcher {
             AppLog.note("valve fetch: \(wrong.count) of \(manifest.files.count) files missed their pinned hash: \(wrong.map(\.bridgePath).joined(separator: ", "))")
             throw StepFailure(
                 step: step,
-                detail: String(localized: "Something is wrong with the downloaded files. Please check for a NotProton update.")
+                detail: String(localized: "Something is wrong with the downloaded files. Please check for a Proton-ish update.")
             )
         }
 

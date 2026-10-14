@@ -28,18 +28,18 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: NotProton
+          name: Proton-ish
           path: release
 
       - name: Verify the archive
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          ditto -x -k release/NotProton.zip release/extracted
-          codesign --verify --strict release/extracted/NotProton.app
-          actual=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' release/extracted/NotProton.app/Contents/Info.plist)
+          ditto -x -k release/Proton-ish.zip release/extracted
+          codesign --verify --strict release/extracted/Proton-ish.app
+          actual=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' release/extracted/Proton-ish.app/Contents/Info.plist)
           test "$actual" = "$VERSION"
-          make -s mincheck APP_BUNDLE=release/extracted/NotProton.app
+          make -s mincheck APP_BUNDLE=release/extracted/Proton-ish.app
 
       - name: Resolve Sparkle tools
         run: swift package resolve --package-path app
@@ -50,7 +50,7 @@ jobs:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
           VERSION: ${{ inputs.version }}
         run: |
-          printf '%s\n' "$RELEASE_NOTES" > release/NotProton.txt
+          printf '%s\n' "$RELEASE_NOTES" > release/Proton-ish.txt
           printf '%s' "$SPARKLE_PRIVATE_KEY" | app/.build/artifacts/sparkle/Sparkle/bin/generate_appcast \
             --ed-key-file - \
             --download-url-prefix "https://github.com/$GITHUB_REPOSITORY/releases/download/v$VERSION/" \
@@ -63,13 +63,13 @@ jobs:
           RELEASE_NOTES: ${{ inputs.release_notes }}
           VERSION: ${{ inputs.version }}
         run: |
-          git config user.name NotProtonNot
-          git config user.email 332734261+NotProtonNot@users.noreply.github.com
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -f -a "v$VERSION" -m "Public release/$VERSION"
           git push --force origin "v$VERSION"
           gh release delete "v$VERSION" --yes || true
           gh release create "v$VERSION" \
-            release/NotProton.zip \
+            release/Proton-ish.zip \
             release/appcast.xml \
             --title "$VERSION" \
             --notes "$RELEASE_NOTES"

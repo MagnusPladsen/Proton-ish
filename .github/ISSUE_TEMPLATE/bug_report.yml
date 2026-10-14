@@ -1,0 +1,41 @@
+name: Bug report
+description: Something in Proton-ish does not work
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Proton-ish version
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Wine runtime
+      options: [CrossOver, Other]
+    validations:
+      required: true
+  - type: input
+    id: runtime_version
+    attributes:
+      label: Runtime version / engine id
+      placeholder: "CrossOver 26.3"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac model
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: protonish-run.log (from the game's prefix)
+      render: text

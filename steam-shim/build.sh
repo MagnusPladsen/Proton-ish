@@ -28,7 +28,7 @@ WINE_BUILD=${WINE_BUILD:-$repo/scratch/wine-build-dual}
 # Relative because it lands in the debug info. Keep the default sibling layout so
 # a rebuild stays comparable to the shipped binary.
 WINE_SRC_REL=${WINE_SRC_REL:-../wine}
-BRIDGE_DIR=${BRIDGE_DIR:-$HOME/Library/Application Support/notproton/bridge}
+BRIDGE_DIR=${BRIDGE_DIR:-$HOME/Library/Application Support/protonish/bridge}
 
 install=0
 [ "${1:-}" = "--install" ] && install=1

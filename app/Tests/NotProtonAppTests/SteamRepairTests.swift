@@ -117,7 +117,7 @@ struct SteamRepairTests {
         #expect(throws: Never.self) { try SteamRepair.verifyValveSignature(copy) }
 
         // The injection this whole project performs, which is what repair exists to undo.
-        try Data("not a dylib".utf8).write(to: copy.appending(path: "Contents/MacOS/notproton.dylib"))
+        try Data("not a dylib".utf8).write(to: copy.appending(path: "Contents/MacOS/protonish.dylib"))
 
         #expect(throws: StepFailure.self) { try SteamRepair.verifyValveSignature(copy) }
     }
@@ -182,7 +182,7 @@ struct SteamRepairTests {
         var tampered = stock
         tampered[SteamBundle.environmentKey] = [
             "LC_ALL": "en_US.UTF-8",
-            SteamBundle.insertKey: "/Applications/Steam.app/Contents/MacOS/notproton.dylib",
+            SteamBundle.insertKey: "/Applications/Steam.app/Contents/MacOS/protonish.dylib",
             SteamBundle.controllerBlockKey: SteamBundle.controllerBlockValue,
         ]
         try SteamBundle.writeInfoPlist(tampered, at: plist)
@@ -257,7 +257,7 @@ struct SteamRepairTests {
         try FileManager.default.createDirectory(
             at: destination.appending(path: "Contents/MacOS"), withIntermediateDirectories: true
         )
-        try Data("stale".utf8).write(to: destination.appending(path: "Contents/MacOS/notproton.dylib"))
+        try Data("stale".utf8).write(to: destination.appending(path: "Contents/MacOS/protonish.dylib"))
 
         try SteamRepair.replace(destination, with: staged)
 
@@ -266,7 +266,7 @@ struct SteamRepairTests {
         #expect(SteamBundle.currentInsert(at: destination.appending(path: "Contents/Info.plist")) == nil)
         #expect(
             !FileManager.default.fileExists(
-                atPath: destination.appending(path: "Contents/MacOS/notproton.dylib").path(percentEncoded: false)
+                atPath: destination.appending(path: "Contents/MacOS/protonish.dylib").path(percentEncoded: false)
             ),
             "the injected dylib survived the replacement"
         )

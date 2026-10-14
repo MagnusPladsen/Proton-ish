@@ -8,15 +8,15 @@ if (!emit) { console.error('usage: fex.js <emit>'); process.exit(2); }
 
 const AVX = 'Advertise AVX2 to Rosetta';
 
-// The hook passes only FEX tools; notproton-rosetta stands for a Rosetta tool next to it.
-const FEX_TOOLS = ['notproton-fex'];
+// The hook passes only FEX tools; protonish-rosetta stands for a Rosetta tool next to it.
+const FEX_TOOLS = ['protonish-fex'];
 
 let failed = 0;
 for (const form of Object.keys(FORMS)) {
   for (const fex of [false, true]) {
     const { render: P, written } = panel(emit, form, undefined, { fexTools: FEX_TOOLS });
     const t = runner(`${form}, ${fex ? 'FEX' : 'Rosetta'}`);
-    const tool = fex ? 'notproton-fex' : 'notproton-rosetta';
+    const tool = fex ? 'protonish-fex' : 'protonish-rosetta';
     const nodes = opts =>
       walk(P({ details: details(opts + ' %command%', { strCompatToolName: tool }) }));
     const toggles = ns => ns.filter(x => x.type === 'Toggle').map(x => x.props.label);
@@ -61,7 +61,7 @@ for (const form of Object.keys(FORMS)) {
 
   // A game with no tool name runs under the fallback tool.
   for (const first of [false, true]) {
-    const fallback = first ? 'notproton-fex' : 'notproton-rosetta';
+    const fallback = first ? 'protonish-fex' : 'protonish-rosetta';
     const { render: P } = panel(emit, form, undefined, { fallback, fexTools: FEX_TOOLS });
     const t = runner(`${form}, unmapped, fallback ${fallback}`);
     const r = walk(P({ details: details('', { strCompatToolName: '' }) }));
@@ -71,9 +71,9 @@ for (const form of Object.keys(FORMS)) {
     failed += t.failed;
   }
 
-  const { render: L } = panel(emit, form, undefined, { fexTools: ['notproton-fex-41069'] });
+  const { render: L } = panel(emit, form, undefined, { fexTools: ['protonish-fex-41069'] });
   const tp = runner(`${form}, FEX tool name prefix`);
-  const pr = walk(L({ details: details('', { strCompatToolName: 'notproton-fex' }) }));
+  const pr = walk(L({ details: details('', { strCompatToolName: 'protonish-fex' }) }));
   tp.ok(pr.find(x => x.type === 'Dropdown').props.rgOptions.some(o => o.data === 'd3dmetal'),
         'a tool whose name prefixes a FEX tool keeps the Rosetta options');
   failed += tp.failed;
@@ -89,18 +89,18 @@ for (const form of Object.keys(FORMS)) {
   };
   const all = 'WINEDEBUG=-all CX_GRAPHICS_BACKEND=d3dmetal D3DM_ENABLE_METALFX=1 MTL_HUD_ENABLED=1 ' +
               "ROSETTA_ADVERTISE_AVX=0 DXMT_CONFIG='a;b' %command% -novid";
-  const r = choose(all, 'notproton-fex');
+  const r = choose(all, 'protonish-fex');
   t.ok(r === "WINEDEBUG=-all MTL_HUD_ENABLED=1 DXMT_CONFIG='a;b' %command% -novid",
        `picking FEX drops only the D3DMetal and Rosetta entries (${r})`);
-  t.ok(choose(all, 'notproton-rosetta') === null, 'picking a Rosetta tool writes nothing');
-  t.ok(choose('D3DM_lower=1 %command%', 'notproton-fex') === null,
+  t.ok(choose(all, 'protonish-rosetta') === null, 'picking a Rosetta tool writes nothing');
+  t.ok(choose('D3DM_lower=1 %command%', 'protonish-fex') === null,
        'names the launch script does not forward are left alone');
   for (const o of ['>D3DM_LOG=1 %command%', "X=$'a\\'b D3DM_Y=1 c' %command%",
                    'wrapper <(x) D3DM_Y=1 %command%', 'D3DM_Y=1 \\\n%command%'])
-    t.ok(choose(o, 'notproton-fex') === null, `text the parser does not model is left alone (${o})`);
-  t.ok(choose('CX_GRAPHICS_BACKEND=dxmt %command%', 'notproton-fex') === null,
+    t.ok(choose(o, 'protonish-fex') === null, `text the parser does not model is left alone (${o})`);
+  t.ok(choose('CX_GRAPHICS_BACKEND=dxmt %command%', 'protonish-fex') === null,
        'another backend is not a reason to write');
-  t.ok(choose('-novid CX_GRAPHICS_BACKEND=d3dmetal', 'notproton-fex') === null,
+  t.ok(choose('-novid CX_GRAPHICS_BACKEND=d3dmetal', 'protonish-fex') === null,
        'text after the game, not set before %command%, is left alone');
   failed += t.failed;
 }

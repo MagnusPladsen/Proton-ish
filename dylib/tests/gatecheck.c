@@ -27,7 +27,7 @@ static void wrong(const char *fmt, ...) {
 static void *rewrite_fallback(void *arg) {
     atomic_int *stop = arg;
     while (!atomic_load(stop))
-        np_webpatch_set_fallback_tool("notproton-fex");
+        np_webpatch_set_fallback_tool("protonish-fex");
     return NULL;
 }
 
@@ -36,7 +36,7 @@ static void check_fallback(void) {
         "return t?(0,i.jsx)(m.B,{feature:p.OK,label:(0,l.we)"
         "(\"#Settings_SteamPlay_DefaultTool\"),rgOptions:A,disabled:0==A.length,"
         "selectedOption:t,onChange:e=>g(e.data)}):null";
-    np_webpatch_set_fallback_tool("notproton-fex");
+    np_webpatch_set_fallback_tool("protonish-fex");
     atomic_int stop = 0;
     pthread_t writer;
     if (pthread_create(&writer, NULL, rewrite_fallback, &stop) != 0) {
@@ -50,8 +50,8 @@ static void check_fallback(void) {
         char *out = np_webpatch_transform((const uint8_t *)source, sizeof(source) - 1,
                                          &length, NULL);
         int ok = out && !memchr(out, '\0', length)
-            && strstr(out, "A.some(e=>e.data===\"notproton-fex\")")
-            && strstr(out, "selectedOption:t||\"notproton-fex\"");
+            && strstr(out, "A.some(e=>e.data===\"protonish-fex\")")
+            && strstr(out, "selectedOption:t||\"protonish-fex\"");
         free(out);
         if (!ok) {
             wrong("concurrent fallback writes changed a chunk's tool name");
@@ -64,9 +64,9 @@ static void check_fallback(void) {
 }
 
 static void check_fex_tools(void) {
-    np_webpatch_set_fex_tools((const char *[]){ "notproton-fex", "bad name", NULL, "",
-                                                "x\"y", "notproton-fex-41069" }, 6);
-    if (strcmp(g_fex_tools, "[\"notproton-fex\",\"notproton-fex-41069\"]") != 0)
+    np_webpatch_set_fex_tools((const char *[]){ "protonish-fex", "bad name", NULL, "",
+                                                "x\"y", "protonish-fex-41069" }, 6);
+    if (strcmp(g_fex_tools, "[\"protonish-fex\",\"protonish-fex-41069\"]") != 0)
         wrong("the FEX tool array is %s", g_fex_tools);
 
     np_webpatch_set_fex_tools(NULL, 0);
@@ -315,8 +315,8 @@ int main(int argc, char **argv) {
         return g_wrong;
     }
 
-    np_webpatch_set_fallback_tool("notproton-fex");
-    np_webpatch_set_fex_tools((const char *[]){ "notproton-fex", "notproton-fex-41069" }, 2);
+    np_webpatch_set_fallback_tool("protonish-fex");
+    np_webpatch_set_fex_tools((const char *[]){ "protonish-fex", "protonish-fex-41069" }, 2);
 
     for (int i = 1; i < argc; i++) {
         size_t len = 0;

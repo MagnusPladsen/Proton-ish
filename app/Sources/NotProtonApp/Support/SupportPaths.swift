@@ -1,11 +1,11 @@
-// Path construction for the NotProton support directory and Steam
+// Path construction for the Proton-ish support directory and Steam
 
 import Foundation
 
 enum SupportPaths {
 
-    static let supportDirName = "notproton"
-    static let dylibName = "notproton.dylib"
+    static let supportDirName = "protonish"
+    static let dylibName = "protonish.dylib"
 
     static var home: URL {
         URL(filePath: NSHomeDirectory())
@@ -15,7 +15,7 @@ enum SupportPaths {
         home.appending(path: "Library/Application Support")
     }
 
-    // ~/Library/Application Support/notproton
+    // ~/Library/Application Support/protonish
     static var support: URL {
         applicationSupport.appending(path: supportDirName)
     }
@@ -112,7 +112,7 @@ enum SupportPaths {
             let entries = (try? FileManager.default.contentsOfDirectory(
                 at: directory, includingPropertiesForKeys: nil
             )) ?? []
-            return entries.filter { $0.lastPathComponent.hasPrefix("notproton") }
+            return entries.filter { $0.lastPathComponent.hasPrefix("protonish") }
         }
 
         static var libraryFoldersVDF: URL { userData.appending(path: "steamapps/libraryfolders.vdf") }

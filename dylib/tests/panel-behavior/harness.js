@@ -26,7 +26,7 @@ const FORMS = {
 
 // `fallback` and `fexTools` stand in for what the hook sets before the transform.
 function panel(emit, form, globals = { document: { documentElement: { lang: 'en' } } },
-               { fallback = 'notproton', fexTools = [], names = ['R0', 'B0'] } = {}) {
+               { fallback = 'protonish', fexTools = [], names = ['R0', 'B0'] } = {}) {
   const raw = execFileSync(emit, [form, fallback, ...fexTools], { encoding: 'utf8' }).trim();
   const f = FORMS[form];
   const body = expand(raw, { [f.react]: names[0], [f.barrel]: names[1] });
@@ -56,7 +56,7 @@ function details(launchOptions, over) {
   return Object.assign({
     unAppID: 287700,
     vecPlatforms: ['windows'],
-    strCompatToolName: 'notproton',
+    strCompatToolName: 'protonish',
     strLaunchOptions: launchOptions,
   }, over || {});
 }

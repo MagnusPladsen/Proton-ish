@@ -1,12 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    " NotProton can be deployed, but the CrossOver compatibility tool cannot be installed without a valid license." : {
+    " Proton-ish can be deployed, but the CrossOver compatibility tool cannot be installed without a valid license." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " 可以部署 NotProton，但没有有效许可证时无法安装 CrossOver 兼容工具。"
+            "value" : " 可以部署 Proton-ish，但没有有效许可证时无法安装 CrossOver 兼容工具。"
           }
         }
       }
@@ -392,12 +392,12 @@
         }
       }
     },
-    "%@/%@ is not in the bridge. Install NotProton first." : {
+    "%@/%@ is not in the bridge. Install Proton-ish first." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "桥接组件中没有 %@/%@。请先安装 NotProton。"
+            "value" : "桥接组件中没有 %@/%@。请先安装 Proton-ish。"
           }
         }
       }
@@ -522,32 +522,32 @@
         }
       }
     },
-    "A Steam client update may break NotProton." : {
+    "A Steam client update may break Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 客户端更新可能导致 NotProton 无法使用。"
+            "value" : "Steam 客户端更新可能导致 Proton-ish 无法使用。"
           }
         }
       }
     },
-    "A game or Wine tool is running on build %@. Quit it before updating NotProton." : {
+    "A game or Wine tool is running on build %@. Quit it before updating Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有游戏或 Wine 工具正在使用构建版本 %@。请先退出，再更新 NotProton。"
+            "value" : "有游戏或 Wine 工具正在使用构建版本 %@。请先退出，再更新 Proton-ish。"
           }
         }
       }
     },
-    "A game or Wine tool is running. Quit it before updating NotProton." : {
+    "A game or Wine tool is running. Quit it before updating Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有游戏或 Wine 工具正在运行。请先退出，再更新 NotProton。"
+            "value" : "有游戏或 Wine 工具正在运行。请先退出，再更新 Proton-ish。"
           }
         }
       }
@@ -592,12 +592,12 @@
         }
       }
     },
-    "A newer NotProton build is installed. Use that build to update or repair the installed files." : {
+    "A newer Proton-ish build is installed. Use that build to update or repair the installed files." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已安装较新的 NotProton 版本。请使用该版本更新或修复已安装的文件。"
+            "value" : "已安装较新的 Proton-ish 版本。请使用该版本更新或修复已安装的文件。"
           }
         }
       }
@@ -612,12 +612,22 @@
         }
       }
     },
-    "A prefix appears here once a Windows game has been launched through NotProton." : {
+    "A prefix appears here once a Windows game has been launched through Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "通过 NotProton 启动 Windows 游戏后，对应的游戏容器就会显示在这里。"
+            "value" : "通过 Proton-ish 启动 Windows 游戏后，对应的游戏容器就会显示在这里。"
+          }
+        }
+      }
+    },
+    "About Proton-ish" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于 Proton-ish"
           }
         }
       }
@@ -682,12 +692,12 @@
         }
       }
     },
-    "Another dylib is present. Repair your Steam install before installing NotProton." : {
+    "Another dylib is present. Repair your Steam install before installing Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "检测到其他动态库。请先修复 Steam，再安装 NotProton。"
+            "value" : "检测到其他动态库。请先修复 Steam，再安装 Proton-ish。"
           }
         }
       }
@@ -1475,22 +1485,22 @@
         }
       }
     },
-    "Delete NotProton's copy of this build." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除 NotProton 保存的此版本副本。"
-          }
-        }
-      }
-    },
     "Delete Prefix" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "删除游戏容器"
+          }
+        }
+      }
+    },
+    "Delete Proton-ish's copy of this build." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除 Proton-ish 保存的此版本副本。"
           }
         }
       }
@@ -1735,12 +1745,12 @@
         }
       }
     },
-    "Find NotProton's components" : {
+    "Find Proton-ish's components" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查找 NotProton 组件"
+            "value" : "查找 Proton-ish 组件"
           }
         }
       }
@@ -1765,12 +1775,12 @@
         }
       }
     },
-    "If NotProton is installed there, it will stay installed. Continue anyway?" : {
+    "If Proton-ish is installed there, it will stay installed. Continue anyway?" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "如果 NotProton 安装在那里，它将保持安装状态。仍要继续吗？"
+            "value" : "如果 Proton-ish 安装在那里，它将保持安装状态。仍要继续吗？"
           }
         }
       }
@@ -1785,32 +1795,32 @@
         }
       }
     },
-    "Install NotProton" : {
+    "Install Proton-ish" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "安装 NotProton"
+            "value" : "安装 Proton-ish"
           }
         }
       }
     },
-    "Install NotProton into Steam." : {
+    "Install Proton-ish into Steam." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将 NotProton 安装到 Steam。"
+            "value" : "将 Proton-ish 安装到 Steam。"
           }
         }
       }
     },
-    "Installation is blocked. Refresh Status and use the NotProton app that installed this build." : {
+    "Installation is blocked. Refresh Status and use the Proton-ish app that installed this build." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "安装已被阻止。请刷新“状态”页面，并使用此前安装此版本的 NotProton 应用。"
+            "value" : "安装已被阻止。请刷新“状态”页面，并使用此前安装此版本的 Proton-ish 应用。"
           }
         }
       }
@@ -2225,129 +2235,6 @@
         }
       }
     },
-    "NotProton" : {
-      "shouldTranslate" : false
-    },
-    "NotProton Components" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 组件"
-          }
-        }
-      }
-    },
-    "NotProton cannot use Steam from a folder with a colon in its name." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 无法使用名称中含有冒号的文件夹中的 Steam。"
-          }
-        }
-      }
-    },
-    "NotProton carries no components." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 未包含任何组件。"
-          }
-        }
-      }
-    },
-    "NotProton could not download the files it needs from %@. Please try again later." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 无法从 %@ 下载所需文件。请稍后重试。"
-          }
-        }
-      }
-    },
-    "NotProton could not reach %@'s servers. Please check your internet connection and try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 无法连接 %@ 服务器。请检查网络连接，然后重试。"
-          }
-        }
-      }
-    },
-    "NotProton does not run %@ with Winetricks." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 不会通过 Winetricks 运行 %@。"
-          }
-        }
-      }
-    },
-    "NotProton has been partially removed, because Steam at %@ cannot be found. Delete that copy of Steam and reinstall it to fully remove NotProton." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 仅被部分移除，因为找不到位于 %@ 的 Steam。请删除该 Steam 并重新安装，以完全移除 NotProton。"
-          }
-        }
-      }
-    },
-    "NotProton has been removed." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 已移除。"
-          }
-        }
-      }
-    },
-    "NotProton has been removed. Steam could not be restored. Reinstall Steam from steampowered.com before using it again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 已移除，但需要重新下载 Steam。请联网后再次执行“修复 Steam”。"
-          }
-        }
-      }
-    },
-    "NotProton is installed in %@. Use Repair Steam to remove it before choosing another copy of Steam." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 已安装在 %@ 中。请先使用“修复 Steam”将其移除，再选择另一份 Steam。"
-          }
-        }
-      }
-    },
-    "NotProton needs the App Management permission." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 需要“App 管理”权限。"
-          }
-        }
-      }
-    },
-    "NotProton successfully installed." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NotProton 安装成功。"
-          }
-        }
-      }
-    },
     "OK" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2514,6 +2401,139 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "独占空间"
+          }
+        }
+      }
+    },
+    "Proton-ish" : {
+      "shouldTranslate" : false
+    },
+    "Proton-ish Components" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 组件"
+          }
+        }
+      }
+    },
+    "Proton-ish cannot use Steam from a folder with a colon in its name." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 无法使用名称中含有冒号的文件夹中的 Steam。"
+          }
+        }
+      }
+    },
+    "Proton-ish carries no components." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 未包含任何组件。"
+          }
+        }
+      }
+    },
+    "Proton-ish could not download the files it needs from %@. Please try again later." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 无法从 %@ 下载所需文件。请稍后重试。"
+          }
+        }
+      }
+    },
+    "Proton-ish could not reach %@'s servers. Please check your internet connection and try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 无法连接 %@ 服务器。请检查网络连接，然后重试。"
+          }
+        }
+      }
+    },
+    "Proton-ish does not run %@ with Winetricks." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 不会通过 Winetricks 运行 %@。"
+          }
+        }
+      }
+    },
+    "Proton-ish has been partially removed, because Steam at %@ cannot be found. Delete that copy of Steam and reinstall it to fully remove Proton-ish." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 仅被部分移除，因为找不到位于 %@ 的 Steam。请删除该 Steam 并重新安装，以完全移除 Proton-ish。"
+          }
+        }
+      }
+    },
+    "Proton-ish has been removed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 已移除。"
+          }
+        }
+      }
+    },
+    "Proton-ish has been removed. Steam could not be restored. Reinstall Steam from steampowered.com before using it again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 已移除，但需要重新下载 Steam。请联网后再次执行“修复 Steam”。"
+          }
+        }
+      }
+    },
+    "Proton-ish is a fork of NotProton by NotProtonNot (https://github.com/NotProtonNot/NotProton), released under GPLv3. It is not affiliated with or endorsed by NotProton, Valve, CodeWeavers or Highball." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 是 NotProtonNot 开发的 NotProton（https://github.com/NotProtonNot/NotProton）的分支，以 GPLv3 发布。它与 NotProton、Valve、CodeWeavers 或 Highball 无关，也未获得其认可。"
+          }
+        }
+      }
+    },
+    "Proton-ish is installed in %@. Use Repair Steam to remove it before choosing another copy of Steam." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 已安装在 %@ 中。请先使用“修复 Steam”将其移除，再选择另一份 Steam。"
+          }
+        }
+      }
+    },
+    "Proton-ish needs the App Management permission." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 需要“App 管理”权限。"
+          }
+        }
+      }
+    },
+    "Proton-ish successfully installed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 安装成功。"
           }
         }
       }
@@ -2758,22 +2778,22 @@
         }
       }
     },
-    "Remove NotProton" : {
+    "Remove Proton-ish" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "移除 NotProton"
+            "value" : "移除 Proton-ish"
           }
         }
       }
     },
-    "Remove NotProton and restore Steam to its original state." : {
+    "Remove Proton-ish and restore Steam to its original state." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "移除 NotProton 并将 Steam 恢复原状。"
+            "value" : "移除 Proton-ish 并将 Steam 恢复原状。"
           }
         }
       }
@@ -2788,12 +2808,12 @@
         }
       }
     },
-    "Remove everything NotProton has created?" : {
+    "Remove everything Proton-ish has created?" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "移除 NotProton 创建的所有内容？"
+            "value" : "移除 Proton-ish 创建的所有内容？"
           }
         }
       }
@@ -2868,12 +2888,12 @@
         }
       }
     },
-    "Repair your Steam install before installing NotProton." : {
+    "Repair your Steam install before installing Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请先修复 Steam，再安装 NotProton。"
+            "value" : "请先修复 Steam，再安装 Proton-ish。"
           }
         }
       }
@@ -3188,12 +3208,12 @@
         }
       }
     },
-    "Something is wrong with the downloaded files. Please check for a NotProton update." : {
+    "Something is wrong with the downloaded files. Please check for a Proton-ish update." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下载的文件存在问题。请检查是否有新版 NotProton。"
+            "value" : "下载的文件存在问题。请检查是否有新版 Proton-ish。"
           }
         }
       }
@@ -3231,12 +3251,12 @@
     "Steam" : {
       "shouldTranslate" : false
     },
-    "Steam at %@ isn't connected, so NotProton can't be removed from it. All other NotProton data is removed, except for Windows Games and prefixes." : {
+    "Steam at %@ isn't connected, so Proton-ish can't be removed from it. All other Proton-ish data is removed, except for Windows Games and prefixes." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "位于 %@ 的 Steam 未连接，因此无法从中移除 NotProton。其他所有 NotProton 数据都会被移除，但 Windows 游戏及游戏容器除外。"
+            "value" : "位于 %@ 的 Steam 未连接，因此无法从中移除 Proton-ish。其他所有 Proton-ish 数据都会被移除，但 Windows 游戏及游戏容器除外。"
           }
         }
       }
@@ -3271,22 +3291,22 @@
         }
       }
     },
-    "Steam client updates may break NotProton." : {
+    "Steam client updates may break Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 客户端更新可能导致 NotProton 无法使用。"
+            "value" : "Steam 客户端更新可能导致 Proton-ish 无法使用。"
           }
         }
       }
     },
-    "Steam client updates may break NotProton. If you don't want to wait for NotProton to be updated to be compatible with future Steam versions at the cost of not getting updates to the Steam client, you can stop the Steam client from updating itself." : {
+    "Steam client updates may break Proton-ish. If you don't want to wait for Proton-ish to be updated to be compatible with future Steam versions at the cost of not getting updates to the Steam client, you can stop the Steam client from updating itself." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 客户端更新可能导致 NotProton 无法使用。你可以阻止 Steam 自动更新，避免等待 NotProton 适配新版本，但这也意味着无法及时获得 Steam 客户端的功能改进和安全更新。"
+            "value" : "Steam 客户端更新可能导致 Proton-ish 无法使用。你可以阻止 Steam 自动更新，避免等待 Proton-ish 适配新版本，但这也意味着无法及时获得 Steam 客户端的功能改进和安全更新。"
           }
         }
       }
@@ -3301,22 +3321,22 @@
         }
       }
     },
-    "Steam has a different copy of NotProton, installed by another account on this Mac. Update NotProton from that account, then try again." : {
+    "Steam has a different copy of Proton-ish, installed by another account on this Mac. Update Proton-ish from that account, then try again." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 中的另一份 NotProton 是由本机其他账户安装的。请使用该账户更新 NotProton，然后重试。"
+            "value" : "Steam 中的另一份 Proton-ish 是由本机其他账户安装的。请使用该账户更新 Proton-ish，然后重试。"
           }
         }
       }
     },
-    "Steam has not been set up for NotProton, and this account cannot change it. Install from the account that owns Steam." : {
+    "Steam has not been set up for Proton-ish, and this account cannot change it. Install from the account that owns Steam." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 尚未配置 NotProton，当前账户无权修改。请使用安装 Steam 的账户执行安装。"
+            "value" : "Steam 尚未配置 Proton-ish，当前账户无权修改。请使用安装 Steam 的账户执行安装。"
           }
         }
       }
@@ -3331,12 +3351,12 @@
         }
       }
     },
-    "Steam is restored to its unmodified state and NotProton is removed, including the compatibility tool that lives inside the Steam folder. Windows games and Steam Play prefixes are not removed." : {
+    "Steam is restored to its unmodified state and Proton-ish is removed, including the compatibility tool that lives inside the Steam folder. Windows games and Steam Play prefixes are not removed." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此操作会将 Steam 恢复为未修改的状态，并移除 NotProton（包括 Steam 文件夹内的兼容工具）。不会删除 Windows 游戏及 Steam Play 游戏容器。"
+            "value" : "此操作会将 Steam 恢复为未修改的状态，并移除 Proton-ish（包括 Steam 文件夹内的兼容工具）。不会删除 Windows 游戏及 Steam Play 游戏容器。"
           }
         }
       }
@@ -3361,12 +3381,12 @@
         }
       }
     },
-    "Steam is set up to inject a different dylib. Please repair Steam before installing NotProton." : {
+    "Steam is set up to inject a different dylib. Please repair Steam before installing Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 已配置为注入其他动态库。请先修复 Steam，再安装 NotProton。"
+            "value" : "Steam 已配置为注入其他动态库。请先修复 Steam，再安装 Proton-ish。"
           }
         }
       }
@@ -3391,12 +3411,12 @@
         }
       }
     },
-    "Steam was installed by another account on this Mac. Only that account can modify it. Log in to macOS with that account to reinstall NotProton." : {
+    "Steam was installed by another account on this Mac. Only that account can modify it. Log in to macOS with that account to reinstall Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 由这台 Mac 上的其他账户安装，只有该账户可以修改。请登录该账户，重新安装 NotProton。"
+            "value" : "Steam 由这台 Mac 上的其他账户安装，只有该账户可以修改。请登录该账户，重新安装 Proton-ish。"
           }
         }
       }
@@ -3411,12 +3431,12 @@
         }
       }
     },
-    "Steam's installed dylib does not match this account's build record. Finish or repair its installation with the NotProton app that last installed it." : {
+    "Steam's installed dylib does not match this account's build record. Finish or repair its installation with the Proton-ish app that last installed it." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 中已安装的动态库与当前账户的版本记录不一致。请使用上次执行安装的 NotProton 应用完成或修复安装。"
+            "value" : "Steam 中已安装的动态库与当前账户的版本记录不一致。请使用上次执行安装的 Proton-ish 应用完成或修复安装。"
           }
         }
       }
@@ -3611,12 +3631,12 @@
         }
       }
     },
-    "The bundled NotProton dylib is invalid." : {
+    "The bundled Proton-ish dylib is invalid." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "随附的 NotProton 动态库无效。"
+            "value" : "随附的 Proton-ish 动态库无效。"
           }
         }
       }
@@ -3801,12 +3821,12 @@
         }
       }
     },
-    "This build of NotProton carries no components at all." : {
+    "This build of Proton-ish carries no components at all." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此版本的 NotProton 未包含任何组件。"
+            "value" : "此版本的 Proton-ish 未包含任何组件。"
           }
         }
       }
@@ -3821,12 +3841,12 @@
         }
       }
     },
-    "This copy of NotProton cannot repair Steam. Please reinstall NotProton." : {
+    "This copy of Proton-ish cannot repair Steam. Please reinstall Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此 NotProton 副本无法修复 Steam。请重新安装 NotProton。"
+            "value" : "此 Proton-ish 副本无法修复 Steam。请重新安装 Proton-ish。"
           }
         }
       }
@@ -3861,12 +3881,12 @@
         }
       }
     },
-    "This will restore Steam itself to its original state but does not remove the support components used by NotProton." : {
+    "This will restore Steam itself to its original state but does not remove the support components used by Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此操作会将 Steam 恢复原状，但不会移除 NotProton 使用的支持组件。"
+            "value" : "此操作会将 Steam 恢复原状，但不会移除 Proton-ish 使用的支持组件。"
           }
         }
       }
@@ -3961,12 +3981,12 @@
         }
       }
     },
-    "Use the newer NotProton app to update or repair the installed files." : {
+    "Use the newer Proton-ish app to update or repair the installed files." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请使用较新版的 NotProton 更新或修复已安装的文件。"
+            "value" : "请使用较新版的 Proton-ish 更新或修复已安装的文件。"
           }
         }
       }

@@ -30,7 +30,7 @@ struct InstallPayloadTests {
     func shippedPayloadIsStaged() throws {
         let located = try InstallPayload.locate()
 
-        #expect(located.dylib.lastPathComponent == "notproton.dylib")
+        #expect(located.dylib.lastPathComponent == "protonish.dylib")
         #expect(located.overlayShim.lastPathComponent == "overlay-shim.dylib")
         #expect(located.appinfo.lastPathComponent == "appinfo")
         #expect(!located.signatures.isEmpty)
@@ -70,7 +70,7 @@ struct InstallPayloadTests {
             _ = try InstallPayload.locate(root: root)
             Issue.record("a payload with no dylib was accepted")
         } catch let failure as StepFailure {
-            #expect(failure.detail.contains("notproton.dylib"))
+            #expect(failure.detail.contains("protonish.dylib"))
             #expect(failure.detail.contains("make app-payload"))
             #expect(!failure.detail.contains("overlay-shim.dylib"), "the shim was present and should not be named")
         }
@@ -100,7 +100,7 @@ struct InstallPayloadTests {
             _ = try InstallPayload.locate(root: root)
             Issue.record("an empty payload was accepted")
         } catch let failure as StepFailure {
-            #expect(failure.detail.contains("notproton.dylib"))
+            #expect(failure.detail.contains("protonish.dylib"))
             #expect(failure.detail.contains("overlay-shim.dylib"))
             #expect(failure.detail.contains("iconmaker"))
             #expect(failure.detail.contains("appinfo"))
