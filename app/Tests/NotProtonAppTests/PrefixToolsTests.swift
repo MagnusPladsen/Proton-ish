@@ -1470,13 +1470,13 @@ struct PrefixLastBuildTests {
             to: prefix.root.appending(path: PrefixTools.buildRecordName), atomically: true, encoding: .utf8)
 
         let fexOnly = [InstalledTool(
-            tool: CompatTool(name: "notproton", flavor: .fex, display: "CrossOver Preview (FEX)"),
+            tool: CompatTool(name: "protonish", flavor: .fex, display: "CrossOver Preview (FEX)"),
             build: Self.preview)]
         #expect(PrefixTools.tool(for: prefix, among: fexOnly, runners: runners) == nil)
 
         let fex = try #require(SupportedRunners.all.first { $0.id == Self.preview })
         let both = SupportedRunners.tools(for: [fex])
-        #expect(PrefixTools.tool(for: prefix, among: both, runners: runners)?.name == "notproton-fex-rosetta")
+        #expect(PrefixTools.tool(for: prefix, among: both, runners: runners)?.name == "protonish-fex-rosetta")
     }
 
     @Test("A prefix another CrossOver updated gets no tool, so nothing runs over it")
