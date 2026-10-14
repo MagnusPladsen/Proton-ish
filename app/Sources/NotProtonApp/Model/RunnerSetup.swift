@@ -50,7 +50,7 @@ enum RunnerSetup {
         toolList: URL = SupportPaths.toolList,
         compatTools: URL = SupportPaths.Steam.compatTools,
         runScript: () throws -> URL = { try InstallPayload.locate().run },
-        license: (URL) -> CrossOverLicense.Status = { CrossOverLicense.check(crossOverRoot: $0) },
+        license: (URL) -> CrossOverLicense.Status = { RuntimeKind.crossover.runtime.accessStatus(root: $0) },
         verify: (RunnerBuild, URL) throws -> Void = RunnerInstaller.verifyClone,
         stage: (RunnerBuild, URL, URL) throws -> [WineArch] = {
             try NtdllPatcher.stage(build: $0, runnerRoot: $1, bridge: $2)

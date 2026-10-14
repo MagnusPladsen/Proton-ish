@@ -42,4 +42,29 @@ struct WineRuntimeTests {
         }
         #expect(RunnerStore.clonedBuilds(in: runners) == ["26.3.0.39832", "27.0.0.40921-fex"])
     }
+
+    @Test("CrossOver's loader is the x86_64 unix wine binary")
+    func crossOverLoader() {
+        let root = URL(filePath: "/R/root")
+        #expect(RuntimeKind.crossover.runtime.unixLoader(inRoot: root).path(percentEncoded: false)
+            == "/R/root/lib/wine/x86_64-unix/wine")
+        #expect(CrossOverSource.unixLoader(inRoot: root) == RuntimeKind.crossover.runtime.unixLoader(inRoot: root))
+    }
+
+    @Test("CrossOver's base environment sets CX_ROOT and CX_HOME")
+    func crossOverEnvironment() {
+        let env = RuntimeKind.crossover.runtime.baseEnvironment(root: URL(filePath: "/R/root"))
+        #expect(env["CX_ROOT"] == "/R/root")
+        #expect(env["CX_HOME"]?.hasSuffix("/Library/Application Support/CrossOver") == true)
+    }
+
+    @Test("PrefixTools' layout is the runtime's layout")
+    func layoutDelegates() {
+        let root = URL(filePath: "/R/root")
+        for flavor in CompatTool.Flavor.allCases {
+            let a = PrefixTools.layout(runner: root, flavor: flavor)
+            let b = RuntimeKind.crossover.runtime.layout(root: root, flavor: flavor)
+            #expect(a.loader == b.loader && a.server == b.server && a.unixDir == b.unixDir)
+        }
+    }
 }
