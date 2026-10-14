@@ -169,7 +169,7 @@ enum SteamInstaller {
                 report(.signing)
                 try adHocSign(dylib)
                 try adHocSign(app.appending(path: "Contents/MacOS/steam_osx"))
-                try adHocSign(app)
+                try signSteamBundle(app)
             } catch {
                 revertPlist(priorPlist, at: plist, app: app)
                 throw error
@@ -335,7 +335,7 @@ enum SteamInstaller {
     static func revertPlist(_ bytes: Data?, at plist: URL, app: URL) {
         guard let bytes else { return }
         try? bytes.write(to: plist)
-        try? adHocSign(app)
+        try? signSteamBundle(app)
     }
 
     static func setInsert(at plist: URL, to dylib: URL) throws {
@@ -353,13 +353,22 @@ enum SteamInstaller {
         try SteamBundle.writeInfoPlist(dict, at: plist)
     }
 
-    static func adHocSign(_ url: URL, step: String = step) throws {
+    // The user's Steam signed with the local identity keeps its privacy permissions across
+    // installs. Any other bundle, or a failed signature, stays ad hoc.
+    static func signSteamBundle(_ app: URL, step: String = step, identity: (() -> String?)? = nil) throws {
+        let isUsersSteam = app.standardizedFileURL.path == SupportPaths.Steam.app.standardizedFileURL.path
+        let provider = identity ?? { isUsersSteam ? LocalSigningIdentity.ensure() : nil }
+        if let identity = provider(), (try? adHocSign(app, step: step, identity: identity)) != nil { return }
+        try adHocSign(app, step: step)
+    }
+
+    static func adHocSign(_ url: URL, step: String = step, identity: String = "-") throws {
         let path = url.path(percentEncoded: false)
-        var result = try Shell.run("/usr/bin/codesign", ["-f", "-s", "-", path])
+        var result = try Shell.run("/usr/bin/codesign", ["-f", "-s", identity, path])
         // Fixes codesign refusing a Steam.app that carries Finder info or a resource fork.
         if !result.succeeded, result.stderr.contains("detritus not allowed") {
             clearFinderData(in: enclosingBundle(of: url))
-            result = try Shell.run("/usr/bin/codesign", ["-f", "-s", "-", path])
+            result = try Shell.run("/usr/bin/codesign", ["-f", "-s", identity, path])
         }
         guard result.succeeded else {
             throw StepFailure(
