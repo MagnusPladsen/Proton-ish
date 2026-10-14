@@ -41,8 +41,9 @@ development that every free runtime, Highball included, is built on.
   `make bridge fonts app` builds the full `out/Proton-ish.app` (the bridge step compiles a Wine tree and takes a while).
 - `make brandcheck` must stay clean: it fails if an upstream NotProton identifier slips back in.
 
-The upstream documentation follows. Where it says "NotProton", read "Proton-ish" unless it refers
-to the upstream project itself.
+The upstream NotProton documentation follows, unchanged. Its install and usage steps apply to Proton-ish
+(with Proton-ish in place of NotProton). Its policy statements, such as CrossOver being the only supported
+runtime, and its first-person notes are upstream's own and do not describe Proton-ish.
 
 ---
 

@@ -82,6 +82,10 @@ run_section() {
         grep -q 'not affiliated' README.md || { echo "==> brandcheck docs: README lacks the no-affiliation statement"; failed=1; }
         grep -q 'Modified by Proton-ish contributors' NOTICE || { echo "==> brandcheck docs: NOTICE lacks the modification notice"; failed=1; }
         [ -d .github/ISSUE_TEMPLATE ] || { echo "==> brandcheck docs: .github/ISSUE_TEMPLATE missing"; failed=1; }
+        # Until Highball support ships (M2), docs must not offer or promise it
+        ! grep -q 'Highball' .github/ISSUE_TEMPLATE/bug_report.yml || { echo "==> brandcheck docs: bug template offers Highball before it is supported"; failed=1; }
+        ! grep -q 'that adds free Wine' CONTRIBUTING.md || { echo "==> brandcheck docs: CONTRIBUTING claims Highball support exists"; failed=1; }
+        ! grep -q 'read "Proton-ish" unless' README.md || { echo "==> brandcheck docs: README rewrites upstream policy text as Proton-ish's"; failed=1; }
         ;;
     *)
         echo "brandcheck: unknown section $1" >&2; exit 2 ;;
