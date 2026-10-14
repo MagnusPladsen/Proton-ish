@@ -354,6 +354,12 @@ struct StatusView: View {
                 }
             }
 
+            Section {
+                highballSection(snapshot)
+            } header: {
+                Text("Highball")
+            }
+
             componentsSection(snapshot.payload)
 
             dangerSection
@@ -568,6 +574,43 @@ struct StatusView: View {
                 ) { Task { await status.requestCompatibilityTool() } }
             )
         }
+    }
+
+    @ViewBuilder
+    private func highballSection(_ snapshot: StatusSnapshot) -> some View {
+        if snapshot.highball.isEmpty {
+            StatusRow(
+                title: "Highball",
+                value: String(localized: "Not found. Install Highball from gethighball.com."),
+                tone: .neutral
+            )
+        }
+        ForEach(snapshot.highball) { engine in
+            highballRow(engine, installed: snapshot.installedRunners)
+        }
+        if let notice = SystemStatus.highballNotice(engines: snapshot.highball) {
+            StatusRow(title: String(localized: "Compatibility Tool"), value: notice, tone: .warning)
+        }
+    }
+
+    private func highballRow(_ engine: HighballEngine, installed: [RunnerBuild]) -> StatusRow {
+        guard case .supported(let build) = engine.support else {
+            return StatusRow(title: engine.displayName, value: String(localized: "Not supported yet"),
+                             tone: .neutral, detail: engine.id)
+        }
+        let isInstalled = installed.contains { $0.id == build.id }
+        return StatusRow(
+            title: engine.displayName,
+            value: isInstalled ? String(localized: "Ready") : String(localized: "Not set up"),
+            tone: isInstalled ? .ok : .info,
+            detail: engine.id,
+            trailing: isInstalled ? buildSize(build.id) : nil,
+            action: StatusAction(
+                label: isInstalled ? String(localized: "Reinstall") : String(localized: "Set Up"),
+                isProminent: !isInstalled,
+                isEnabled: status.isIdle
+            ) { Task { await status.setUpHighball(engine, replacingExisting: isInstalled) } }
+        )
     }
 
     private func crossOverValue(_ row: CrossOverRow) -> String {

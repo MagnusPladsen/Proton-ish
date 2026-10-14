@@ -1765,6 +1765,16 @@
         }
       }
     },
+    "Highball" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highball"
+          }
+        }
+      }
+    },
     "Highball engine %@ isn't supported yet." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2205,6 +2215,16 @@
         }
       }
     },
+    "Not found. Install Highball from gethighball.com." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到。请从 gethighball.com 安装 Highball。"
+          }
+        }
+      }
+    },
     "Not found. Supported: %@." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2221,6 +2241,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尚未安装。"
+          }
+        }
+      }
+    },
+    "Not set up" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未设置"
+          }
+        }
+      }
+    },
+    "Not supported yet" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚不受支持"
           }
         }
       }
@@ -2518,6 +2558,16 @@
         }
       }
     },
+    "Proton-ish needs Highball's Wine 11 engine. Switch an environment to Wine 11 in its settings in Highball." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 需要 Highball 的 Wine 11 引擎。请在 Highball 中将某个环境的设置切换为 Wine 11。"
+          }
+        }
+      }
+    },
     "Proton-ish needs the App Management permission." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2564,6 +2614,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "读取组件列表"
+          }
+        }
+      }
+    },
+    "Ready" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就绪"
           }
         }
       }

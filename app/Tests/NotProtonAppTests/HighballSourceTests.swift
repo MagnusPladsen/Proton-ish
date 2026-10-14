@@ -64,3 +64,35 @@ struct HighballSourceTests {
         #expect(HighballSource.discover(home: URL(filePath: "/nonexistent-\(UUID().uuidString)")).isEmpty)
     }
 }
+
+@Suite("Highball notice")
+struct HighballNoticeTests {
+
+    private func engine(_ id: String, _ support: HighballSupport) -> HighballEngine {
+        HighballEngine(id: id, directory: URL(filePath: "/H/engines/\(id)"), displayName: id, support: support)
+    }
+
+    @Test("Only Wine 10 engines asks for the Wine 11 engine")
+    func onlyWine10() {
+        let notice = SystemStatus.highballNotice(engines: [engine("x64-sikarugir10.0_6-r21", .unsupported)])
+        #expect(notice?.contains("Wine 11") == true)
+    }
+
+    @Test("An unsupported Wine 11 engine is named")
+    func unsupportedWine11() {
+        let notice = SystemStatus.highballNotice(engines: [engine("x64-crossover26.3-r99", .unsupported)])
+        #expect(notice?.contains("x64-crossover26.3-r99") == true)
+    }
+
+    @Test("A supported engine needs no notice")
+    func supported() throws {
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))
+        #expect(SystemStatus.highballNotice(engines: [engine("x64-crossover26.3-r19", .supported(build)),
+                                                      engine("x64-sikarugir10.0_6-r21", .unsupported)]) == nil)
+    }
+
+    @Test("No engines needs no notice")
+    func none() {
+        #expect(SystemStatus.highballNotice(engines: []) == nil)
+    }
+}
