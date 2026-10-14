@@ -68,9 +68,12 @@ jobs:
           git tag -f -a "v$VERSION" -m "Public release/$VERSION"
           git push --force origin "v$VERSION"
           gh release delete "v$VERSION" --yes || true
+          # A version with a suffix (0.1.0-beta.1) is a pre-release
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
           gh release create "v$VERSION" \
             release/Proton-ish.zip \
             release/appcast.xml \
             --title "$VERSION" \
             --notes "$RELEASE_NOTES" \
-            $(case "$VERSION" in *-*) echo --prerelease ;; esac)
+            ${prerelease:+"$prerelease"}
