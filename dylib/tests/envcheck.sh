@@ -41,7 +41,8 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 np_support="$work/Application Support/protonish"
 np_build="test"
-library="$np_support/runners/crossover-$np_build/CrossOver/lib64/apple_gptk/external/libd3dshared.dylib"
+np_runtime=crossover
+library="$np_support/runners/crossover-$np_build/root/lib64/apple_gptk/external/libd3dshared.dylib"
 init=$(sed -n '/^CX_ROOT=/,/^wine_unix=/p' "$SRC")
 # shellcheck disable=SC2016 # Match the literal launcher loop.
 forward=$(sed -n '/^for name in $(env /,/^done$/p' "$SRC")

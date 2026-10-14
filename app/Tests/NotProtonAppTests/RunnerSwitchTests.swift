@@ -632,7 +632,8 @@ struct RunnerRemovalTests {
         let template = script.split(separator: "\n").first { $0.contains("template_dir=\"") }
         #expect(template?.contains("template_dir=\"$template_cache/$runner_id\"") == true)
         let names = ["x86_64-unix", "aarch64-unix"].map { arch in
-            expression.replacingOccurrences(of: "$np_build", with: "27.0.0.40921-fex")
+            expression.replacingOccurrences(of: "$np_runtime", with: "crossover")
+                .replacingOccurrences(of: "$np_build", with: "27.0.0.40921-fex")
                 .replacingOccurrences(of: "${wine_unix##*/}", with: arch)
         }
         #expect(SupportPaths.prefixTemplates(forBuild: "27.0.0.40921-fex", in: library).map(\.path)
