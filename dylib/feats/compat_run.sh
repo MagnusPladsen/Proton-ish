@@ -194,7 +194,7 @@ export WINEDLLPATH="$CX_ROOT/lib/wine/x86_64-windows:$wine_unix${WINEDLLPATH:+:$
 export PATH="$CX_ROOT/bin:$PATH"
 
 if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
-  log="$STEAM_COMPAT_DATA_PATH/notproton-run.log"
+  log="$STEAM_COMPAT_DATA_PATH/protonish-run.log"
 else
   log=/dev/null
 fi
@@ -287,8 +287,8 @@ refuse_foreign_prefix() {
   esac
   have=$(prefix_machine) || return 0
   [ "$have" = "$want" ] && return 0
-  echo "=== prefix ntdll is $have and this compatibility tool wants $want, rebuild the prefix in NotProton ===" >> "$log" 2>&1 || true
-  show_alert "This game needs its prefix rebuilt" "This game originally ran under $(tool_name "$have"), but $(tool_name "$want") is present now. The prefix needs to be rebuilt in NotProton in order to run the game. You will not lose game saves by rebuilding the prefix."
+  echo "=== prefix ntdll is $have and this compatibility tool wants $want, rebuild the prefix in Proton-ish ===" >> "$log" 2>&1 || true
+  show_alert "This game needs its prefix rebuilt" "This game originally ran under $(tool_name "$have"), but $(tool_name "$want") is present now. The prefix needs to be rebuilt in Proton-ish in order to run the game. You will not lose game saves by rebuilding the prefix."
   exit 1
 }
 
@@ -329,9 +329,9 @@ refuse_other_build() {
     last_wine_build
   fi
   if [ -n "$had_build" ] && [ "$had_build" != "$np_build" ]; then
-    echo "=== prefix was last run by build $had_build and this compatibility tool runs $np_build, rebuild the prefix in NotProton ===" >> "$log" 2>&1 || true
+    echo "=== prefix was last run by build $had_build and this compatibility tool runs $np_build, rebuild the prefix in Proton-ish ===" >> "$log" 2>&1 || true
     had_display=$(alert_safe "${had_display:-CrossOver build $had_build}")
-    show_alert "This game needs its prefix rebuilt" "This game's prefix was last run by $had_display, and this compatibility tool runs $(alert_safe "$np_display"). Rebuild the prefix in NotProton to run it here, or pick $had_display again in the game's Compatibility settings. You will not lose game saves by rebuilding the prefix."
+    show_alert "This game needs its prefix rebuilt" "This game's prefix was last run by $had_display, and this compatibility tool runs $(alert_safe "$np_display"). Rebuild the prefix in Proton-ish to run it here, or pick $had_display again in the game's Compatibility settings. You will not lose game saves by rebuilding the prefix."
     exit 1
   fi
 }
@@ -624,8 +624,8 @@ import_prefix_settings() {
 
 stage_step="runner check"
 if [ -z "$np_build" ] || [ ! -d "$CX_ROOT/lib/wine" ]; then
-  echo "=== build ${np_build:-(none recorded)} behind this compatibility tool is not set up, set it up in NotProton ===" >> "$log" 2>&1 || true
-  show_alert "CrossOver is not set up" "The CrossOver build behind $(alert_safe "$np_display") is not set up. Set it up in NotProton, or pick another compatibility tool for this game."
+  echo "=== build ${np_build:-(none recorded)} behind this compatibility tool is not set up, set it up in Proton-ish ===" >> "$log" 2>&1 || true
+  show_alert "CrossOver is not set up" "The CrossOver build behind $(alert_safe "$np_display") is not set up. Set it up in Proton-ish, or pick another compatibility tool for this game."
   exit 1
 fi
 echo "runner: build $np_build ($np_display) at $CX_ROOT" >> "$log" 2>&1 || true
@@ -926,7 +926,7 @@ prepare_prefix_directory() {
   for interrupted in "$STEAM_COMPAT_DATA_PATH"/pfx.replaced.*; do
     [ -e "$interrupted" ] || [ -L "$interrupted" ] || continue
     echo "=== interrupted prefix replacement needs recovery: $interrupted ===" >> "$log" 2>&1 || true
-    show_alert "Prefix recovery required" "An interrupted prefix replacement may hold saved games. Do not delete this prefix. Check its notproton-run.log for the recovery folder."
+    show_alert "Prefix recovery required" "An interrupted prefix replacement may hold saved games. Do not delete this prefix. Check its protonish-run.log for the recovery folder."
     exit 1
   done
   mkdir -p "$WINEPREFIX"
@@ -1058,7 +1058,7 @@ if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   seed_prefix_from_template
   stage_step="profile layout"
   if ! lay_out_proton_profile; then
-    show_alert "Saved-game folders need attention" "NotProton left the conflicting files in place. Open this prefix's notproton-run.log for details before trying again."
+    show_alert "Saved-game folders need attention" "Proton-ish left the conflicting files in place. Open this prefix's protonish-run.log for details before trying again."
     exit 1
   fi
   echo "video: RetinaMode=${NOTPROTON_RETINA:-0}" >> "$log" 2>&1 || true
@@ -1077,7 +1077,7 @@ bridge_src="$np_support/bridge"
 prefix_steam="$WINEPREFIX/drive_c/Program Files (x86)/Steam"
 verify_runner() {
   if [ ! -d "$bridge_src/wine/$np_build" ]; then
-    echo "=== no patched ntdll for build $np_build in the bridge, set it up in NotProton ===" >> "$log" 2>&1 || true
+    echo "=== no patched ntdll for build $np_build in the bridge, set it up in Proton-ish ===" >> "$log" 2>&1 || true
     return
   fi
   for arch in x86_64-windows i386-windows aarch64-windows; do
@@ -1085,9 +1085,9 @@ verify_runner() {
     live="$CX_ROOT/lib/wine/$arch/ntdll.dll"
     [ -f "$staged" ] || continue
     if [ ! -f "$live" ]; then
-      echo "=== runner has no $arch ntdll, set up the runner in NotProton ===" >> "$log" 2>&1 || true
+      echo "=== runner has no $arch ntdll, set up the runner in Proton-ish ===" >> "$log" 2>&1 || true
     elif ! cmp -s "$staged" "$live"; then
-      echo "=== runner $arch ntdll is not the patched copy, set up the runner in NotProton ===" >> "$log" 2>&1 || true
+      echo "=== runner $arch ntdll is not the patched copy, set up the runner in Proton-ish ===" >> "$log" 2>&1 || true
     fi
   done
   for arch in i386-windows x86_64-windows "${wine_unix##*/}"; do
@@ -1096,7 +1096,7 @@ verify_runner() {
       *) name="lsteamclient.dll" ;;
     esac
     [ -f "$CX_ROOT/lib/wine/$arch/$name" ] && continue
-    echo "=== runner is missing $arch/$name, set up the runner in NotProton ===" >> "$log" 2>&1 || true
+    echo "=== runner is missing $arch/$name, set up the runner in Proton-ish ===" >> "$log" 2>&1 || true
   done
 }
 install_lsteamclient_trigger() {
@@ -1224,7 +1224,7 @@ if [ -d "$bridge_src" ] && [ -n "$WINEPREFIX" ]; then
       fi
     done
     if [ "$unstaged" -eq 1 ]; then
-      show_alert "Steam files could not be copied" "NotProton could not copy a file into this game's prefix. Open this prefix's notproton-run.log for details."
+      show_alert "Steam files could not be copied" "Proton-ish could not copy a file into this game's prefix. Open this prefix's protonish-run.log for details."
       exit 1
     fi
   fi
@@ -1237,7 +1237,7 @@ if [ -d "$bridge_src" ] && [ -n "$WINEPREFIX" ]; then
   done
   verify_runner
   if ! install_lsteamclient_trigger; then
-    show_alert "Steam files could not be copied" "NotProton could not copy a file into this game's prefix. Open this prefix's notproton-run.log for details."
+    show_alert "Steam files could not be copied" "Proton-ish could not copy a file into this game's prefix. Open this prefix's protonish-run.log for details."
     exit 1
   fi
   install_legacy_steam_dll
@@ -1373,7 +1373,7 @@ fi
 cat > "$loader_macos/launcher" <<LAUNCHER
 #!/bin/sh
 export WINELOADER="$WINELOADER"
-wine_log="$loader_root/notproton-wine.log"
+wine_log="$loader_root/protonish-wine.log"
 exec > "\$wine_log" 2>&1
 shim="$HOME/Library/Application Support/protonish/overlay-shim.dylib"
 if [ -n "\$STEAM_DYLD_INSERT_LIBRARIES" ]; then

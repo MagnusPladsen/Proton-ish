@@ -14,7 +14,7 @@ struct NotProtonApp: App {
     }
 
     var body: some Scene {
-        Window("NotProton", id: "main") {
+        Window("Proton-ish", id: "main") {
             RootView(pane: $pane)
                 .environment(status)
                 .environment(prefixes)

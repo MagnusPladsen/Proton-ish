@@ -362,7 +362,7 @@ int np_compat_load_tool_list(const char *path, const char *tools_dir) {
     FILE *f = fopen(path, "r");
     if (!f) {
         NP_WARN("np_compat_load_tool_list: %s is missing, so no build has a tool "
-                "until NotProton sets one up", path);
+                "until Proton-ish sets one up", path);
         return 0;
     }
     g_tool_list_present = 1;
