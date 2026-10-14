@@ -5,7 +5,7 @@ import Foundation
 enum SupportPaths {
 
     static let supportDirName = "protonish"
-    static let dylibName = "notproton.dylib"
+    static let dylibName = "protonish.dylib"
 
     static var home: URL {
         URL(filePath: NSHomeDirectory())

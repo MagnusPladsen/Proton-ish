@@ -9,7 +9,7 @@ CFLAGS   := -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) $(AVAIL) \
             -fPIC -MMD -MP \
             -Idylib -Ivendor -Ivendor/dobby/include
 LDFLAGS  := -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) \
-            -dynamiclib -install_name @rpath/notproton.dylib
+            -dynamiclib -install_name @rpath/protonish.dylib
 
 FRAMEWORKS := -framework CoreFoundation -framework CoreGraphics
 
@@ -55,9 +55,9 @@ GENERATED_DIR := $(OUT_DIR)/generated
 RUN_SCRIPT_H  := $(GENERATED_DIR)/compat_run.h
 CFLAGS += -I$(GENERATED_DIR)
 
-ARM64_DYLIB := $(OUT_DIR)/notproton.arm64.dylib
-X86_STUB    := $(OUT_DIR)/notproton.x86_64.dylib
-TARGET      := $(OUT_DIR)/notproton.dylib
+ARM64_DYLIB := $(OUT_DIR)/protonish.arm64.dylib
+X86_STUB    := $(OUT_DIR)/protonish.x86_64.dylib
+TARGET      := $(OUT_DIR)/protonish.dylib
 
 OBJS := $(patsubst %.c,$(OUT_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
@@ -324,7 +324,7 @@ spawn-live: $(TARGET)
 		drv=$${spec%%:*}; rest=$${spec#*:}; kid=$${rest%%:*}; rest=$${rest#*:}; \
 		want=$${rest%%:*}; arg=$${rest#*:}; [ "$$arg" = "$$rest" ] && arg=""; \
 		got=$$(DYLD_INSERT_LIBRARIES=$$PWD/$(TARGET) "$$tmp/$$drv" "$$tmp/$$kid" $$arg 2>/dev/null \
-		       | grep -c "/notproton.dylib$$") || true; \
+		       | grep -c "/protonish.dylib$$") || true; \
 		if [ "$$got" != "$$want" ]; then \
 			echo "$$drv $$arg -> $$kid: insert present $$got, wanted $$want"; fail=1; fi; \
 	done; \
@@ -373,7 +373,7 @@ $(ARM64_DYLIB): $(OBJS)
 $(X86_STUB): dylib/stub_x86_64.c
 	@mkdir -p $(dir $@)
 	$(CC) -arch x86_64 -mmacosx-version-min=$(MIN_VER) $(AVAIL) \
-		-dynamiclib -install_name @rpath/notproton.dylib \
+		-dynamiclib -install_name @rpath/protonish.dylib \
 		-o $@ $<
 
 $(TARGET): $(ARM64_DYLIB) $(X86_STUB)
@@ -497,8 +497,8 @@ dobby:
 	$(MAKE) -C $(DOBBY_DIR) -j$(shell sysctl -n hw.ncpu)
 
 STEAM_APP    ?= $$(p=$$(defaults read com.notproton.NotProton steamAppPath 2>/dev/null); printf '%s' "$${p:-/Applications/Steam.app}")
-DEPLOY_DST    = $(STEAM_APP)/Contents/MacOS/notproton.dylib
-INSTALL_DST  := $(SUPPORT_DIR)/notproton.dylib
+DEPLOY_DST    = $(STEAM_APP)/Contents/MacOS/protonish.dylib
+INSTALL_DST  := $(SUPPORT_DIR)/protonish.dylib
 
 dylib-install: $(TARGET)
 	$(call install_atomically,$(TARGET),$(INSTALL_DST))
@@ -525,10 +525,10 @@ deploy: $(TARGET) dylib-install sigdb-install fonts-install helpers-install
 	$(call install_atomically,$(TARGET),$(DEPLOY_DST))
 	@echo "==> Deployed: $(DEPLOY_DST) (restart Steam to load)"
 	@for b in $(LAUNCHABLE_BUNDLES); do \
-		p=$$(find "$$b" -name notproton.dylib -type f 2>/dev/null | head -1); \
+		p=$$(find "$$b" -name protonish.dylib -type f 2>/dev/null | head -1); \
 		[ -n "$$p" ] || continue; \
 		cmp -s "$$p" "$(DEPLOY_DST)" && continue; \
-		echo "==> warning: $$b carries a different notproton.dylib"; \
+		echo "==> warning: $$b carries a different protonish.dylib"; \
 		echo "==> warning: launching it reverts this deploy, so rebuild it with 'make app'"; \
 	done
 
@@ -558,7 +558,7 @@ fonts:
 app-payload: $(TARGET) $(OVERLAY_SHIM) $(ICONMAKER) $(APPINFO)
 	@mkdir -p "$(APP_PAYLOAD)/signatures/macos.arm64"
 	@mkdir -p "$(APP_PAYLOAD)/bridge"
-	cp -f $(TARGET) "$(APP_PAYLOAD)/notproton.dylib"
+	cp -f $(TARGET) "$(APP_PAYLOAD)/protonish.dylib"
 	cp -f $(OVERLAY_SHIM) "$(APP_PAYLOAD)/overlay-shim.dylib"
 	cp -f $(ICONMAKER) "$(APP_PAYLOAD)/iconmaker"
 	cp -f $(APPINFO) "$(APP_PAYLOAD)/appinfo"

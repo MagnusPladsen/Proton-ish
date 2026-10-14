@@ -318,7 +318,7 @@ struct SteamInstallerTests {
 
         _ = try install(fixture)
 
-        let backup = fixture.backups.appending(path: "Info.plist.before-notproton")
+        let backup = fixture.backups.appending(path: "Info.plist.before-protonish")
         let saved = try #require(SteamBundle.readInfoPlist(at: backup))
         let environment = try #require(saved[SteamBundle.environmentKey] as? [String: Any])
         #expect(environment[SteamBundle.insertKey] == nil, "the backup already carries an insert")
