@@ -194,6 +194,12 @@ enum Uninstall {
         let files = FileManager.default
         var removed: [String] = []
 
+        // The signing keychain lives in the support folder; take it off the search list first
+        let keychain = LocalSigningIdentity.keychain.standardizedFileURL.path
+        if directories.contains(where: { keychain.hasPrefix($0.standardizedFileURL.path + "/") }) {
+            LocalSigningIdentity.removeFromSearchList()
+        }
+
         for target in [legacyCompat] + compatTools + directories {
             let path = target.path(percentEncoded: false)
             guard files.fileExists(atPath: path) else { continue }
