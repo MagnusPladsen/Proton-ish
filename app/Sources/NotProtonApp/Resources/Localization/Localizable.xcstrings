@@ -1372,6 +1372,16 @@
         }
       }
     },
+    "Create the signing identity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建签名身份"
+          }
+        }
+      }
+    },
     "CrossOver" : {
       "shouldTranslate" : false
     },

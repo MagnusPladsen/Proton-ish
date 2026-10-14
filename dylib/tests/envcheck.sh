@@ -110,6 +110,20 @@ case "$launcher_text" in
 esac
 rm -rf "$hb"
 
+echo "== Wine's server directory permissions =="
+tighten=$(sed -n '/^tighten_wine_tmp() {$/,/^}$/p' "$SRC")
+[ -n "$tighten" ] || { echo "FAIL: tighten_wine_tmp not found"; exit 1; }
+eval "$tighten"
+wt=$(mktemp -d)
+log="$wt/run.log"
+mkdir -m 755 "$wt/.wine-test"
+tighten_wine_tmp "$wt/.wine-test"
+is "an open server directory is tightened to 700" "drwx------" "$(stat -f %Sp "$wt/.wine-test")"
+is "the fix is logged" "1" "$(grep -c 'tightened' "$log")"
+tighten_wine_tmp "$wt/.wine-missing"
+is "a missing directory is left for wineserver to create" "no" "$([ -e "$wt/.wine-missing" ] && echo yes || echo no)"
+rm -rf "$wt"
+
 echo "== Apple GPTK initialization and launcher environment =="
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

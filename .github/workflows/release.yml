@@ -72,4 +72,5 @@ jobs:
             release/Proton-ish.zip \
             release/appcast.xml \
             --title "$VERSION" \
-            --notes "$RELEASE_NOTES"
+            --notes "$RELEASE_NOTES" \
+            $(case "$VERSION" in *-*) echo --prerelease ;; esac)

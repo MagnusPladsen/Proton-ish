@@ -658,6 +658,17 @@ if [ -z "$np_build" ] || [ ! -d "$CX_ROOT/lib/wine" ]; then
 fi
 echo "runner: build $np_build ($np_display) at $CX_ROOT" >> "$log" 2>&1 || true
 
+# wineserver refuses to start when its directory is open to other users, which happens when
+# another tool created it with the default umask
+tighten_wine_tmp() {
+  [ -d "$1" ] && [ ! -L "$1" ] || return 0
+  [ "$(stat -f %u "$1" 2>/dev/null)" = "$(id -u)" ] || return 0
+  [ "$(stat -f %Lp "$1" 2>/dev/null)" != 700 ] || return 0
+  chmod 700 "$1" 2>/dev/null || return 0
+  echo "=== tightened $1 to 700 so wineserver will start ===" >> "$log" 2>&1 || true
+}
+tighten_wine_tmp "/tmp/.wine-$(id -u)"
+
 # Each CrossOver build needs its own template.
 # FEX builds need two, one for FEX/arm64 Wine and one for Rosetta/AMD64 Wine
 runner_id=""
