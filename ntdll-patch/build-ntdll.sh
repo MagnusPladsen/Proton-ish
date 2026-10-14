@@ -10,7 +10,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 cd "$here"
 
 CX_ROOT="${CX_ROOT:-/Applications/CrossOver Preview.app/Contents/SharedSupport/CrossOver}"
-BRIDGE_DIR="${BRIDGE_DIR:-$HOME/Library/Application Support/notproton/bridge}"
+BRIDGE_DIR="${BRIDGE_DIR:-$HOME/Library/Application Support/protonish/bridge}"
 OUT="${OUT:-$here/build}"
 
 ROSETTA_CLEAN_X86_64=04c7200b6645decb7c2d1ba6b0195abc9af83257072558d11aa72cc067ac3377

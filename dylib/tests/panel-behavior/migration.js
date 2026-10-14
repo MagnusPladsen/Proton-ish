@@ -79,7 +79,7 @@ const app = (id, o, over) => Object.assign(
   t.ok(other.written.length === 1, 'another account gets its own pass');
 
   const native = steam([app(1, 'MTL_HUD_ENABLED=1', { vecPlatforms: ['windows', 'osx'] }),
-                        app(2, 'MTL_HUD_ENABLED=1', { vecPlatforms: ['osx'], strCompatToolName: 'notproton' }),
+                        app(2, 'MTL_HUD_ENABLED=1', { vecPlatforms: ['osx'], strCompatToolName: 'protonish' }),
                         app(2147483650, 'MTL_HUD_ENABLED=1', { vecPlatforms: ['osx'] })]);
   await native.go();
   t.ok(native.written.map(x => x.appid).join() === '2,2147483650',

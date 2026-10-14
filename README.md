@@ -30,23 +30,30 @@ development that every free runtime, Highball included, is built on.
 
 ## Status
 
-- Proton-ish is in early development.
-- The code on `main` is currently unmodified upstream NotProton.
-- The rebrand (own bundle ID, update feed, support directory `~/Library/Application Support/protonish/`,
-  tool names `protonish-*`) is in progress on branch
-  [`design/protonish-highball`](https://github.com/MagnusPladsen/Proton-ish/tree/design/protonish-highball).
-  See the [design spec](https://github.com/MagnusPladsen/Proton-ish/blob/design/protonish-highball/docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
-- Highball support comes after the rebrand.
-- There are no Proton-ish releases yet. Until then, use upstream
-  [NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+Proton-ish is in early development and has **no releases yet**. The rebrand (milestone M0: own bundle ID,
+update feed, support directory `~/Library/Application Support/protonish/`, tool names `protonish-*`) is done;
+Highball support is next. Until the first Proton-ish release, use
+[upstream NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
 
-The upstream NotProton documentation follows.
+## Changes from upstream
+
+- 2026-10-14: Rebranded to Proton-ish (bundle ID `com.magnuspladsen.protonish`, support
+  directory `~/Library/Application Support/protonish/`, tool names `protonish-*`, own update feed).
+
+## Building from source
+
+- Xcode 27 (the same toolchain upstream CI uses); older Xcode versions fail to type-check the app.
+- `brew install shellcheck node` for the lint and panel checks.
+- `make dobby && make all && make app-tests` builds the dylib and runs the Swift tests;
+  `make bridge fonts app` builds the full `out/Proton-ish.app` (the bridge step compiles a Wine tree and takes a while).
+- `make brandcheck` must stay clean: it fails if an upstream NotProton identifier slips back in.
+
+The upstream NotProton documentation follows, unchanged. Its install and usage steps apply to Proton-ish
+(with Proton-ish in place of NotProton). Its policy statements, such as CrossOver being the only supported
+runtime, and its first-person notes are upstream's own and do not describe Proton-ish.
 
 ---
-
-## Upstream NotProton README
-
-NotProton enables the Steam Play experience from Linux Steam in the macOS Steam client.
 
 This is done by forcibly enabling the Steam Play functionality in macOS Steam (which is
 present and inert) as well as by porting some components of Valve's Proton to macOS.
@@ -65,7 +72,7 @@ If a game has a native macOS version as well as a Windows one, Steam will downlo
 
 **Valve Anti-Cheat is not supported.** Proton itself does not support VAC in Valve titles; Valve ships native Linux ports instead. VAC titles will launch in Insecure Mode and will not allow matchmaking. 
 
-**This project now has a brew cask.** For brew users, you can install via ``brew install --cask notprotonnot/notproton/notproton``
+**Homebrew:** not available yet for Proton-ish.
 
 Please read NOTICE for license information.
 
@@ -88,5 +95,5 @@ Developer Notes:
 As far as the source structure goes, the macOS app itself is located in the ```app``` folder. The core logic is in ```dylib```.
 ```lsteamclient``` is a macOS port of Valve's lsteamclient. ```steam-shim```is a port of Valve's
 steam-helper from Proton 9.0. ntdll-patch patches the copy of CrossOver that the app
-makes/places in the ```~/Library/Application Support/notproton/runners/``` folder so that
+makes/places in the ```~/Library/Application Support/protonish/runners/``` folder so that
 lsteamclient is loaded.

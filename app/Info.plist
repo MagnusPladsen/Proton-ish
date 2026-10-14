@@ -12,15 +12,15 @@
 	<key>CFBundleExecutable</key>
 	<string>NotProtonApp</string>
 	<key>CFBundleIconFile</key>
-	<string>NotProton</string>
+	<string>Proton-ish</string>
 	<key>CFBundleIconName</key>
-	<string>NotProton</string>
+	<string>Proton-ish</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.notproton.NotProton</string>
+	<string>com.magnuspladsen.protonish</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>NotProton</string>
+	<string>Proton-ish</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -36,8 +36,8 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
-	<string>https://github.com/NotProtonNot/NotProton/releases/latest/download/appcast.xml</string>
+	<string>https://github.com/MagnusPladsen/Proton-ish/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>rDOXzJ+vt12aWeu9hATgvz6q46MlRcgR4gbTfj5YuWQ=</string>
+	<string>79PzyxFS2reMeH0l3dRQkuWZwTSKX7ypBIcdQqBUSyQ=</string>
 </dict>
 </plist>

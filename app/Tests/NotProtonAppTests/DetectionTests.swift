@@ -124,7 +124,7 @@ struct CompatToolOrderTests {
         let tools = SupportedRunners.tools(for: [
             try build("26.3.0.39832"), try build("27.0.0.40921-fex"),
         ])
-        #expect(tools.map(\.name) == ["notproton-fex", "notproton-fex-rosetta", "notproton-26.3"])
+        #expect(tools.map(\.name) == ["protonish-fex", "protonish-fex-rosetta", "protonish-26.3"])
         #expect(tools.map(\.build) == ["27.0.0.40921-fex", "27.0.0.40921-fex", "26.3.0.39832"])
     }
 
@@ -132,9 +132,9 @@ struct CompatToolOrderTests {
     func noFEX() throws {
         let builds = [try build("27.0.0.41069-fex"), try build("26.3.0.39832")]
         let fresh = SupportedRunners.tools(for: builds, fexAvailable: false)
-        #expect(fresh.map(\.name) == ["notproton-fex-rosetta-41069", "notproton-26.3"])
-        let kept = SupportedRunners.tools(for: builds, fexAvailable: false, keeping: ["notproton-fex-41069"])
-        #expect(kept.map(\.name) == ["notproton-fex-41069", "notproton-fex-rosetta-41069", "notproton-26.3"])
+        #expect(fresh.map(\.name) == ["protonish-fex-rosetta-41069", "protonish-26.3"])
+        let kept = SupportedRunners.tools(for: builds, fexAvailable: false, keeping: ["protonish-fex-41069"])
+        #expect(kept.map(\.name) == ["protonish-fex-41069", "protonish-fex-rosetta-41069", "protonish-26.3"])
     }
 
     @Test("Each Preview keeps its own tools when both are set up")
@@ -142,7 +142,7 @@ struct CompatToolOrderTests {
         let tools = SupportedRunners.tools(for: [
             try build("27.0.0.40921-fex"), try build("27.0.0.40921"),
         ])
-        #expect(tools.map(\.name) == ["notproton-fex", "notproton-fex-rosetta", "notproton-preview"])
+        #expect(tools.map(\.name) == ["protonish-fex", "protonish-fex-rosetta", "protonish-preview"])
         #expect(tools.map(\.build) == ["27.0.0.40921-fex", "27.0.0.40921-fex", "27.0.0.40921"])
         #expect(Set(tools.map(\.display)).count == tools.count)
     }
@@ -150,7 +150,7 @@ struct CompatToolOrderTests {
     @Test("The Rosetta-only Preview can hold the legacy name")
     func rosettaPreviewAlone() throws {
         let tools = SupportedRunners.tools(for: [try build("27.0.0.40921")], legacy: .build("27.0.0.40921"))
-        #expect(tools.map(\.name) == ["notproton"])
+        #expect(tools.map(\.name) == ["protonish"])
         #expect(tools.first?.tool.flavor == .rosetta)
     }
 
@@ -158,16 +158,16 @@ struct CompatToolOrderTests {
     func explicitHolder() throws {
         let builds = [try build("27.0.0.40921-fex"), try build("27.0.0.40921")]
         let held = SupportedRunners.tools(for: builds, legacy: .build("27.0.0.40921"))
-        #expect(held.map(\.name) == ["notproton", "notproton-fex", "notproton-fex-rosetta"])
+        #expect(held.map(\.name) == ["protonish", "protonish-fex", "protonish-fex-rosetta"])
         #expect(held.first?.build == "27.0.0.40921")
         let none = SupportedRunners.tools(for: builds, legacy: .nobody)
-        #expect(none.map(\.name) == ["notproton-fex", "notproton-fex-rosetta", "notproton-preview"])
+        #expect(none.map(\.name) == ["protonish-fex", "protonish-fex-rosetta", "protonish-preview"])
     }
 
     @Test("Every tool name is one the dylib accepts")
     func namesParse() {
         for tool in SupportedRunners.all.flatMap(\.tools) {
-            #expect(tool.name.hasPrefix("notproton"))
+            #expect(tool.name.hasPrefix("protonish"))
             #expect(tool.name.contains("proton"))
             #expect(tool.name.allSatisfy { $0.isLetter || $0.isNumber || "._-".contains($0) })
             #expect(!tool.display.contains { "\"\\".contains($0) || $0.isNewline })
@@ -178,7 +178,7 @@ struct CompatToolOrderTests {
     func contents() throws {
         let tools = SupportedRunners.tools(for: [try build("26.3.0.39832")])
         #expect(CompatToolList.contents(tools)
-            == "notproton-26.3\t26.3.0.39832\trosetta\tCrossOver 26.3\n")
+            == "protonish-26.3\t26.3.0.39832\trosetta\tCrossOver 26.3\n")
     }
 }
 
@@ -219,16 +219,16 @@ struct SupportPathTests {
     @Test("Paths match what the dylib and the run script use")
     func pathsAreStable() {
         let support = SupportPaths.support.path(percentEncoded: false)
-        #expect(support.hasSuffix("/Library/Application Support/notproton"))
+        #expect(support.hasSuffix("/Library/Application Support/protonish"))
 
         #expect(SupportPaths.signatures.path(percentEncoded: false)
-            .hasSuffix("/notproton/signatures/macos.arm64"))
+            .hasSuffix("/protonish/signatures/macos.arm64"))
         #expect(SupportPaths.overlayShim.path(percentEncoded: false)
-            .hasSuffix("/notproton/overlay-shim.dylib"))
+            .hasSuffix("/protonish/overlay-shim.dylib"))
         #expect(SupportPaths.toolList.path(percentEncoded: false)
-            .hasSuffix("/notproton/tools"))
+            .hasSuffix("/protonish/tools"))
         #expect(SupportPaths.Steam.deployedDylib.path(percentEncoded: false)
-            == "/Applications/Steam.app/Contents/MacOS/notproton.dylib")
+            == "/Applications/Steam.app/Contents/MacOS/protonish.dylib")
         #expect(SupportPaths.Steam.infoPlist.path(percentEncoded: false)
             == "/Applications/Steam.app/Contents/Info.plist")
     }

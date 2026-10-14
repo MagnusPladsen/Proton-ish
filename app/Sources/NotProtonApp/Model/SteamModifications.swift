@@ -5,7 +5,7 @@ struct SteamModifications: Sendable {
     let legacyRecord: URL
 
     static var shared: Self {
-        Self(file: SupportPaths.applicationSupport.appending(path: "notproton-steam-bundles.json"),
+        Self(file: SupportPaths.applicationSupport.appending(path: "protonish-steam-bundles.json"),
              legacyRecord: DeploymentContent.record(beside: SupportPaths.deployedVersion))
     }
 

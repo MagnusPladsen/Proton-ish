@@ -16,7 +16,7 @@
 // The client maps Cloud's Windows path roots into the compat prefix only when
 // the tool's name contains "proton" so without a match every AutoCloud rule silently
 // skips the app.
-#define TOOL_DIR_NAME "notproton"
+#define TOOL_DIR_NAME "protonish"
 #define TOOL_RUN      "/run"
 
 #define COMPAT_MANAGER_ENABLED_OFF  0x7B0
@@ -362,7 +362,7 @@ int np_compat_load_tool_list(const char *path, const char *tools_dir) {
     FILE *f = fopen(path, "r");
     if (!f) {
         NP_WARN("np_compat_load_tool_list: %s is missing, so no build has a tool "
-                "until NotProton sets one up", path);
+                "until Proton-ish sets one up", path);
         return 0;
     }
     g_tool_list_present = 1;
@@ -421,7 +421,7 @@ static void load_tool_list(void) {
     if (!home || tools_dir_path(tools_dir, sizeof(tools_dir)) != 0) return;
 
     char path[512];
-    snprintf(path, sizeof(path), "%s/Library/Application Support/notproton/tools", home);
+    snprintf(path, sizeof(path), "%s/Library/Application Support/protonish/tools", home);
     np_compat_load_tool_list(path, tools_dir);
 }
 
@@ -483,7 +483,7 @@ static int write_tool(const tool_entry_t *tool) {
     return 0;
 }
 
-#define RUN_SCRIPT_MARK "\n# notproton CrossOver compatibility tool shim\n"
+#define RUN_SCRIPT_MARK "\n# protonish CrossOver compatibility tool shim\n"
 
 static int written_here(const char *tool_dir) {
     char path[768];

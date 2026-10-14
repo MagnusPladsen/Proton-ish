@@ -24,7 +24,7 @@ set -eu
 
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(cd "$here/.." && pwd)"
-BRIDGE_DIR="${BRIDGE_DIR:-$HOME/Library/Application Support/notproton/bridge}"
+BRIDGE_DIR="${BRIDGE_DIR:-$HOME/Library/Application Support/protonish/bridge}"
 ATTIC="${ATTIC:-$repo/scratch/bridge-attic}"
 # Stale whole-bridge copies get made next to it rather than inside it, where a
 # check that only walks the bridge cannot see them.

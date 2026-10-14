@@ -42,7 +42,7 @@ struct InstallOutcome: Sendable {
 }
 
 enum SteamInstaller {
-    static let step = String(localized: "Install NotProton")
+    static let step = String(localized: "Install Proton-ish")
 
     typealias ClientStopper = @Sendable (URL, () -> Void) throws -> Bool
     typealias BundleRegistrar = @Sendable (URL) -> Void
@@ -92,7 +92,7 @@ enum SteamInstaller {
             ? nil : try DeploymentContent.acquireInstallationLock(in: lockFolder, steamFolder: app.deletingLastPathComponent())
         defer { installationLock?.release() }
         guard let dylibHashes = try MachOBuild.hashesIgnoringSignature(of: payload.dylib) else {
-            throw StepFailure(step: step, detail: String(localized: "The bundled NotProton dylib is invalid."))
+            throw StepFailure(step: step, detail: String(localized: "The bundled Proton-ish dylib is invalid."))
         }
         let build = DeploymentContent.Build(version: version, builtAt: payload.builtAt,
                                             dylibHashes: dylibHashes)
@@ -108,11 +108,11 @@ enum SteamInstaller {
         let content = try DeploymentContent.inspect(files: files, bundled: build, installed: previousBuild,
                                                    legacyVersion: SteamBundle.deployedVersion(at: deployedVersion))
         guard content != .newerInstalled else {
-            throw StepFailure(step: step, detail: String(localized: "A newer NotProton build is installed. Use that build to update or repair the installed files."))
+            throw StepFailure(step: step, detail: String(localized: "A newer Proton-ish build is installed. Use that build to update or repair the installed files."))
         }
         func refuseRunningRunners() throws {
             for id in RunnerStore.clonedBuilds(in: runners) where runnerIsRunning(SupportPaths.runnerRoot(forBuild: id, runners: runners)) {
-                throw StepFailure(step: step, detail: String(localized: "A game or Wine tool is running on build \(id). Quit it before updating NotProton."))
+                throw StepFailure(step: step, detail: String(localized: "A game or Wine tool is running on build \(id). Quit it before updating Proton-ish."))
             }
         }
         try refuseRunningRunners()
@@ -187,7 +187,7 @@ enum SteamInstaller {
             AppLog.note("install: bundle declares \(landed ?? "no insert")")
             throw StepFailure(
                 step: step,
-                detail: String(localized: "Steam is set up to inject a different dylib. Please repair Steam before installing NotProton.")
+                detail: String(localized: "Steam is set up to inject a different dylib. Please repair Steam before installing Proton-ish.")
             )
         }
 
@@ -260,7 +260,7 @@ enum SteamInstaller {
         guard foreign.isEmpty else {
             throw StepFailure(
                 step: step,
-                detail: String(localized: "Another dylib is present. Repair your Steam install before installing NotProton.")
+                detail: String(localized: "Another dylib is present. Repair your Steam install before installing Proton-ish.")
             )
         }
     }
@@ -268,7 +268,7 @@ enum SteamInstaller {
     static func needsPatching(plist: URL, dylib: URL, shipping: URL, app: URL) throws -> Bool {
         let deployed = SteamBundle.currentInsert(at: plist) == dylib.path(percentEncoded: false)
             && SteamBundle.currentControllerBlock(at: plist) == SteamBundle.controllerBlockValue
-        let file = DeploymentContent.File(source: shipping, destination: dylib, name: "notproton.dylib", allowsResigning: true)
+        let file = DeploymentContent.File(source: shipping, destination: dylib, name: SupportPaths.dylibName, allowsResigning: true)
         if deployed, try file.matches() {
             AppLog.note("install: Steam already carries this dylib, installing for this account only")
             return false
@@ -286,10 +286,10 @@ enum SteamInstaller {
     }
 
     private static let mismatchAcrossAccounts =
-        String(localized: "Steam has a different copy of NotProton, installed by another account on this Mac. Update NotProton from that account, then try again.")
+        String(localized: "Steam has a different copy of Proton-ish, installed by another account on this Mac. Update Proton-ish from that account, then try again.")
 
     private static let unpatchedAcrossAccounts =
-        String(localized: "Steam has not been set up for NotProton, and this account cannot change it. Install from the account that owns Steam.")
+        String(localized: "Steam has not been set up for Proton-ish, and this account cannot change it. Install from the account that owns Steam.")
 
     static func assertBundleIsWritable(_ app: URL) throws {
         let directory = app.appending(path: "Contents/MacOS")

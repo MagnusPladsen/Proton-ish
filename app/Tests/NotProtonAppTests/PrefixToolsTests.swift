@@ -30,16 +30,16 @@ struct PrefixToolsTests {
     @Test("Log paths match where compat_run.sh writes them")
     func logPathsMatchRunScript() throws {
         let source = try Self.compatSource()
-        #expect(source.contains(#"log="$STEAM_COMPAT_DATA_PATH/notproton-run.log""#))
-        #expect(source.contains(#"loader_root="$HOME/Library/Application Support/notproton/launchers/$app_id""#))
-        #expect(source.contains(#"wine_log="$loader_root/notproton-wine.log""#))
+        #expect(source.contains(#"log="$STEAM_COMPAT_DATA_PATH/protonish-run.log""#))
+        #expect(source.contains(#"loader_root="$HOME/Library/Application Support/protonish/launchers/$app_id""#))
+        #expect(source.contains(#"wine_log="$loader_root/protonish-wine.log""#))
 
         let prefix = samplePrefix()
         let launchers = URL(filePath: "/tmp/launchers")
-        #expect(PrefixLog.launch.url(for: prefix, launchers: launchers) == prefix.root.appending(path: "notproton-run.log"))
+        #expect(PrefixLog.launch.url(for: prefix, launchers: launchers) == prefix.root.appending(path: "protonish-run.log"))
         #expect(PrefixLog.wine.url(for: prefix, launchers: launchers).path(percentEncoded: false)
-            == "/tmp/launchers/1574480/notproton-wine.log")
-        #expect(SupportPaths.launchers.path(percentEncoded: false).hasSuffix("Application Support/notproton/launchers"))
+            == "/tmp/launchers/1574480/protonish-wine.log")
+        #expect(SupportPaths.launchers.path(percentEncoded: false).hasSuffix("Application Support/protonish/launchers"))
     }
 
     @Test("The runner variables are the ones RUN_SCRIPT exports")
@@ -1058,7 +1058,7 @@ struct PrefixToolsTests {
         let entry = library.compatdata.appending(path: "1574480")
         try FileManager.default.createDirectory(
             at: entry.appending(path: "pfx/drive_c"), withIntermediateDirectories: true)
-        try Data("log".utf8).write(to: entry.appending(path: "notproton-run.log"))
+        try Data("log".utf8).write(to: entry.appending(path: "protonish-run.log"))
 
         let prefix = try #require(PrefixStore.all(libraries: [library]).first)
         try PrefixTools.delete(prefix)
@@ -1470,13 +1470,13 @@ struct PrefixLastBuildTests {
             to: prefix.root.appending(path: PrefixTools.buildRecordName), atomically: true, encoding: .utf8)
 
         let fexOnly = [InstalledTool(
-            tool: CompatTool(name: "notproton", flavor: .fex, display: "CrossOver Preview (FEX)"),
+            tool: CompatTool(name: "protonish", flavor: .fex, display: "CrossOver Preview (FEX)"),
             build: Self.preview)]
         #expect(PrefixTools.tool(for: prefix, among: fexOnly, runners: runners) == nil)
 
         let fex = try #require(SupportedRunners.all.first { $0.id == Self.preview })
         let both = SupportedRunners.tools(for: [fex])
-        #expect(PrefixTools.tool(for: prefix, among: both, runners: runners)?.name == "notproton-fex-rosetta")
+        #expect(PrefixTools.tool(for: prefix, among: both, runners: runners)?.name == "protonish-fex-rosetta")
     }
 
     @Test("A prefix another CrossOver updated gets no tool, so nothing runs over it")

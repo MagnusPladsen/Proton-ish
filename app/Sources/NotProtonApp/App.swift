@@ -14,7 +14,7 @@ struct NotProtonApp: App {
     }
 
     var body: some Scene {
-        Window("NotProton", id: "main") {
+        Window("Proton-ish", id: "main") {
             RootView(pane: $pane)
                 .environment(status)
                 .environment(prefixes)
@@ -31,6 +31,10 @@ struct NotProtonApp: App {
     @CommandsBuilder
     private var menus: some Commands {
         CommandGroup(replacing: .newItem) {}
+
+        CommandGroup(replacing: .appInfo) {
+            Button("About Proton-ish") { AboutCredits.show() }
+        }
 
         CommandGroup(after: .appInfo) {
             Button("Check for Updates…") { updater.check() }

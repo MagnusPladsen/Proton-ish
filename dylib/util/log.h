@@ -17,7 +17,7 @@ enum {
     NP_LVL_DBG,
 };
 
-#define NP_LOG_PREFIX "[notproton]"
+#define NP_LOG_PREFIX "[protonish]"
 
 #define NP_EMIT(level, tag, fmt, ...) do { \
     if (np_log_level >= (level)) { \

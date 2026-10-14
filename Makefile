@@ -9,7 +9,7 @@ CFLAGS   := -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) $(AVAIL) \
             -fPIC -MMD -MP \
             -Idylib -Ivendor -Ivendor/dobby/include
 LDFLAGS  := -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) \
-            -dynamiclib -install_name @rpath/notproton.dylib
+            -dynamiclib -install_name @rpath/protonish.dylib
 
 FRAMEWORKS := -framework CoreFoundation -framework CoreGraphics
 
@@ -55,9 +55,9 @@ GENERATED_DIR := $(OUT_DIR)/generated
 RUN_SCRIPT_H  := $(GENERATED_DIR)/compat_run.h
 CFLAGS += -I$(GENERATED_DIR)
 
-ARM64_DYLIB := $(OUT_DIR)/notproton.arm64.dylib
-X86_STUB    := $(OUT_DIR)/notproton.x86_64.dylib
-TARGET      := $(OUT_DIR)/notproton.dylib
+ARM64_DYLIB := $(OUT_DIR)/protonish.arm64.dylib
+X86_STUB    := $(OUT_DIR)/protonish.x86_64.dylib
+TARGET      := $(OUT_DIR)/protonish.dylib
 
 OBJS := $(patsubst %.c,$(OUT_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
@@ -98,6 +98,10 @@ runcheck:
 seedcheck:
 	@if [ ! -f dylib/tests/seedcheck.sh ]; then $(call SKIP,seedcheck,dylib/tests/seedcheck.sh); exit 0; fi; \
 	sh dylib/tests/seedcheck.sh dylib/feats/compat_run.sh
+
+.PHONY: brandcheck
+brandcheck:
+	@sh dylib/tests/brandcheck.sh
 
 envcheck:
 	@if [ ! -f dylib/tests/envcheck.sh ]; then $(call SKIP,envcheck,dylib/tests/envcheck.sh); exit 0; fi; \
@@ -320,7 +324,7 @@ spawn-live: $(TARGET)
 		drv=$${spec%%:*}; rest=$${spec#*:}; kid=$${rest%%:*}; rest=$${rest#*:}; \
 		want=$${rest%%:*}; arg=$${rest#*:}; [ "$$arg" = "$$rest" ] && arg=""; \
 		got=$$(DYLD_INSERT_LIBRARIES=$$PWD/$(TARGET) "$$tmp/$$drv" "$$tmp/$$kid" $$arg 2>/dev/null \
-		       | grep -c "/notproton.dylib$$") || true; \
+		       | grep -c "/protonish.dylib$$") || true; \
 		if [ "$$got" != "$$want" ]; then \
 			echo "$$drv $$arg -> $$kid: insert present $$got, wanted $$want"; fail=1; fi; \
 	done; \
@@ -369,7 +373,7 @@ $(ARM64_DYLIB): $(OBJS)
 $(X86_STUB): dylib/stub_x86_64.c
 	@mkdir -p $(dir $@)
 	$(CC) -arch x86_64 -mmacosx-version-min=$(MIN_VER) $(AVAIL) \
-		-dynamiclib -install_name @rpath/notproton.dylib \
+		-dynamiclib -install_name @rpath/protonish.dylib \
 		-o $@ $<
 
 $(TARGET): $(ARM64_DYLIB) $(X86_STUB)
@@ -387,7 +391,7 @@ $(RUN_SCRIPT_H): dylib/feats/compat_run.sh dylib/embed_script.py
 
 $(OUT_DIR)/dylib/feats/compat.o: $(RUN_SCRIPT_H)
 
-SUPPORT_DIR        := $(HOME)/Library/Application Support/notproton
+SUPPORT_DIR        := $(HOME)/Library/Application Support/protonish
 OVERLAY_SHIM_SRC   := overlay-shim/overlay_shim.m
 OVERLAY_SHIM_ARM   := $(OUT_DIR)/overlay-shim.arm64.dylib
 OVERLAY_SHIM_X86   := $(OUT_DIR)/overlay-shim.x86_64.dylib
@@ -492,9 +496,9 @@ dobby:
 		-G "Unix Makefiles"
 	$(MAKE) -C $(DOBBY_DIR) -j$(shell sysctl -n hw.ncpu)
 
-STEAM_APP    ?= $$(p=$$(defaults read com.notproton.NotProton steamAppPath 2>/dev/null); printf '%s' "$${p:-/Applications/Steam.app}")
-DEPLOY_DST    = $(STEAM_APP)/Contents/MacOS/notproton.dylib
-INSTALL_DST  := $(SUPPORT_DIR)/notproton.dylib
+STEAM_APP    ?= $$(p=$$(defaults read com.magnuspladsen.protonish steamAppPath 2>/dev/null); printf '%s' "$${p:-/Applications/Steam.app}")
+DEPLOY_DST    = $(STEAM_APP)/Contents/MacOS/protonish.dylib
+INSTALL_DST  := $(SUPPORT_DIR)/protonish.dylib
 
 dylib-install: $(TARGET)
 	$(call install_atomically,$(TARGET),$(INSTALL_DST))
@@ -505,7 +509,7 @@ sigdb-install:
 	cp -f signatures/macos.arm64/*.json "$(SUPPORT_DIR)/signatures/macos.arm64/"
 	@echo "==> Installed: $(SUPPORT_DIR)/signatures/macos.arm64"
 
-LAUNCHABLE_BUNDLES := $(HOME)/Desktop/NotProton.app /Applications/NotProton.app
+LAUNCHABLE_BUNDLES := $(HOME)/Desktop/Proton-ish.app /Applications/Proton-ish.app
 
 FONT_FILES := --include='*/' --include='*.ttf' --include='*.ttc' --exclude='*'
 
@@ -521,10 +525,10 @@ deploy: $(TARGET) dylib-install sigdb-install fonts-install helpers-install
 	$(call install_atomically,$(TARGET),$(DEPLOY_DST))
 	@echo "==> Deployed: $(DEPLOY_DST) (restart Steam to load)"
 	@for b in $(LAUNCHABLE_BUNDLES); do \
-		p=$$(find "$$b" -name notproton.dylib -type f 2>/dev/null | head -1); \
+		p=$$(find "$$b" -name protonish.dylib -type f 2>/dev/null | head -1); \
 		[ -n "$$p" ] || continue; \
 		cmp -s "$$p" "$(DEPLOY_DST)" && continue; \
-		echo "==> warning: $$b carries a different notproton.dylib"; \
+		echo "==> warning: $$b carries a different protonish.dylib"; \
 		echo "==> warning: launching it reverts this deploy, so rebuild it with 'make app'"; \
 	done
 
@@ -554,7 +558,7 @@ fonts:
 app-payload: $(TARGET) $(OVERLAY_SHIM) $(ICONMAKER) $(APPINFO)
 	@mkdir -p "$(APP_PAYLOAD)/signatures/macos.arm64"
 	@mkdir -p "$(APP_PAYLOAD)/bridge"
-	cp -f $(TARGET) "$(APP_PAYLOAD)/notproton.dylib"
+	cp -f $(TARGET) "$(APP_PAYLOAD)/protonish.dylib"
 	cp -f $(OVERLAY_SHIM) "$(APP_PAYLOAD)/overlay-shim.dylib"
 	cp -f $(ICONMAKER) "$(APP_PAYLOAD)/iconmaker"
 	cp -f $(APPINFO) "$(APP_PAYLOAD)/appinfo"
@@ -574,15 +578,15 @@ app-payload: $(TARGET) $(OVERLAY_SHIM) $(ICONMAKER) $(APPINFO)
 	echo "$$stamp" > "$(APP_PAYLOAD)/build-time"
 	@echo "==> Staged app payload in $(APP_PAYLOAD)"
 
-APP_BUNDLE  := $(OUT_DIR)/NotProton.app
+APP_BUNDLE  := $(OUT_DIR)/Proton-ish.app
 APP_BUNDLE_PAYLOAD := $(APP_BUNDLE)/Contents/Resources/NotProtonApp_NotProtonApp.bundle/Contents/Resources/payload
-APP_ZIP     := $(OUT_DIR)/NotProton.zip
+APP_ZIP     := $(OUT_DIR)/Proton-ish.zip
 APP_VERSION := $(shell sed -n 's/^\#define NOTPROTON_VERSION "\(.*\)"/\1/p' dylib/version.h)
 
 APP_SIGN_ID ?= -
 
 ICONGEN  := $(OUT_DIR)/icongen
-ICON_DOC := $(OUT_DIR)/NotProton.icon
+ICON_DOC := $(OUT_DIR)/Proton-ish.icon
 ICON_DIR := $(OUT_DIR)/icon
 ICON_CAR := $(ICON_DIR)/Assets.car
 
@@ -598,7 +602,7 @@ $(ICON_CAR): $(ICONGEN)
 	$(ICONGEN) "$(ICON_DOC)"
 	@mkdir -p "$(ICON_DIR)"
 	xcrun actool "$(ICON_DOC)" --compile "$(ICON_DIR)" --platform macosx \
-		--minimum-deployment-target 15.0 --app-icon NotProton \
+		--minimum-deployment-target 15.0 --app-icon Proton-ish \
 		--output-partial-info-plist "$(ICON_DIR)/partial.plist" >/dev/null
 	@echo "==> Built $@"
 
@@ -625,7 +629,7 @@ app: app-payload $(ICON_CAR)
 		"$(APP_BUNDLE)/Contents/Resources/"
 	cp -R "$(APP_BUNDLE)/Contents/Resources/NotProtonApp_NotProtonApp.bundle/Contents/Resources/"*.lproj \
 		"$(APP_BUNDLE)/Contents/Resources/"
-	cp "$(ICON_DIR)/Assets.car" "$(ICON_DIR)/NotProton.icns" \
+	cp "$(ICON_DIR)/Assets.car" "$(ICON_DIR)/Proton-ish.icns" \
 		"$(APP_BUNDLE)/Contents/Resources/"
 	@missing=$$(cd "$(APP_PAYLOAD)" && find . -type f ! -name '.DS_Store' | sed 's|^\./||' \
 		| while read -r rel; do \

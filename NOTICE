@@ -34,3 +34,12 @@ These third party files carry their original notices from the project authors:
   steam-shim/json/json-forwards.h    JsonCpp, public domain / MIT (header)
   vendor/cJSON.c                     cJSON, MIT (header)
   vendor/cJSON.h                     cJSON, MIT (header)
+
+Proton-ish modifications
+========================
+
+Modified by Proton-ish contributors, 2026. Proton-ish is a fork of NotProton
+(https://github.com/NotProtonNot/NotProton). The modifications are licensed under
+GPLv3, like the bulk of the project. Each modification is recorded in the git history
+of https://github.com/MagnusPladsen/Proton-ish and summarised under "Changes from
+upstream" in README.md. All licensing terms above continue to apply.

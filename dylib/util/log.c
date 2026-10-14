@@ -74,7 +74,7 @@ static void log_open(int may_rotate) {
     char logpath[512];
     np_support_path(folder, sizeof(folder), home, NULL);
     mkdir(folder, 0755);
-    snprintf(logpath, sizeof(logpath), "%s/notproton.log", folder);
+    snprintf(logpath, sizeof(logpath), "%s/protonish.log", folder);
 
     struct stat info;
     int oversize = (may_rotate && stat(logpath, &info) == 0
