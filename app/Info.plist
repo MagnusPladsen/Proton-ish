@@ -12,9 +12,9 @@
 	<key>CFBundleExecutable</key>
 	<string>NotProtonApp</string>
 	<key>CFBundleIconFile</key>
-	<string>NotProton</string>
+	<string>Proton-ish</string>
 	<key>CFBundleIconName</key>
-	<string>NotProton</string>
+	<string>Proton-ish</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.magnuspladsen.protonish</string>
 	<key>CFBundleInfoDictionaryVersion</key>

@@ -253,8 +253,8 @@ let document: [String: Any] = [
     "features": ["refractivity", "specular-location"],
     "fill": [
         "linear-gradient": [
-            "srgb:0.25882,0.25882,0.26667,1.00000",
-            "srgb:0.12549,0.12549,0.13333,1.00000",
+            "srgb:0.10196,0.52941,0.52941,1.00000",
+            "srgb:0.04706,0.27059,0.30196,1.00000",
         ]
     ],
     "groups": Element.allCases.map(group(for:)),
