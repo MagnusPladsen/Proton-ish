@@ -30,10 +30,13 @@ development that every free runtime, Highball included, is built on.
 
 ## Status
 
-Proton-ish is in early development and has **no releases yet**. The rebrand (milestone M0: own bundle ID,
-update feed, support directory `~/Library/Application Support/protonish/`, tool names `protonish-*`) is done;
-Highball support is next. Until the first Proton-ish release, use
-[upstream NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+Proton-ish is in early development and has **no releases yet**. The rebrand (milestone M0) is done, and
+Highball support is being tested: Highball's Wine 11 engine can be set up as a Steam Play compatibility
+tool, and it shows up in Steam's Compatibility settings. Launching games through it is being verified now.
+Until the first Proton-ish release, use [upstream NotProton](https://github.com/NotProtonNot/NotProton)
+with CrossOver.
+
+![Steam's Compatibility settings with "Highball Wine 11 (r19)" selected as the compatibility tool](docs/screenshots/steam-compatibility-highball.png)
 Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
 
 ## Changes from upstream
