@@ -106,8 +106,11 @@ x86_64 and i386, one Rosetta `CompatTool`.
 - Tool names: `protonish-crossover-<build>[-fex]`, `protonish-highball-<engine-id>`.
   Display name example: `Highball Wine 11 (r25)`.
 - Copies use `cp -c -R` (APFS clone) with `cp -R` fallback, as upstream.
-- Prefix record files: `protonish-build`, `protonish-msync`. The run script also reads
-  `notproton-build` / `notproton-msync` as a fallback.
+- Prefix and runner marker files keep their upstream names (`notproton-build`,
+  `notproton-msync`, `*.notproton-orig`, `notproton-template`, lock files). They are
+  invisible to users, and keeping them means existing prefixes need no migration.
+  `NOTPROTON_*` environment variables are also kept, because users' saved Steam launch
+  options contain them.
 
 ## 4. Highball runner pipeline
 
@@ -202,8 +205,8 @@ Runs once when Proton-ish detects any of: `~/Library/Application Support/notprot
    `protonish/runners/crossover-<b>/root`. Re-verify hashes.
 3. Remap games: rewrite `notproton-*` → `protonish-*` in Steam's `config.vdf`
    `CompatToolMapping`, reusing the existing `legacyToolName` / `legacyHolders` logic.
-4. Prefixes stay in `steamapps/compatdata/<appid>/pfx`. Rename record files
-   `notproton-build` → `protonish-build`, `notproton-msync` → `protonish-msync`.
+4. Prefixes stay in `steamapps/compatdata/<appid>/pfx` untouched; marker files keep
+   their upstream names (section 3), so no per-prefix changes are needed.
 5. Uninstall NotProton using upstream's uninstall routine (restore the Steam bundle,
    remove the dylib and `notproton-*` tools). Old template prefixes are deleted and
    rebuilt on first launch.
