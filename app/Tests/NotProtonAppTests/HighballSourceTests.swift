@@ -59,6 +59,36 @@ struct HighballSourceTests {
         #expect(HighballSource.discover(home: home).first?.support == .unreadable)
     }
 
+    @Test("An engine is only the pinned build when its manifest id matches too")
+    func identityNeedsMatchingID() throws {
+        let home = try scratchDirectory("hb-identity")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))
+        // Another revision can ship the same launcher bytes as r19
+        func engine(_ id: String) throws -> HighballEngine? {
+            let directory = home.appending(path: "engines/\(id)")
+            try FileManager.default.createDirectory(at: directory.appending(path: "engine/bin"), withIntermediateDirectories: true)
+            try Data(#"{"id": "\#(id)"}"#.utf8).write(to: directory.appending(path: "manifest.json"))
+            let fixture = FileManager.default.temporaryDirectory.appending(path: "hb-launcher-\(UUID().uuidString)")
+            try Data(contentsOf: try #require(Self.r19Launcher)).write(to: fixture)
+            try FileManager.default.moveItem(at: fixture, to: directory.appending(path: "engine/bin/wine"))
+            return HighballSource.inspect(directory)
+        }
+        guard Self.r19Launcher != nil else { return }
+        #expect(try engine("x64-crossover26.3-r19")?.support == .supported(build))
+        #expect(try engine("x64-crossover26.3-r18")?.support == .unsupported)
+    }
+
+    // The real r19 launcher, when the scratch fixture or a Highball install has it
+    static var r19Launcher: URL? {
+        let repo = URL(filePath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        return [repo.appending(path: "scratch/hb-r19/engine/bin/wine"),
+                HighballSource.home().appending(path: "engines/x64-crossover26.3-r19/engine/bin/wine")]
+            .first { FileManager.default.fileExists(atPath: $0.path(percentEncoded: false)) }
+    }
+
     @Test("No Highball home means no engines")
     func missingHome() {
         #expect(HighballSource.discover(home: URL(filePath: "/nonexistent-\(UUID().uuidString)")).isEmpty)
