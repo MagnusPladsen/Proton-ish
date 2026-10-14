@@ -275,8 +275,35 @@ Each milestone leaves `main` building with all tests passing.
 4. **M3, NotProton migration.** Section 6.
 5. **M4, release pipeline.** Own appcast and Sparkle key, tagged signed release. Brew tap
    afterwards.
+6. **M5, automation.** Section 10.
 
-## 10. Risks
+M2 also adds in-app engine notices: the Status screen shows when an installed Highball
+engine is newer than every pinned build ("Highball engine `<id>` is not supported yet; an
+update to Proton-ish will add it"), and when a Proton-ish update adds support for an engine
+the user already has ("Set up `<id>` now"). App updates themselves come from Sparkle's
+existing "Check for Updates…" once M4 publishes the appcast.
+
+## 10. Automation (M5)
+
+Goal: keep Proton-ish current with upstream NotProton and new Highball engines with as
+little manual work as possible, while a human approves every release.
+
+- **Upstream sync.** A scheduled GitHub Actions workflow (daily) fetches `upstream/main`,
+  merges it into a `sync/upstream-<date>` branch and opens a PR against `main`. CI (full
+  build, tests, `brandcheck`) runs on the PR. Conflicts are left in the PR for a human.
+- **Highball engine re-pin.** A scheduled workflow (daily) reads Highball's engine
+  manifests from https://github.com/gauthierpiarrette/highball-engine releases. For each new
+  Wine 11 engine it downloads the tarball (sha256-verified against the manifest), runs
+  `ntdll-patch/resolve.py`, builds the detour payloads, adds the `SupportedRunners` and
+  `NtdllPatcher` entries and opens a PR. The PR is labelled "needs game test": a human
+  launches one Steam game on that engine before merging.
+- **Release on merge.** Merging a PR that bumps `dylib/version.h` triggers `release.yml`:
+  build, sign the appcast with the Sparkle key from the `SPARKLE_PRIVATE_KEY` secret,
+  publish the GitHub release. Users get it through Sparkle in the app.
+- **Human gate.** No auto-merge. Every sync or re-pin PR and every release needs one human
+  approval, because a bad Steam hook or a wrong pin breaks Steam Play for every user.
+
+## 11. Risks
 
 | Risk | Mitigation |
 |---|---|
