@@ -97,7 +97,10 @@ enum RunnerStore {
 enum CompatToolList {
 
     static func contents(_ tools: [InstalledTool]) -> String {
-        tools.map { "\($0.name)\t\($0.build)\t\($0.tool.flavor.rawValue)\t\($0.display)\n" }.joined()
+        tools.map { tool in
+            let runtime = SupportPaths.runtime(forBuild: tool.build).rawValue
+            return "\(tool.name)\t\(tool.build)\t\(tool.tool.flavor.rawValue)\t\(runtime)\t\(tool.display)\n"
+        }.joined()
     }
 
     static func installed(

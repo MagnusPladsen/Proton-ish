@@ -311,7 +311,7 @@ last_wine_build() {
     fi
     had_build=${inf#"$np_support/runners/crossover-"}
     had_build=${had_build%%/*}
-    had_display=$(awk -F '\t' -v b="$had_build" '$2 == b { print $4; exit }' \
+    had_display=$(awk -F '\t' -v b="$had_build" '$2 == b { print $NF; exit }' \
       "$np_support/tools" 2>/dev/null) || had_display=""
   done
 }

@@ -25,7 +25,7 @@ clone() {
 }
 clone 26.3.0.39832 202607151200
 clone 27.0.0.40921-fex 202608211200
-printf 'protonish\t27.0.0.40921-fex\tfex\tCrossOver Preview (FEX)\nprotonish-26.3\t26.3.0.39832\trosetta\tCrossOver 26.3\n' \
+printf 'protonish\t27.0.0.40921-fex\tfex\tcrossover\tCrossOver Preview (FEX)\nprotonish-26.3\t26.3.0.39832\trosetta\tcrossover\tCrossOver 26.3\n' \
 	> "$np_support/tools"
 mtime() { stat -f %m "$np_support/runners/crossover-$1/CrossOver/share/wine/wine.inf"; }
 

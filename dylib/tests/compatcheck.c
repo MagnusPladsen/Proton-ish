@@ -235,15 +235,17 @@ static void tool_list_cases(void) {
         check(0, "the tool list fixture can be written");
         return;
     }
-    fputs("protonish\t27.0.0.40921-fex\tfex\tCrossOver Preview (FEX)\n"
-          "protonish-fex-41069\t27.0.0.41069-fex\tfex\tCrossOver Preview 41069 (FEX)\n"
-          "protonish-fex-rosetta\t27.0.0.40921-fex\trosetta\tCrossOver Preview (Rosetta)\n"
+    fputs("protonish\t27.0.0.40921-fex\tfex\tcrossover\tCrossOver Preview (FEX)\n"
+          "protonish-fex-41069\t27.0.0.41069-fex\tfex\tcrossover\tCrossOver Preview 41069 (FEX)\n"
+          "protonish-fex-rosetta\t27.0.0.40921-fex\trosetta\tcrossover\tCrossOver Preview (Rosetta)\n"
           "protonish-26.3\t26.3.0.39832\trosetta\tCrossOver 26.3\n"
-          "protonish\t26.3.0.39832\trosetta\tDuplicate\n"
-          "proton-other\t1\trosetta\tForeign\n"
-          "protonish-x\t1\tarm\tBad flavor\n"
-          "protonish-q\t1\trosetta\tQuote\"d\n"
+          "protonish\t26.3.0.39832\trosetta\tcrossover\tDuplicate\n"
+          "proton-other\t1\trosetta\tcrossover\tForeign\n"
+          "protonish-x\t1\tarm\tcrossover\tBad flavor\n"
+          "protonish-q\t1\trosetta\tcrossover\tQuote\"d\n"
           "protonish-short\t1\trosetta\n"
+          "protonish-rt\t1\trosetta\twinehq\tUnknown runtime\n"
+          "protonish-six\t1\trosetta\tcrossover\tSix\textra\n"
           "\n", f);
     fclose(f);
 
@@ -256,6 +258,12 @@ static void tool_list_cases(void) {
     check(strcmp(g_tools[3].build, "26.3.0.39832") == 0
           && strcmp(g_tools[3].dir, "/tools/protonish-26.3") == 0,
           "each tool carries its build and directory");
+    check(strcmp(g_tools[0].runtime, "crossover") == 0
+          && strcmp(g_tools[0].display, "CrossOver Preview (FEX)") == 0,
+          "a five-column line carries its runtime and keeps the display");
+    check(strcmp(g_tools[3].runtime, "crossover") == 0
+          && strcmp(g_tools[3].display, "CrossOver 26.3") == 0,
+          "a four-column line from an older app is a CrossOver tool");
 
     uint8_t *mgr = build_manager(3, -1);
     *(const char **)(entries + np_compat_tool_stride() + COMPAT_TOOL_NAME_OFF) = "protonish-26.3";
@@ -279,7 +287,7 @@ static void tool_list_cases(void) {
         return;
     }
     for (int i = 0; i < 40; i++)
-        fprintf(f, "protonish-%d\t1\trosetta\tTool %d\n", i, i);
+        fprintf(f, "protonish-%d\t1\trosetta\tcrossover\tTool %d\n", i, i);
     fclose(f);
     kept = np_compat_load_tool_list(path, "/tools");
     unlink(path);
@@ -446,6 +454,33 @@ static void installed_fn_cases(void) {
     check(last_priority == 0, "mapping an app to no tool at all reaches the client as nothing");
 }
 
+static void runtime_file_cases(void) {
+    char root[] = "out/compatcheck-runtime.XXXXXX";
+    if (!mkdtemp(root)) {
+        check(0, "the runtime fixture directory can be made");
+        return;
+    }
+    tool_entry_t tool = { 0 };
+    snprintf(tool.name, sizeof(tool.name), "%s", "protonish-26.3");
+    snprintf(tool.build, sizeof(tool.build), "%s", "26.3.0.39832");
+    snprintf(tool.flavor, sizeof(tool.flavor), "%s", "rosetta");
+    snprintf(tool.runtime, sizeof(tool.runtime), "%s", "crossover");
+    snprintf(tool.display, sizeof(tool.display), "%s", "CrossOver 26.3");
+    snprintf(tool.dir, sizeof(tool.dir), "%s/%s", root, tool.name);
+
+    write_tool(&tool);
+    char path[768];
+    snprintf(path, sizeof(path), "%s/runtime", tool.dir);
+    FILE *f = fopen(path, "r");
+    char line[32] = { 0 };
+    if (f) { fgets(line, sizeof(line), f); fclose(f); }
+    check(strcmp(line, "crossover\n") == 0, "each tool directory records its runtime");
+
+    remove_tool(root, tool.name);
+    check(!exists(tool.dir), "removing a tool removes its runtime file and the directory");
+    rmdir(root);
+}
+
 int main(void) {
     concurrent_fallback_cases();
     probe_cases();
@@ -455,6 +490,7 @@ int main(void) {
     tool_list_cases();
     tool_launch_cases();
     stale_tool_cases();
+    runtime_file_cases();
     installed_fn_cases();
 
     if (failures) {
