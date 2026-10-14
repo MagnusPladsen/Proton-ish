@@ -41,6 +41,8 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 - 2026-10-14: Rebranded to Proton-ish (bundle ID `com.magnuspladsen.protonish`, support
   directory `~/Library/Application Support/protonish/`, tool names `protonish-*`, own update feed).
 - 2026-10-14: New app icon (two crossed orbits around a wine drop), replacing upstream's artwork.
+- 2026-10-14: Internal groundwork for more Wine runtimes: runners now live in
+  `runners/<runtime>-<build>/root/`, and compatibility tools record their runtime. No change for CrossOver users.
 
 ## Building from source
 
