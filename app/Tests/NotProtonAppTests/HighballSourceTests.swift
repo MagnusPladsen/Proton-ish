@@ -126,3 +126,25 @@ struct HighballNoticeTests {
         #expect(SystemStatus.highballNotice(engines: []) == nil)
     }
 }
+
+@Suite("Highball rows")
+struct HighballRowTests {
+
+    @Test("A Highball copy is not set up, ready, or in need of repair")
+    func copyState() throws {
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))
+        #expect(SystemStatus.highballCopy(build.id, installed: [], runner: .none) == .notSetUp)
+        #expect(SystemStatus.highballCopy(build.id, installed: [build], runner: .ready(builds: [build.id])) == .ready)
+        #expect(SystemStatus.highballCopy(build.id, installed: [build],
+                                          runner: .unpatched(builds: [build.id], problems: ["x"])) == .needsRepair)
+    }
+
+    @Test("Orphaned Highball copies are found by their directory, CrossOver ones are not")
+    func orphans() throws {
+        let runners = try scratchDirectory("hb-orphans")
+        defer { try? FileManager.default.removeItem(at: runners) }
+        try FileManager.default.createDirectory(at: runners.appending(path: "highball-x64-old-r1"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: runners.appending(path: "crossover-1.2.3"), withIntermediateDirectories: true)
+        #expect(SystemStatus.highballOrphans(["x64-old-r1", "1.2.3"], runners: runners) == ["x64-old-r1"])
+    }
+}

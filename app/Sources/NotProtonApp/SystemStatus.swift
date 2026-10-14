@@ -449,6 +449,19 @@ final class SystemStatus {
         }
     }
 
+    enum HighballCopy: Sendable, Equatable { case notSetUp, ready, needsRepair }
+
+    nonisolated static func highballCopy(_ build: String, installed: [RunnerBuild], runner: RunnerState) -> HighballCopy {
+        guard installed.contains(where: { $0.id == build }) else { return .notSetUp }
+        if case .unpatched(let builds, _) = runner, builds.contains(build) { return .needsRepair }
+        return .ready
+    }
+
+    // Copies left behind when their build is no longer supported, so they can still be removed
+    nonisolated static func highballOrphans(_ orphaned: [String], runners: URL = SupportPaths.runners) -> [String] {
+        orphaned.filter { SupportPaths.runtime(forBuild: $0, runners: runners) == .highball }
+    }
+
     // What the Highball section says when no engine can be set up
     nonisolated static func highballNotice(engines: [HighballEngine]) -> String? {
         guard !engines.isEmpty, !engines.contains(where: \.isUsable) else { return nil }

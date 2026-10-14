@@ -2205,6 +2205,16 @@
         }
       }
     },
+    "No longer supported" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已不再受支持"
+          }
+        }
+      }
+    },
     "No supported copy of CrossOver found." : {
       "localizations" : {
         "zh-Hans" : {
