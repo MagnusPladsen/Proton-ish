@@ -121,6 +121,7 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
 - 2026-10-15: Highball games run with Highball's own launch environment (HighballKit 0.10.15): the Graphics choice
   works (D3DMetal, DXMT, DXVK, WineD3D), Automatic follows highball-db, and highball-db's environment fixes apply.
   New `highball-env` helper; the run log reports which renderer served the game. Synced with NotProton `dae593c`.
+- 2026-10-15: 0.1.0-beta.3: Highball graphics choice and per-game fixes, renderer report, NotProton console-output fix.
 
 ## What Install changes
 
