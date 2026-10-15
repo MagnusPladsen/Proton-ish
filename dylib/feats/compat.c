@@ -885,10 +885,25 @@ int np_compat_apply_default_tool_in(void *compat_mgr, const char *support) {
     char request_path[768];
     snprintf(request_path, sizeof(request_path), "%s/default-tool", support);
     char request[64];
-    if (!read_default_tool_request(request_path, request, sizeof(request)))
-        return 0;
-
     load_tool_list_once();
+    if (!read_default_tool_request(request_path, request, sizeof(request))) {
+        // No request yet: a Highball tool becomes the default only when Steam has none, once.
+        // The request file then records it, so the app's switch shows on and can undo it.
+        if (current && *current) return 0;
+        const char *highball = NULL;
+        for (int i = 0; i < g_tool_count && !highball; i++)
+            if (strcmp(g_tools[i].runtime, "highball") == 0) highball = g_tools[i].name;
+        if (!highball) return 0;
+        np_compat_map_tool(compat_mgr, 0, highball);
+        FILE *req = fopen(request_path, "w");
+        if (req) {
+            fprintf(req, "%s\n", highball);
+            fclose(req);
+        }
+        NP_LOG("np_compat_apply_default_tool: Steam had no default tool, %s is now the default", highball);
+        return 1;
+    }
+
     switch (np_compat_default_tool_action(request, current)) {
     case NP_DEFAULT_TOOL_SET:
         np_compat_map_tool(compat_mgr, 0, request);

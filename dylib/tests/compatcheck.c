@@ -473,7 +473,30 @@ static void default_tool_cases(void) {
     check(last_appid == 0, "clearing maps app 0");
     stub_mapping_entry[0] = NULL;
     check(np_compat_apply_default_tool_in(manager, support) == 0, "the switch off with no default does nothing on disk either");
-    check(np_compat_apply_default_tool(manager) == 0, "the home-based entry refuses a home with no support folder");
+
+    // No request yet: Highball becomes the default only when Steam has none
+    snprintf(request, sizeof(request), "%s/default-tool", support);
+    remove(request);
+    stub_mapping_entry[0] = "proton_9";
+    last_appid = 7;
+    check(np_compat_apply_default_tool_in(manager, support) == 0 && last_appid == 7,
+          "with no request, someone else's default is left alone");
+    check(access(request, F_OK) != 0, "and no request is written");
+    stub_mapping_entry[0] = NULL;
+    check(np_compat_apply_default_tool_in(manager, support) == 1 && last_appid == 0,
+          "with no request and no default, the Highball tool becomes the default");
+    f = fopen(request, "r");
+    line[0] = 0;
+    if (f) { if (!fgets(line, sizeof(line), f)) line[0] = 0; fclose(f); }
+    check(strcmp(line, "protonish-highball-x64-crossover26.3-r19\n") == 0,
+          "the adoption is recorded as the app's request, so the switch shows on");
+    remove(request);
+    put_text(list, "protonish-26.3\t26.3.0.39832\trosetta\tcrossover\tCrossOver 26.3\n");
+    check(np_compat_load_tool_list(list, tools_dir) == 1, "a list with only CrossOver loads");
+    last_appid = 7;
+    check(np_compat_apply_default_tool_in(manager, support) == 0 && last_appid == 7,
+          "without a Highball tool nothing is adopted");
+    check(np_compat_apply_default_tool(manager) == 0, "the home-based entry does nothing for a home with no support folder");
 }
 
 static void renderer_list_cases(void) {

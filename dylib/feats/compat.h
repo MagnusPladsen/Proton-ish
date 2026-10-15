@@ -104,8 +104,9 @@ void np_compat_map_tool(void *compat_mgr, uint32_t appid, const char *tool_name)
 const char *np_compat_global_mapping(void *compat_mgr);
 
 // The app's default-tool request (~/Library/Application Support/protonish/default-tool:
-// a tool name sets it, an empty line clears it when it is one of ours, no file leaves
-// it alone) against Steam's current default.
+// a tool name sets it, an empty line clears it when it is one of ours) against Steam's
+// current default. With no request file, np_compat_apply_default_tool_in makes a listed
+// Highball tool the default when Steam has none, and writes the request.
 typedef enum { NP_DEFAULT_TOOL_KEEP, NP_DEFAULT_TOOL_SET, NP_DEFAULT_TOOL_CLEAR } np_default_tool_action_t;
 np_default_tool_action_t np_compat_default_tool_action(const char *request, const char *current);
 
