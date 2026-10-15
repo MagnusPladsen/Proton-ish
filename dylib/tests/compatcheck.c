@@ -476,6 +476,32 @@ static void default_tool_cases(void) {
     check(np_compat_apply_default_tool(manager) == 0, "the home-based entry refuses a home with no support folder");
 }
 
+static void renderer_list_cases(void) {
+    char root[] = "out/compatcheck-renderers.XXXXXX";
+    if (!mkdtemp(root)) {
+        check(0, "the renderer list fixture directory can be made");
+        return;
+    }
+    char path[768];
+    snprintf(path, sizeof(path), "%s/renderers", root);
+    put_text(path, "protonish-highball-x64-crossover26.3-r19\tdxmt,wined3d\n"
+                   "protonish-highball-x64-other\tdxmt,d3dmetal,dxvk,wined3d\n"
+                   "not a tool\tdxmt\n"
+                   "protonish-broken\n");
+    const char *names[16];
+    char storage[1024];
+    size_t n = np_compat_tools_lacking_in(path, "d3dmetal", names, 16, storage, sizeof(storage));
+    check(n == 1 && strcmp(names[0], "protonish-highball-x64-crossover26.3-r19") == 0,
+          "the tool without D3DMetal is reported, the one with it and the malformed lines are not");
+    n = np_compat_tools_lacking_in(path, "dxvk", names, 16, storage, sizeof(storage));
+    check(n == 1, "the tool without DXVK is reported");
+    n = np_compat_tools_lacking_in(path, "dxmt", names, 16, storage, sizeof(storage));
+    check(n == 0, "a renderer every listed tool has reports nothing");
+    snprintf(path, sizeof(path), "%s/missing", root);
+    check(np_compat_tools_lacking_in(path, "d3dmetal", names, 16, storage, sizeof(storage)) == 0,
+          "no list reports nothing");
+}
+
 static void installed_fn_cases(void) {
     // Nothing installed is the state before the client has given the function up, and
     // every one of these reads as "cannot say" rather than as an answer.
@@ -567,6 +593,7 @@ int main(void) {
     stale_tool_cases();
     runtime_file_cases();
     default_tool_cases();
+    renderer_list_cases();
     installed_fn_cases();
 
     if (failures) {

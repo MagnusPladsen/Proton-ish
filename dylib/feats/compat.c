@@ -905,6 +905,48 @@ int np_compat_apply_default_tool_in(void *compat_mgr, const char *support) {
     return 0;
 }
 
+// The app lists each Highball tool's renderers in <support>/renderers, one line per tool:
+// "<tool>\t<renderer>,<renderer>". A tool on the list without `renderer` lacks it; tools not
+// on the list (CrossOver's) are never reported. Names point into `storage`.
+size_t np_compat_tools_lacking_in(const char *path, const char *renderer, const char **names, size_t max,
+                                  char *storage, size_t storage_size) {
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    size_t n = 0, used = 0;
+    char line[512];
+    while (n < max && fgets(line, sizeof(line), f)) {
+        line[strcspn(line, "\r\n")] = 0;
+        char *tab = strchr(line, '\t');
+        if (!tab) continue;
+        *tab = 0;
+        if (!is_tool_name(line)) continue;
+        int has = 0;
+        for (char *item = tab + 1; item && *item;) {
+            char *comma = strchr(item, ',');
+            if (comma) *comma = 0;
+            if (strcmp(item, renderer) == 0) has = 1;
+            item = comma ? comma + 1 : NULL;
+        }
+        if (has) continue;
+        size_t len = strlen(line) + 1;
+        if (used + len > storage_size) break;
+        memcpy(storage + used, line, len);
+        names[n++] = storage + used;
+        used += len;
+    }
+    fclose(f);
+    return n;
+}
+
+size_t np_compat_tools_lacking(const char *renderer, const char **names, size_t max,
+                               char *storage, size_t storage_size) {
+    const char *home = np_home_dir();
+    if (!home) return 0;
+    char path[768];
+    snprintf(path, sizeof(path), "%s/Library/Application Support/protonish/renderers", home);
+    return np_compat_tools_lacking_in(path, renderer, names, max, storage, storage_size);
+}
+
 // Once per Steam run, the first time the compat manager is seen
 int np_compat_apply_default_tool(void *compat_mgr) {
     static int applied = 0;

@@ -93,6 +93,12 @@ enum RunnerSetup {
         outcome.toolsChanged = try CompatToolList.sync(
             runners: runners, bridge: bridge, file: toolList, compatTools: compatTools
         )
+        // The options panel's renderer list; a failure here costs nothing but the filtering
+        if build.runtime == .highball {
+            do { try RendererList.sync(builds: RunnerStore.installedBuilds(in: runners)) } catch {
+                AppLog.note("renderer list not written: \(error)")
+            }
+        }
         for tool in CompatToolList.installed(runners: runners, file: toolList) {
             let run = compatTools.appending(path: "\(tool.name)/run")
             if FileManager.default.fileExists(atPath: run.path(percentEncoded: false)) { continue }

@@ -511,6 +511,7 @@ final class SystemStatus {
             let payload = try InstallPayload.locate()
             try await HighballInstaller.run(helper: payload.highballEnv,
                                             arguments: ["accept", "--engine", engine.id], progress: progress)
+            do { try RendererList.sync() } catch { AppLog.note("renderer list not written: \(error)") }
             return String(localized: "D3DMetal is enabled for \(engine.displayName).")
         }
     }

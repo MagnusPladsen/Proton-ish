@@ -6,7 +6,7 @@ import Foundation
 import HighballEnvCore
 
 var commandLine = Array(CommandLine.arguments.dropFirst())
-let command = commandLine.first.flatMap { ["install", "accept"].contains($0) ? $0 : nil }
+let command = commandLine.first.flatMap { ["install", "accept", "renderers"].contains($0) ? $0 : nil }
 if command != nil { commandLine.removeFirst() }
 let acceptD3DMetal = commandLine.contains("--accept-d3dmetal")
 commandLine.removeAll { $0 == "--accept-d3dmetal" }
@@ -20,6 +20,7 @@ while let name = arguments.next() {
 
 // highball-env install --manifest <engine manifest> [--accept-d3dmetal]
 // highball-env accept --engine <engine id>
+// highball-env renderers --engine <engine id>   (available renderers, one per line)
 switch command {
 case "install":
     guard let manifest = options["manifest"] else {
@@ -45,6 +46,18 @@ case "accept":
     do {
         try EngineInstall.accept(engineID: engine)
         print("accepted \(EngineInstall.d3dmetalLicence) for \(engine)")
+        exit(0)
+    } catch {
+        print("# error: \(error)")
+        exit(1)
+    }
+case "renderers":
+    guard let engine = options["engine"] else {
+        print("# error: usage: highball-env renderers --engine <engine id>")
+        exit(1)
+    }
+    do {
+        for renderer in try EngineRenderers.available(engineID: engine) { print(renderer) }
         exit(0)
     } catch {
         print("# error: \(error)")

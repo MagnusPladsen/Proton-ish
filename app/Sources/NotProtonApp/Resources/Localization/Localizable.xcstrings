@@ -2215,6 +2215,16 @@
         }
       }
     },
+    "List the engine's renderers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列出引擎的渲染器"
+          }
+        }
+      }
+    },
     "List the prefixes again and update their sizes." : {
       "localizations" : {
         "zh-Hans" : {

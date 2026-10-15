@@ -82,6 +82,18 @@ struct EngineInstallTests {
         #expect(try installedManifest(f).acceptedLicenses == [EngineInstall.d3dmetalLicence])
     }
 
+    @Test("Available renderers follow Highball's rule: shipped folders, D3DMetal only with the licence")
+    func availableRenderers() async throws {
+        let f = try fixture()
+        let paths = HighballPaths(home: f.home)
+        _ = try await EngineInstall.install(manifest: f.manifest, acceptD3DMetal: false, paths: paths) { _ in }
+        let d3dmetal = f.home.appending(path: "engines/x64-test-r1/frameworks/renderer/d3dmetal/wine")
+        try FileManager.default.createDirectory(at: d3dmetal, withIntermediateDirectories: true)
+        #expect(try EngineRenderers.available(engineID: "x64-test-r1", paths: paths) == ["wined3d", "dxmt"])
+        try EngineInstall.accept(engineID: "x64-test-r1", paths: paths)
+        #expect(try EngineRenderers.available(engineID: "x64-test-r1", paths: paths) == ["wined3d", "dxmt", "d3dmetal"])
+    }
+
     @Test("Progress is reported once per percent, and always at the end")
     func throttledProgress() {
         let throttle = EngineInstall.ProgressThrottle()

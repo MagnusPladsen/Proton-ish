@@ -46,3 +46,11 @@ public enum EngineInstall {
         }
     }
 }
+
+public enum EngineRenderers {
+    // The renderers a game can be given on this engine right now, Highball's own availability rule
+    public static func available(engineID: String, paths: HighballPaths = HighballPaths()) throws -> [String] {
+        let engine = try EngineStore(paths: paths).engine(engineID)
+        return Renderer.allCases.filter { $0.availability(in: engine) == .available }.map(\.rawValue)
+    }
+}

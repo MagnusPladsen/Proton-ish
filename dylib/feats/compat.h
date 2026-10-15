@@ -115,6 +115,13 @@ int np_compat_apply_default_tool_in(void *compat_mgr, const char *support);
 // The same against ~/Library/Application Support/protonish, once per Steam run.
 int np_compat_apply_default_tool(void *compat_mgr);
 
+// Tools whose engine cannot run `renderer` ("d3dmetal", "dxvk"), from the app's renderer
+// list (<support>/renderers). `names` point into `storage`.
+size_t np_compat_tools_lacking_in(const char *path, const char *renderer, const char **names, size_t max,
+                                  char *storage, size_t storage_size);
+size_t np_compat_tools_lacking(const char *renderer, const char **names, size_t max,
+                               char *storage, size_t storage_size);
+
 // CCompatManager::YldRegisterTool, resolved at install time.
 void np_compat_set_register_fn(uintptr_t yld_register_tool);
 
