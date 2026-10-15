@@ -1,7 +1,30 @@
 # Proton-ish
 
-Proton-ish brings the Steam Play experience from Linux Steam to the macOS Steam client.
-Pick a Windows game in your normal macOS Steam library, choose a compatibility tool, press Play.
+Proton-ish lets the macOS Steam client run Windows games through Wine, the way Steam Play and Proton do
+on Linux. Pick a Windows game in your normal macOS Steam library, choose a compatibility tool, press Play.
+
+## Quick start
+
+Free setup with Highball's Wine engine. Using CrossOver instead? See [Using CrossOver](#using-crossover).
+
+**You need:** an Apple Silicon Mac with macOS 15 or newer, [Steam for macOS](https://store.steampowered.com/about/)
+and Rosetta 2 (macOS offers to install it the first time something needs it, or run
+`softwareupdate --install-rosetta`).
+
+1. **Install Proton-ish:** `brew install --cask magnuspladsen/tap/proton-ish`, or download `Proton-ish.zip` from the
+   [Releases page](https://github.com/MagnusPladsen/Proton-ish/releases) and move `Proton-ish.app` to Applications.
+2. **Open it once.** It is not notarized, so macOS blocks it; go to **System Settings → Privacy & Security** and click
+   **Open Anyway**.
+3. **Get the Wine engine:** install [Highball](https://github.com/gauthierpiarrette/highball), open any environment's
+   settings and set **Advanced → Engine** to `x64-crossover26.3-r19` (Wine 11). Highball downloads it. Wine 10
+   engines do not work yet.
+4. **Set up Proton-ish:** allow **App Management** when macOS asks (Proton-ish modifies the Steam app), click
+   **Install** on the Status screen, then **Set Up** next to the engine in the Highball section.
+5. **Play:** quit and reopen Steam. In a Windows game's **Properties → Compatibility**, tick **Force the use of a
+   specific Steam Play compatibility tool**, pick **Highball Wine 11 (r19)** and press Play.
+
+Updates arrive through **Proton-ish → Check for Updates…** (or `brew upgrade`). Something broken? Open an
+[issue](https://github.com/MagnusPladsen/Proton-ish/issues) and attach the game's `protonish-run.log`.
 
 ## Why Proton-ish exists
 
@@ -30,11 +53,10 @@ development that every free runtime, Highball included, is built on.
 
 ## Status
 
-Proton-ish is in early development and has **no releases yet**. Highball support works: a Windows game
-(Emberward) launched from the macOS Steam client through Highball's free Wine 11 engine (`x64-crossover26.3-r19`)
-on an Apple Silicon Mac, with Steam sign-in and the overlay working. That is one game on one Mac so far; expect
-rough edges. Until the first release, build it from source (below) or use
-[upstream NotProton](https://github.com/NotProtonNot/NotProton) with CrossOver.
+Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Highball
+support works: a Windows game (Emberward) launched from the macOS Steam client through Highball's free Wine 11
+engine (`x64-crossover26.3-r19`) on an Apple Silicon Mac, with Steam sign-in and the overlay working. That is one
+game on one Mac so far; expect rough edges.
 
 ![Emberward running from macOS Steam through Proton-ish and Highball's Wine 11 engine](docs/screenshots/emberward-running-highball.png)
 
@@ -42,15 +64,31 @@ rough edges. Until the first release, build it from source (below) or use
 
 ## Using Highball
 
-1. Install [Highball](https://github.com/gauthierpiarrette/highball). In Highball, open an environment's settings and
-   set **Advanced → Engine** to `x64-crossover26.3-r19` (Wine 11). Wine 10 engines are not supported yet.
-2. Open Proton-ish and allow it under **System Settings → Privacy & Security → App Management** (it modifies the
-   Steam app). Click **Install** on the Status screen, then **Set Up** next to the engine in the Highball section.
-3. Restart Steam. In a Windows game's **Properties → Compatibility**, choose **Highball Wine 11 (r19)** and press Play.
+The [Quick start](#quick-start) covers it. Keep Highball installed: Proton-ish sets up its engine from
+Highball's copy.
 
-Only Windows games go through a compatibility tool. Games with a native macOS version run as normal macOS apps;
-to run the Windows version of such a game instead, force a compatibility tool in its Compatibility settings.
 Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
+
+## Using CrossOver
+
+Follow the [Quick start](#quick-start) but skip step 3 and set up your CrossOver install in step 4 instead.
+CrossOver works exactly as in NotProton. Supported: CrossOver 26.3 and the CrossOver Preview builds 20260821 and
+20261006. Preview builds come in a Rosetta (x86) and an ARM64 variant; the ARM64 variant offers both a FEX and a
+Rosetta compatibility tool. The Status screen shows which of your CrossOver installs can be set up.
+
+A Steam client update can break Proton-ish until Proton-ish catches up; the Status screen has a
+**Block Steam client updates** switch if you would rather wait.
+
+Set a default tool under **Steam → Settings → Compatibility**, and override it per game under the game's
+**Properties → Compatibility**. A Rosetta tool is the safer default; FEX is worth trying per game.
+
+## Good to know
+
+- **Native macOS versions win.** If a game has a macOS version, Steam installs and runs that. To get the Windows
+  version, tick **Force the use of a specific Steam Play compatibility tool** in the game's Compatibility settings
+  and pick a tool. Unticking it switches back to the macOS version.
+- **No Valve Anti-Cheat.** VAC is not supported (Proton does not support it either). VAC games start in insecure
+  mode and cannot join secure matchmaking.
 
 ## Changes from upstream
 
@@ -64,23 +102,19 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 - 2026-10-14: First pre-release, 0.1.0-beta.1.
 - 2026-10-14: 0.1.0-beta.2: the signing certificate moves to Proton-ish's own keychain, so installing no longer asks for your password.
 - 2026-10-14: "Check for Updates" works for pre-releases (fixed feed address). Releases are published automatically when a version is merged into main.
+- 2026-10-15: README rewritten in Proton-ish's own words; the copied NotProton README text is gone, and NotProton's thanks to earlier projects are kept, clearly attributed.
+- 2026-10-15: README starts with a single Quick start, from installing Proton-ish to pressing Play.
 
-## Installing a test build
+## What Install changes
 
-Pre-releases are on the [Releases page](https://github.com/MagnusPladsen/Proton-ish/releases).
-
-1. With Homebrew: `brew install --cask magnuspladsen/tap/proton-ish`. Or download `Proton-ish.zip`, unzip it
-   and move `Proton-ish.app` to Applications.
-2. The app is not notarized (that needs a paid Apple developer account), so macOS blocks the first launch.
-   Open it once, then allow it under **System Settings → Privacy & Security → Open Anyway**.
-3. Grant **App Management** when asked (Proton-ish modifies the Steam app), then click **Install**.
-4. The first install creates a "Proton-ish Local Signing" certificate in Proton-ish's own keychain
-   (`~/Library/Application Support/protonish/signing.keychain-db`) and signs Steam with it, so Steam keeps its
-   Accessibility permission across Proton-ish updates. No password prompt: Proton-ish holds that keychain's password.
-   Remove Everything deletes it again.
-5. Follow "Using Highball" above. Updates arrive through **Proton-ish → Check for Updates…**.
-
-Please report problems at https://github.com/MagnusPladsen/Proton-ish/issues with the game's `protonish-run.log`.
+- **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
+- **Signing certificate:** the first install creates a "Proton-ish Local Signing" certificate in Proton-ish's own
+  keychain (`~/Library/Application Support/protonish/signing.keychain-db`) and signs Steam with it, so Steam keeps
+  its Accessibility permission across Proton-ish updates. No password prompt: Proton-ish holds that keychain's
+  password.
+- **Not notarized:** notarizing needs a paid Apple developer account, hence the Open Anyway step.
+- **Undo:** **Remove Everything** in Proton-ish restores Steam and deletes the support folder and the keychain
+  (`brew uninstall --zap --cask proton-ish` does the same).
 
 ## Building from source
 
@@ -90,51 +124,27 @@ Please report problems at https://github.com/MagnusPladsen/Proton-ish/issues wit
   `make bridge fonts app` builds the full `out/Proton-ish.app` (the bridge step compiles a Wine tree and takes a while).
 - `make brandcheck` must stay clean: it fails if an upstream NotProton identifier slips back in.
 
-The upstream NotProton documentation follows, unchanged. Its install and usage steps apply to Proton-ish
-(with Proton-ish in place of NotProton). Its policy statements, such as CrossOver being the only supported
-runtime, and its first-person notes are upstream's own and do not describe Proton-ish.
+### Source layout
 
----
+- `app/`: the macOS app (SwiftUI) that sets everything up.
+- `dylib/`: the code injected into Steam that enables Steam Play and adds the compatibility tools.
+- `lsteamclient/`: Valve's lsteamclient, ported to macOS, so Windows games can talk to the macOS Steam client.
+- `steam-shim/`: Valve's steam_helper from Proton 9.0, ported.
+- `ntdll-patch/`: patches each runner's copy of Wine (in `~/Library/Application Support/protonish/runners/`) so it
+  loads lsteamclient.
 
-This is done by forcibly enabling the Steam Play functionality in macOS Steam (which is
-present and inert) as well as by porting some components of Valve's Proton to macOS.
+## Contributing and license
 
-This tool is intended to be used with the stable Steam Client (version 1791918634) as well as the beta Steam Client (version 1791686101) paired with **CrossOver 26.3 or CrossOver [Preview](https://www.codeweavers.com/preview)
-20261006 or 20260821**, with more supported versions to come.
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Licensing is described in
+[NOTICE](NOTICE).
 
-Supporting specifically CrossOver is a design goal of this project. Better support for modifying CrossOver (using custom builds of DXMT/patched D3DMetal/MacGameVideoFix) will come in a future update, but support for alternatives to CrossOver itself is not planned.
+## Earlier projects, as credited by NotProton
 
-Both the FEX and the Rosetta versions are supported. I recommend using the FEX version of the 
-Preview 20261006, as it includes both the FEX version as well as the Rosetta one. 
+NotProton's README thanks earlier projects with similar goals, noting that NotProton was not built on their work.
+Proton-ish passes those thanks on:
 
-I further recommend going into Steam Settings - Compatibility and selecting the Rosetta version as your default compatibility tool. You can select FEX on a per game basis by right clicking a game in Steam, going into Properties - Compatibility and selecting FEX there.
+- [Kaon](https://github.com/natbro/kaon) by [Nat Brown](https://github.com/natbro).
+- [Neutron](https://github.com/mont127/Neutron) by mont127, a similar idea implemented differently.
+- [Gio](https://github.com/giodotblue), who worked on enabling Steam Play in macOS Steam before NotProton was released.
 
-If a game has a native macOS version as well as a Windows one, Steam will download the macOS version. To override this behavior, right click on the game, select Properties, select Compatibility. Enable 'Force the use of a specific Steam Play compatibility tool'. Select whichever version of CrossOver you want to do use. That will make Steam download the Windows version. Unchecking the 'Force the use...' box or selecting 'No Compatibility Tool' in the drop down list will revert to the macOS version of the game, with the specifics there varying based on your Steam version.
-
-**Valve Anti-Cheat is not supported.** Proton itself does not support VAC in Valve titles; Valve ships native Linux ports instead. VAC titles will launch in Insecure Mode and will not allow matchmaking. 
-
-**Homebrew:** `brew install --cask magnuspladsen/tap/proton-ish` (pre-release builds).
-
-Please read NOTICE for license information.
-
-Please open issue reports with any issues. PRs are welcome and encouraged.
-
-There are many people who worked on similar ideas, similar projects. I did not base NotProton on their work, but I still want to 
-give thanks to the people who came before me:
-
-[Nat Brown](https://github.com/natbro) made [Kaon](https://github.com/natbro/kaon), which is similar in goals to NotProton.
-
-mont127's [Neutron](https://github.com/mont127/Neutron) is also a similar idea, but implemented differently. 
-
-[Gio](https://github.com/giodotblue) was working enabling Steam Play inside of Steam on macOS prior to the release of NotProton itself. 
-I would have done things differently had I been aware of that. 
-
-Thanks to everyone who has positively contributed to macOS gaming. 
-
-Developer Notes:
-
-As far as the source structure goes, the macOS app itself is located in the ```app``` folder. The core logic is in ```dylib```.
-```lsteamclient``` is a macOS port of Valve's lsteamclient. ```steam-shim```is a port of Valve's
-steam-helper from Proton 9.0. ntdll-patch patches the copy of CrossOver that the app
-makes/places in the ```~/Library/Application Support/protonish/runners/``` folder so that
-lsteamclient is loaded.
+The original NotProton README is at https://github.com/NotProtonNot/NotProton#readme.
