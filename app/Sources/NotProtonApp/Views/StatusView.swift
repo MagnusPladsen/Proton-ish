@@ -626,6 +626,29 @@ struct StatusView: View {
         if let notice = SystemStatus.highballNotice(engines: snapshot.highball) {
             StatusRow(title: String(localized: "Compatibility Tool"), value: notice, tone: .warning)
         }
+        if snapshot.installedRunners.contains(where: { $0.runtime == .highball }) {
+            defaultToolRow(snapshot)
+        }
+    }
+
+    private func defaultToolRow(_ snapshot: StatusSnapshot) -> some View {
+        let requested = snapshot.defaultToolRequest.map { !$0.isEmpty } ?? false
+        let value: String = if requested {
+            String(localized: "Windows games without their own choice run through Highball. Applies when Steam starts.")
+        } else if let current = snapshot.steamDefaultTool, !current.isEmpty, !DefaultTool.isOurs(current) {
+            String(localized: "Steam's default is \(current). Turn on to use Highball instead.")
+        } else {
+            String(localized: "Each game needs Highball chosen under Properties → Compatibility.")
+        }
+        return StatusRow(
+            title: String(localized: "Use Highball for all Windows games"),
+            value: value,
+            toggle: Binding(
+                get: { requested },
+                set: { wanted in Task { await status.setDefaultTool(on: wanted) } }
+            )
+        )
+        .disabled(!status.isIdle)
     }
 
     private func highballRow(_ engine: HighballEngine, snapshot: StatusSnapshot) -> StatusRow {

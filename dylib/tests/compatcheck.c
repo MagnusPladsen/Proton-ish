@@ -404,6 +404,78 @@ static void stub_set_mapping(void *mgr, uint32_t appid, const char *tool_name,
     last_priority = priority;
 }
 
+static void put_text(const char *path, const char *text) {
+    FILE *f = fopen(path, "w");
+    if (f) { fputs(text, f); fclose(f); }
+}
+
+static void default_tool_cases(void) {
+    // The list the app would have written: a CrossOver tool and the Highball tool
+    char home[] = "out/compatcheck-home.XXXXXX";
+    if (!mkdtemp(home)) {
+        check(0, "the home fixture directory can be made");
+        return;
+    }
+    char library[768], app_support[768], support[768], tools_dir[768], list[768];
+    snprintf(library, sizeof(library), "%s/Library", home);
+    snprintf(app_support, sizeof(app_support), "%s/Application Support", library);
+    snprintf(support, sizeof(support), "%s/protonish", app_support);
+    snprintf(tools_dir, sizeof(tools_dir), "%s/Steam/compatibilitytools.d", app_support);
+    snprintf(list, sizeof(list), "%s/tools", support);
+    check(ensure_dir(library) == 0 && ensure_dir(app_support) == 0 && ensure_dir(support) == 0,
+          "the support fixture can be made");
+    put_text(list, "protonish-26.3\t26.3.0.39832\trosetta\tcrossover\tCrossOver 26.3\n"
+                   "protonish-highball-x64-crossover26.3-r19\tx64-crossover26.3-r19\trosetta\thighball\tHighball Wine 11 (r19)\n");
+    check(np_compat_load_tool_list(list, tools_dir) == 2, "the fixture tool list loads both tools");
+
+    check(np_compat_default_tool_action(NULL, "protonish-26.3") == NP_DEFAULT_TOOL_KEEP,
+          "no request file leaves the default alone");
+    check(np_compat_default_tool_action("protonish-highball-x64-crossover26.3-r19", NULL) == NP_DEFAULT_TOOL_SET,
+          "a listed tool is set when Steam has no default");
+    check(np_compat_default_tool_action("protonish-highball-x64-crossover26.3-r19", "proton_9") == NP_DEFAULT_TOOL_SET,
+          "the switch on replaces another default");
+    check(np_compat_default_tool_action("protonish-26.3", "protonish-26.3") == NP_DEFAULT_TOOL_KEEP,
+          "a default that already matches is not set again");
+    check(np_compat_default_tool_action("protonish-unknown", NULL) == NP_DEFAULT_TOOL_KEEP,
+          "a tool that is not in the app's list is never set");
+    check(np_compat_default_tool_action("proton_9", NULL) == NP_DEFAULT_TOOL_KEEP,
+          "a name that is not one of ours is never set");
+    check(np_compat_default_tool_action("", "protonish-26.3") == NP_DEFAULT_TOOL_CLEAR,
+          "the switch off clears a default that is ours");
+    check(np_compat_default_tool_action("", "proton_9") == NP_DEFAULT_TOOL_KEEP,
+          "the switch off leaves someone else's default");
+    check(np_compat_default_tool_action("", NULL) == NP_DEFAULT_TOOL_KEEP,
+          "the switch off with no default does nothing");
+
+    // Then the file round trip, against the fake support folder
+    np_compat_set_app_mapping_fn((uintptr_t)stub_find_mapping);
+    np_compat_set_mapping_fn((uintptr_t)stub_set_mapping);
+    stub_mapping_entry[0] = "proton_9";
+    char request[768], status[768];
+    snprintf(request, sizeof(request), "%s/default-tool", support);
+    snprintf(status, sizeof(status), "%s/steam-default-tool", support);
+    put_text(request, "protonish-highball-x64-crossover26.3-r19\n");
+    last_appid = 7; last_priority = 7;
+    check(np_compat_apply_default_tool_in(manager, support) == 1, "a request that changes the default reports a change");
+    check(last_appid == 0 && last_priority == COMPAT_MAPPING_PRIORITY_GLOBAL,
+          "the request maps app 0 at global priority");
+    FILE *f = fopen(status, "r");
+    char line[128] = "";
+    if (f) { if (!fgets(line, sizeof(line), f)) line[0] = 0; fclose(f); }
+    check(strcmp(line, "proton_9\n") == 0, "Steam's default before the change is recorded for the app");
+    // Steam took the request; the next run finds it in place and leaves it
+    stub_mapping_entry[0] = "protonish-highball-x64-crossover26.3-r19";
+    last_appid = 7;
+    check(np_compat_apply_default_tool_in(manager, support) == 0, "a default that already matches is left alone");
+    check(last_appid == 7, "nothing is mapped when the default already matches");
+    put_text(request, "\n");
+    check(np_compat_apply_default_tool_in(manager, support) == 1, "the switch off clears our default");
+    check(last_appid == 0, "clearing maps app 0");
+    stub_mapping_entry[0] = NULL;
+    check(np_compat_apply_default_tool_in(manager, support) == 0, "the switch off with no default does nothing on disk either");
+    check(np_compat_apply_default_tool(manager) == 0, "the home-based entry refuses a home with no support folder");
+}
+
 static void installed_fn_cases(void) {
     // Nothing installed is the state before the client has given the function up, and
     // every one of these reads as "cannot say" rather than as an answer.
@@ -494,6 +566,7 @@ int main(void) {
     tool_launch_cases();
     stale_tool_cases();
     runtime_file_cases();
+    default_tool_cases();
     installed_fn_cases();
 
     if (failures) {

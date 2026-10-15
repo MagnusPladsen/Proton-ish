@@ -26,6 +26,8 @@ struct StatusSnapshot: Sendable {
     var damagedRunners: [String] = []
     var installContent: DeploymentContent.Status = .unchecked
     var highball: [HighballEngine] = []
+    var defaultToolRequest: String?
+    var steamDefaultTool: String?
 
     static func capture(bundledVersion: String) -> StatusSnapshot {
         let installs = CrossOverSource.discover()
@@ -49,7 +51,9 @@ struct StatusSnapshot: Sendable {
             orphanedRunners: RunnerStore.orphanedClones(),
             damagedRunners: RunnerStore.damagedClones(),
             installContent: DeploymentContent.current(version: bundledVersion),
-            highball: HighballSource.discover()
+            highball: HighballSource.discover(),
+            defaultToolRequest: DefaultTool.request(),
+            steamDefaultTool: DefaultTool.steamDefault()
         )
     }
 }
@@ -445,7 +449,29 @@ final class SystemStatus {
                 }
             }.value
 
-            return runnerOutcome(result)
+            return runnerOutcome(result) + adoptHighballAsDefault()
+        }
+    }
+
+    // Option C: Highball becomes Steam's default for Windows games only when Steam has no default
+    private func adoptHighballAsDefault() -> String {
+        guard DefaultTool.shouldAdopt(request: DefaultTool.request(), steamDefault: DefaultTool.steamDefault()),
+              let tool = DefaultTool.highballTool(installed: RunnerStore.installedBuilds()),
+              (try? DefaultTool.set(tool)) != nil else { return "" }
+        return " " + String(localized: "Highball is now Steam's default for Windows games.")
+    }
+
+    func setDefaultTool(on wanted: Bool) async {
+        await perform(from: DefaultTool.step) { _ in
+            if wanted {
+                guard let tool = DefaultTool.highballTool(installed: RunnerStore.installedBuilds()) else {
+                    throw StepFailure(step: DefaultTool.step, detail: String(localized: "Set up the Highball engine first."))
+                }
+                try DefaultTool.set(tool)
+                return String(localized: "Highball is Steam's default for Windows games from the next Steam start.")
+            }
+            try DefaultTool.clear()
+            return String(localized: "Steam's default tool is cleared at the next Steam start.")
         }
     }
 
@@ -476,7 +502,7 @@ final class SystemStatus {
             let result = try await Task.detached(priority: .userInitiated) {
                 try RunnerSetup.run(from: engine) { progress($0.label) }
             }.value
-            return runnerOutcome(result)
+            return runnerOutcome(result) + adoptHighballAsDefault()
         }
     }
 

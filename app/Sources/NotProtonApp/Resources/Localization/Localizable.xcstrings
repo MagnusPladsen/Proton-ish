@@ -1805,6 +1805,16 @@
         }
       }
     },
+    "Each game needs Highball chosen under Properties → Compatibility." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个游戏都需要在“属性 → 兼容性”中选择 Highball。"
+          }
+        }
+      }
+    },
     "Enable D3DMetal" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1951,6 +1961,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Highball 引擎已下载。请点击“安装”，然后点击引擎旁的“设置”。"
+          }
+        }
+      }
+    },
+    "Highball is Steam's default for Windows games from the next Steam start." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从下次启动 Steam 起，Highball 将是 Windows 游戏的默认工具。"
+          }
+        }
+      }
+    },
+    "Highball is now Steam's default for Windows games." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highball 现在是 Steam 运行 Windows 游戏的默认工具。"
           }
         }
       }
@@ -3348,6 +3378,16 @@
         }
       }
     },
+    "Set Steam's default tool" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置 Steam 的默认工具"
+          }
+        }
+      }
+    },
     "Set Up" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3374,6 +3414,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "设置兼容工具"
+          }
+        }
+      }
+    },
+    "Set up the Highball engine first." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先设置 Highball 引擎。"
           }
         }
       }
@@ -3677,6 +3727,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steam 已停止，请重新启动。"
+          }
+        }
+      }
+    },
+    "Steam's default is %@. Turn on to use Highball instead." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 的默认工具是 %@。打开此项以改用 Highball。"
+          }
+        }
+      }
+    },
+    "Steam's default tool is cleared at the next Steam start." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次启动 Steam 时将清除 Steam 的默认工具。"
           }
         }
       }
@@ -4241,6 +4311,16 @@
         }
       }
     },
+    "Use Highball for all Windows games" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对所有 Windows 游戏使用 Highball"
+          }
+        }
+      }
+    },
     "Use a copy of Steam from another folder or drive." : {
       "localizations" : {
         "zh-Hans" : {
@@ -4297,6 +4377,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不支持版本 %@（支持：%@）"
+          }
+        }
+      }
+    },
+    "Windows games without their own choice run through Highball. Applies when Steam starts." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未单独选择工具的 Windows 游戏将通过 Highball 运行。在 Steam 启动时生效。"
           }
         }
       }

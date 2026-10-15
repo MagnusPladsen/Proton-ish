@@ -829,6 +829,94 @@ void np_compat_register_crossover(void *compat_mgr) {
     }
 }
 
+// The global default (app 0), what Steam's Compatibility settings call the default tool
+const char *np_compat_global_mapping(void *compat_mgr) {
+    if (!g_find_mapping || !compat_mgr)
+        return NULL;
+    return mapping_name(g_find_mapping(compat_mgr, 0));
+}
+
+static int is_listed_tool(const char *name) {
+    for (int i = 0; i < g_tool_count; i++)
+        if (strcmp(g_tools[i].name, name) == 0) return 1;
+    return 0;
+}
+
+// What the app asked for versus what Steam has. `request` is NULL without a request
+// file, "" to clear, else a tool name; `current` is NULL or "" when Steam has no default.
+np_default_tool_action_t np_compat_default_tool_action(const char *request, const char *current) {
+    if (!request)
+        return NP_DEFAULT_TOOL_KEEP;
+    if (!*request)
+        return current && is_tool_name(current) ? NP_DEFAULT_TOOL_CLEAR : NP_DEFAULT_TOOL_KEEP;
+    if (!is_tool_name(request) || !is_listed_tool(request))
+        return NP_DEFAULT_TOOL_KEEP;
+    return current && strcmp(current, request) == 0 ? NP_DEFAULT_TOOL_KEEP : NP_DEFAULT_TOOL_SET;
+}
+
+// One line, the tool name or nothing. Anything else reads as no request.
+static int read_default_tool_request(const char *path, char *name, size_t size) {
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    name[0] = 0;
+    char *got = fgets(name, (int)size, f);
+    // A line longer than a tool name can be is no request
+    int too_long = got && !strchr(name, '\n') && !feof(f);
+    fclose(f);
+    if (too_long) return 0;
+    name[strcspn(name, "\r\n")] = 0;
+    return 1;
+}
+
+// Records Steam's current default in <support>/steam-default-tool for the app, then applies
+// the request in <support>/default-tool. Returns 1 when the global mapping changed.
+int np_compat_apply_default_tool_in(void *compat_mgr, const char *support) {
+    if (!compat_mgr || !support) return 0;
+    const char *current = np_compat_global_mapping(compat_mgr);
+
+    char status_path[768];
+    snprintf(status_path, sizeof(status_path), "%s/steam-default-tool", support);
+    FILE *status = fopen(status_path, "w");
+    if (status) {
+        fprintf(status, "%s\n", current ? current : "");
+        fclose(status);
+    }
+
+    char request_path[768];
+    snprintf(request_path, sizeof(request_path), "%s/default-tool", support);
+    char request[64];
+    if (!read_default_tool_request(request_path, request, sizeof(request)))
+        return 0;
+
+    load_tool_list_once();
+    switch (np_compat_default_tool_action(request, current)) {
+    case NP_DEFAULT_TOOL_SET:
+        np_compat_map_tool(compat_mgr, 0, request);
+        NP_LOG("np_compat_apply_default_tool: %s is now the default tool (was %s)",
+               request, current ? current : "none");
+        return 1;
+    case NP_DEFAULT_TOOL_CLEAR:
+        np_compat_map_tool(compat_mgr, 0, "");
+        NP_LOG("np_compat_apply_default_tool: cleared the default tool %s", current);
+        return 1;
+    case NP_DEFAULT_TOOL_KEEP:
+        break;
+    }
+    return 0;
+}
+
+// Once per Steam run, the first time the compat manager is seen
+int np_compat_apply_default_tool(void *compat_mgr) {
+    static int applied = 0;
+    if (applied || !compat_mgr) return 0;
+    applied = 1;
+    const char *home = np_home_dir();
+    if (!home) return 0;
+    char support[768];
+    snprintf(support, sizeof(support), "%s/Library/Application Support/protonish", home);
+    return np_compat_apply_default_tool_in(compat_mgr, support);
+}
+
 const char *np_compat_fallback_tool_name(void) {
     load_tool_list_once();
     return g_tool_count > 0 ? g_tools[0].name : TOOL_DIR_NAME;

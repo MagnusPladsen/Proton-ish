@@ -100,6 +100,21 @@ const char *np_compat_app_mapping(void *compat_mgr, uint32_t appid);
 void np_compat_set_mapping_fn(uintptr_t set_compat_tool_mapping);
 void np_compat_map_tool(void *compat_mgr, uint32_t appid, const char *tool_name);
 
+// The global default tool (app 0), or NULL when Steam has none.
+const char *np_compat_global_mapping(void *compat_mgr);
+
+// The app's default-tool request (~/Library/Application Support/protonish/default-tool:
+// a tool name sets it, an empty line clears it when it is one of ours, no file leaves
+// it alone) against Steam's current default.
+typedef enum { NP_DEFAULT_TOOL_KEEP, NP_DEFAULT_TOOL_SET, NP_DEFAULT_TOOL_CLEAR } np_default_tool_action_t;
+np_default_tool_action_t np_compat_default_tool_action(const char *request, const char *current);
+
+// Writes Steam's current default to <support>/steam-default-tool for the app, then applies
+// the request in <support>/default-tool. Returns 1 when the global mapping changed.
+int np_compat_apply_default_tool_in(void *compat_mgr, const char *support);
+// The same against ~/Library/Application Support/protonish, once per Steam run.
+int np_compat_apply_default_tool(void *compat_mgr);
+
 // CCompatManager::YldRegisterTool, resolved at install time.
 void np_compat_set_register_fn(uintptr_t yld_register_tool);
 
