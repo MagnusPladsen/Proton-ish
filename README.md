@@ -150,6 +150,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-15: Steam keeps its Accessibility permission across installs (the grant was reset on every install before).
 - 2026-10-15: README: Status reflects Highball's game support, "Reporting problems" says where to report what.
 - 2026-10-15: 0.1.0-beta.4: engine download from Proton-ish, default tool for all Windows games, DirectX 12 games on D3DMetal, Accessibility kept across installs.
+- 2026-10-15: Upstream sync workflow: NotProton merges, Highball pin and highball-db bumps as PRs, new engine builds as issues.
 - 2026-10-15: A final release counts as newer than an installed beta (it was refused before); Remove Everything clears Steam's default tool when it was Proton-ish's.
 
 ## What Install changes
@@ -182,6 +183,21 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - `steam-shim/`: Valve's steam_helper from Proton 9.0, ported.
 - `ntdll-patch/`: patches each runner's copy of Wine (in `~/Library/Application Support/protonish/runners/`) so it
   loads lsteamclient.
+
+## Maintenance
+
+A daily workflow (`.github/workflows/upstream-sync.yml`, also on demand under Actions) keeps the fork current:
+
+- **NotProton:** a new upstream commit becomes a PR that merges it into main, or an issue listing the conflicting
+  files when the merge is not clean.
+- **Highball:** a new Highball release bumps the HighballKit pin, and a new highball-db commit refreshes the bundled
+  snapshot, in one PR.
+- **Highball engines:** a new engine build becomes an issue with the steps to support it.
+
+Nothing merges or releases by itself; the PRs run the normal checks and never touch `dylib/version.h`. The workflow
+needs a repository secret `SYNC_TOKEN`: a fine-grained GitHub token for this repository only, with Contents,
+Pull requests, Issues and Workflows set to read and write, so that CI runs on the PRs it opens. When the token
+expires the workflow skips with a notice until it is renewed. Run the scripts' tests with `make synccheck`.
 
 ## Contributing and license
 
