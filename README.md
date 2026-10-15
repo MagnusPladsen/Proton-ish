@@ -149,6 +149,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-15: DirectX 12-only games go to D3DMetal on Automatic; the Graphics list shows only what the engine can run.
 - 2026-10-15: Steam keeps its Accessibility permission across installs (the grant was reset on every install before).
 - 2026-10-15: README: Status reflects Highball's game support, "Reporting problems" says where to report what.
+- 2026-10-15: 0.1.0-beta.4: engine download from Proton-ish, default tool for all Windows games, DirectX 12 games on D3DMetal, Accessibility kept across installs.
 
 ## What Install changes
 
