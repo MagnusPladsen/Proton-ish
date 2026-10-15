@@ -180,11 +180,15 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
   `WINEDLLPATH` with `root/engine/lib/wine/x86_64-windows` first,
   `PATH=root/engine/bin:...`.
 - Manifest `baseEnv` applied with `${frameworks}` expanded.
-- Graphics: the in-Steam options panel (`dylib/feats/webpatch.c`) lists only renderers
-  present in `root/renderers/`. The chosen renderer maps to
-  `WINEDLLPATH_PREPEND=root/renderers/<name>/wine` (from Highball engine patch 0003).
-  D3DMetal is listed only when the GPTK licence is accepted. A game whose launch options
-  request an unavailable renderer falls back to DXMT and logs it.
+- Graphics (amended 2026-10-15, M2b): the run script asks `highball-env`, which links
+  Highball's HighballKit, for the environment Highball would use. It maps the panel's
+  launch options onto `BottleSettings`, applies the game's highball-db row and the
+  environment-only steps of its recipe, and returns `Bottle.environment()`; renderer folders,
+  the GPTK licence gate, the D3DMetal timestamp shim and fallbacks (DXMT → DXVK → WineD3D)
+  are Highball's. Proton-ish keeps `WINELOADER`, `WINESERVER`, `WINEPREFIX`, `WINEDLLPATH`,
+  `PATH`, `WINEDEBUG` and `WINEMSYNC`. Any helper failure keeps `runtime.env` + DXMT. The
+  panel still lists every renderer (filtering moves to M2d); prefix-changing recipe steps
+  are M2c.
 - Windows user: after `wineboot`, the script reads the real profile folder under
   `drive_c/users/` (excluding `Public`) and links it to `steamuser`, instead of assuming
   `users/crossover`. This handles Highball engine patch 0001.

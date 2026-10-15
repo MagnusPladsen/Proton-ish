@@ -16,5 +16,7 @@ struct AboutCreditsTests {
         #expect(text.contains("CodeWeavers"))
         #expect(text.contains("Highball"))
         #expect(text.contains("GPLv3"))
+        #expect(text.contains("HighballKit"))
+        #expect(text.contains("highball-db"))
     }
 }

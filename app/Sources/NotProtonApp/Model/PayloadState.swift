@@ -9,6 +9,8 @@ struct PayloadState: Sendable {
     var overlayShimPresent: Bool
     var iconmakerPresent: Bool
     var appinfoPresent: Bool
+    var highballEnvPresent: Bool
+    var highballDBPresent: Bool
     var signatureDatabase: String?
     var legacyCompatPresent: Int
     var legacyCompatExpected: Int
@@ -23,6 +25,8 @@ struct PayloadState: Sendable {
         if !overlayShimPresent { names.append("overlay-shim.dylib") }
         if !iconmakerPresent { names.append("iconmaker") }
         if !appinfoPresent { names.append("appinfo") }
+        if !highballEnvPresent { names.append("highball-env") }
+        if !highballDBPresent { names.append("highball-db.json") }
         return names
     }
 
@@ -31,7 +35,7 @@ struct PayloadState: Sendable {
     }
 
     var isEmpty: Bool {
-        present == 0 && !overlayShimPresent && !iconmakerPresent && !appinfoPresent
+        present == 0 && !overlayShimPresent && !iconmakerPresent && !appinfoPresent && !highballEnvPresent && !highballDBPresent
             && signatureDatabase == nil
     }
 
@@ -79,6 +83,8 @@ enum PayloadInspector {
             overlayShimPresent: fm.fileExists(atPath: SupportPaths.overlayShim.path(percentEncoded: false)),
             iconmakerPresent: fm.fileExists(atPath: SupportPaths.iconmaker.path(percentEncoded: false)),
             appinfoPresent: fm.fileExists(atPath: SupportPaths.appinfo.path(percentEncoded: false)),
+            highballEnvPresent: fm.fileExists(atPath: SupportPaths.highballEnv.path(percentEncoded: false)),
+            highballDBPresent: fm.fileExists(atPath: SupportPaths.highballDB.path(percentEncoded: false)),
             signatureDatabase: newestSignatureDatabase(),
             legacyCompatPresent: legacyPresent,
             legacyCompatExpected: legacyNames.count,
