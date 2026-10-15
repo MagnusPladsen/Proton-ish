@@ -206,6 +206,36 @@ struct UninstallTests {
         #expect(try verifies(layout.app))
     }
 
+    @Test("Remove Everything takes our tool out of Steam's default-tool setting, and leaves another's")
+    func clearsOurDefaultTool() async throws {
+        for (tool, cleared) in [("protonish-highball-x64-crossover26.3-r19", true), ("proton_9", false)] {
+            let layout = try layout()
+            defer { try? FileManager.default.removeItem(at: layout.root) }
+            let config = layout.root.appending(path: "config.vdf")
+            let entry = "\t\t\t\t\t\"0\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"name\"\t\t\"\(tool)\"\n\t\t\t\t\t\t\"config\"\t\t\"\"\n\t\t\t\t\t}\n"
+            let text = "\"InstallConfigStore\"\n{\n\t\t\t\t\"CompatToolMapping\"\n\t\t\t\t{\n\(entry)\t\t\t\t}\n}\n"
+            try Data(text.utf8).write(to: config)
+            struct Offline: Error {}
+
+            _ = try await Uninstall.run(
+                app: layout.app,
+                innerPlist: layout.innerPlist,
+                updateBlocks: [layout.updateBlock],
+                legacyCompat: layout.legacyCompat,
+                compatTools: layout.compatTools,
+                compatConfig: config,
+                directories: [layout.support, layout.caches],
+                libraries: [],
+                modifications: layout.modifications, lockFolder: layout.root,
+                repair: { _, _ in throw Offline() },
+                stop: { _, _ in false }
+            )
+
+            let after = try String(contentsOf: config, encoding: .utf8)
+            #expect((SteamCompatConfig.defaultTool(in: after) == nil) == cleared, Comment(rawValue: tool))
+        }
+    }
+
     @Test("A restore that fails does not cancel the removal")
     func removesEverythingWhenSteamCannotBeRestored() async throws {
         let layout = try layout()

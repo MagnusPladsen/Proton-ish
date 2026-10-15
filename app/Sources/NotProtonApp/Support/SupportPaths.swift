@@ -111,6 +111,7 @@ enum SupportPaths {
         }
 
         static var configFile: URL { userData.appending(path: "steam.cfg") }
+        static var compatConfig: URL { userData.appending(path: "config/config.vdf") }
 
         static var innerApp: URL { userData.appending(path: "Steam.AppBundle/Steam") }
         static var innerInfoPlist: URL { innerApp.appending(path: "Contents/Info.plist") }
