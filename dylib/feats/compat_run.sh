@@ -1077,6 +1077,7 @@ link_fonts() {
 np_hb_env_file=""
 np_hb_launch_mark=""
 highball_environment() {
+  hb_exe="${1:-}"
   hb_helper="$np_support/highball-env"
   hb_file="$STEAM_COMPAT_DATA_PATH/protonish-highball.env"
   hb_raw="$hb_file.raw"
@@ -1085,8 +1086,10 @@ highball_environment() {
     echo "highball-env: missing, using the engine defaults" >> "$log" 2>&1 || true
     return 0
   fi
-  "$hb_helper" --prefix "$WINEPREFIX" --engine "$np_build" --appid "${app_id:-0}" \
-    --db "$np_support/highball-db.json" > "$hb_raw" 2>> "$log" &
+  # The game's executable lets Highball spot a DirectX 12-only program
+  set -- --prefix "$WINEPREFIX" --engine "$np_build" --appid "${app_id:-0}" --db "$np_support/highball-db.json"
+  [ -z "$hb_exe" ] || [ ! -f "$hb_exe" ] || set -- "$@" --exe "$hb_exe"
+  "$hb_helper" "$@" > "$hb_raw" 2>> "$log" &
   hb_pid=$!
   hb_wait=0
   while kill -0 "$hb_pid" 2>/dev/null && [ "$hb_wait" -lt 100 ]; do
@@ -1195,7 +1198,7 @@ if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   map_game_drive
   if [ "$np_runtime" = highball ]; then
     stage_step="highball environment"
-    highball_environment
+    highball_environment "$1"
   fi
 fi
 

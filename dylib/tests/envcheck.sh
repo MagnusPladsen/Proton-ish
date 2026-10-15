@@ -159,6 +159,16 @@ is "notes are logged" "1" "$(grep -c 'highball-env: note: renderer d3dmetal' "$l
 is "the helper gets the prefix, engine, app id and database" \
   "args: --prefix $WINEPREFIX --engine x64-crossover26.3-r19 --appid 1086940 --db $np_support/highball-db.json" \
   "$(grep '^args:' "$log")"
+reset_hb
+hb_game="$hb/Game.exe"; : > "$hb_game"
+highball_environment "$hb_game"
+is "the game's executable is passed when it exists" "1" "$(grep -c -- "--exe $hb_game\$" "$log")"
+reset_hb
+highball_environment "$hb/missing.exe"
+is "a missing executable is not passed" "0" "$(grep -c -- '--exe' "$log")"
+# shellcheck disable=SC2016 # Match the literal script line.
+hb_call_site=$(grep -c 'highball_environment "\$1"' "$SRC")
+is "the run script hands the game's executable to the helper" "1" "$hb_call_site"
 unset -v GST_PLUGIN_PATH CX_D3DMETALPATH HB_VALUE
 
 reset_hb

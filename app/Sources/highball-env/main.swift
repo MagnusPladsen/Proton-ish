@@ -1,6 +1,6 @@
 // Prints the launch environment Highball would use for a Steam game, one KEY=VALUE per line.
 // Usage: highball-env install|accept … (see below), or
-//        highball-env --prefix <wine prefix> --engine <engine id> [--appid <Steam app id>] [--db <highball-db.json>]
+//        highball-env --prefix <wine prefix> --engine <engine id> [--appid <Steam app id>] [--db <highball-db.json>] [--exe <game executable>]
 
 import Foundation
 import HighballEnvCore
@@ -71,5 +71,6 @@ if let db = options["db"] {
 }
 let request = LaunchEnvironment.Request(
     prefix: URL(fileURLWithPath: prefix), engineID: engine, appID: options["appid"].flatMap(Int.init),
-    environment: ProcessInfo.processInfo.environment, gameData: gameData)
+    environment: ProcessInfo.processInfo.environment, gameData: gameData,
+    exe: options["exe"].map { URL(fileURLWithPath: $0) })
 for line in LaunchEnvironment.lines(for: request) { print(line) }
