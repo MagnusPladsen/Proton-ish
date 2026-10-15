@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   notproton:
-    name: NotProton
+    name: Merge NotProton
     runs-on: ubuntu-latest
     steps:
       - name: Need the sync token
