@@ -122,6 +122,7 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
   works (D3DMetal, DXMT, DXVK, WineD3D), Automatic follows highball-db, and highball-db's environment fixes apply.
   New `highball-env` helper; the run log reports which renderer served the game. Synced with NotProton `dae593c`.
 - 2026-10-15: 0.1.0-beta.3: Highball graphics choice and per-game fixes, renderer report, NotProton console-output fix.
+- 2026-10-15: Upstream sync workflow: NotProton merges, Highball pin and highball-db bumps as PRs, new engine builds as issues.
 
 ## What Install changes
 
@@ -150,6 +151,21 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
 - `steam-shim/`: Valve's steam_helper from Proton 9.0, ported.
 - `ntdll-patch/`: patches each runner's copy of Wine (in `~/Library/Application Support/protonish/runners/`) so it
   loads lsteamclient.
+
+## Maintenance
+
+A daily workflow (`.github/workflows/upstream-sync.yml`, also on demand under Actions) keeps the fork current:
+
+- **NotProton:** a new upstream commit becomes a PR that merges it into main, or an issue listing the conflicting
+  files when the merge is not clean.
+- **Highball:** a new Highball release bumps the HighballKit pin, and a new highball-db commit refreshes the bundled
+  snapshot, in one PR.
+- **Highball engines:** a new engine build becomes an issue with the steps to support it.
+
+Nothing merges or releases by itself; the PRs run the normal checks and never touch `dylib/version.h`. The workflow
+needs a repository secret `SYNC_TOKEN`: a fine-grained GitHub token for this repository only, with Contents,
+Pull requests, Issues and Workflows set to read and write, so that CI runs on the PRs it opens. When the token
+expires the workflow skips with a notice until it is renewed. Run the scripts' tests with `make synccheck`.
 
 ## Contributing and license
 
