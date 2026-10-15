@@ -1072,6 +1072,73 @@ link_fonts() {
   done
 }
 
+# Highball: the launch environment Highball itself would use, from highball-env (HighballKit).
+# On any failure the engine defaults from runtime.env and DXMT stay in place.
+np_hb_env_file=""
+highball_environment() {
+  hb_helper="$np_support/highball-env"
+  hb_file="$STEAM_COMPAT_DATA_PATH/protonish-highball.env"
+  hb_raw="$hb_file.raw"
+  rm -f "$hb_file" "$hb_raw"
+  if [ ! -x "$hb_helper" ]; then
+    echo "highball-env: missing, using the engine defaults" >> "$log" 2>&1 || true
+    return 0
+  fi
+  "$hb_helper" --prefix "$WINEPREFIX" --engine "$np_build" --appid "${app_id:-0}" \
+    --db "$np_support/highball-db.json" > "$hb_raw" 2>> "$log" &
+  hb_pid=$!
+  hb_wait=0
+  while kill -0 "$hb_pid" 2>/dev/null && [ "$hb_wait" -lt 100 ]; do
+    sleep 0.1
+    hb_wait=$((hb_wait + 1))
+  done
+  if kill -0 "$hb_pid" 2>/dev/null; then
+    kill "$hb_pid" 2>/dev/null || true
+    wait "$hb_pid" 2>/dev/null || true
+    echo "highball-env: no answer in 10 s, using the engine defaults" >> "$log" 2>&1 || true
+    rm -f "$hb_raw"
+    return 0
+  fi
+  if ! wait "$hb_pid"; then
+    echo "highball-env: failed, using the engine defaults" >> "$log" 2>&1 || true
+    rm -f "$hb_raw"
+    return 0
+  fi
+  hb_count=0
+  while IFS= read -r hb_line || [ -n "$hb_line" ]; do
+    case "$hb_line" in
+      '#'*) echo "highball-env: ${hb_line#'# '}" >> "$log" 2>&1 || true; continue ;;
+      *=*) ;;
+      *) continue ;;
+    esac
+    hb_key=${hb_line%%=*}
+    # Letters are spelled out: bracket ranges follow the locale and would let lowercase through
+    case "$hb_key" in
+      ''|[0123456789]*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*) continue ;;
+      WINEPREFIX|WINELOADER|WINESERVER|WINEDLLPATH|PATH|WINEUSERNAME|CX_ROOT|WINEDEBUG|WINEMSYNC) continue ;;
+    esac
+    printf '%s\n' "$hb_line" >> "$hb_file"
+    hb_count=$((hb_count + 1))
+  done < "$hb_raw"
+  rm -f "$hb_raw"
+  if [ "$hb_count" -eq 0 ]; then
+    echo "highball-env: no environment, using the engine defaults" >> "$log" 2>&1 || true
+    rm -f "$hb_file"
+    return 0
+  fi
+  # Highball decides the renderer folders now, WineD3D included, which has none
+  unset -v WINEDLLPATH_PREPEND
+  while IFS= read -r hb_line; do
+    hb_key=${hb_line%%=*}
+    # dyld drops DYLD_* on the way to the game; the launcher reads them from the file
+    case "$hb_key" in DYLD_*) continue ;; esac
+    export "$hb_key=${hb_line#*=}"
+    np_hb_keys="$np_hb_keys $hb_key"
+  done < "$hb_file"
+  np_hb_env_file="$hb_file"
+  echo "highball-env: $hb_count variables from Highball" >> "$log" 2>&1 || true
+} # highball_environment
+
 if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   export WINEPREFIX="$STEAM_COMPAT_DATA_PATH/pfx"
   stage_step="prefix lock"
@@ -1110,6 +1177,10 @@ if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   # A prefix that Wine built just now only has dosdevices from this point on.
   stage_step="game drive"
   map_game_drive
+  if [ "$np_runtime" = highball ]; then
+    stage_step="highball environment"
+    highball_environment
+  fi
 fi
 
 bridge_src="$np_support/bridge"
@@ -1428,6 +1499,15 @@ if [ -r "$CX_ROOT/runtime.env" ]; then
   while IFS= read -r line || [ -n "\$line" ]; do
     case "\$line" in DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export "\$line" ;; esac
   done < "$CX_ROOT/runtime.env"
+fi
+# Highball's own values for this game replace the engine defaults above
+if [ -n "$np_hb_env_file" ] && [ -r "$np_hb_env_file" ]; then
+  while IFS= read -r line || [ -n "\$line" ]; do
+    case "\$line" in
+      DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export "\$line" ;;
+      DYLD_INSERT_LIBRARIES=*) export DYLD_INSERT_LIBRARIES="\${DYLD_INSERT_LIBRARIES:+\$DYLD_INSERT_LIBRARIES:}\${line#DYLD_INSERT_LIBRARIES=}" ;;
+    esac
+  done < "$np_hb_env_file"
 fi
 [ -n "\$NOTPROTON_GAME_CWD" ] && cd "\$NOTPROTON_GAME_CWD"
 "$WINELOADER" "\$@"

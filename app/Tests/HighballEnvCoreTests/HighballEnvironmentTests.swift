@@ -12,14 +12,15 @@ struct HighballEnvironmentTests {
     @Test("Variables that point at Proton-ish's engine and prefix are left to the run script")
     func dropsOwnedKeys() {
         let out = lines(["WINEPREFIX": "/hb", "WINELOADER": "/hb/wine", "WINESERVER": "/hb/server", "PATH": "/hb/bin",
-                         "WINEDLLPATH": "/hb/lib", "WINEUSERNAME": "x", "CX_ROOT": "/hb", "GST_PLUGIN_PATH": "/hb/gst"])
+                         "WINEDLLPATH": "/hb/lib", "WINEUSERNAME": "x", "CX_ROOT": "/hb", "WINEDEBUG": "fixme-all",
+                         "WINEMSYNC": "1", "GST_PLUGIN_PATH": "/hb/gst"])
         #expect(out == ["GST_PLUGIN_PATH=/hb/gst"])
     }
 
     @Test("A renderer variable the user typed wins over Highball's")
     func userWins() {
-        let out = lines(["DXVK_HUD": "0", "MTL_HUD_ENABLED": "1", "WINEDEBUG": "fixme-all", "D3DM_MAX_FPS": "60"],
-                        user: ["DXVK_HUD": "fps", "WINEDEBUG": "+loaddll"])
+        let out = lines(["DXVK_HUD": "0", "MTL_HUD_ENABLED": "1", "D3DM_MAX_FPS": "60"],
+                        user: ["DXVK_HUD": "fps"])
         #expect(out == ["D3DM_MAX_FPS=60", "MTL_HUD_ENABLED=1"])
     }
 

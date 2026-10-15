@@ -108,6 +108,91 @@ case "$launcher_text" in
   *'DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export'*) ok "launcher re-exports the engine's DYLD fallback paths" ;;
   *) bad "launcher re-exports the engine's DYLD fallback paths" "a DYLD_FALLBACK case in the launcher" "none" ;;
 esac
+launcher_hb='DYLD_INSERT_LIBRARIES=*) export DYLD_INSERT_LIBRARIES='
+# shellcheck disable=SC2016 # Match the literal launcher text.
+case "$launcher_text" in
+  *"$launcher_hb"*'done < "$np_hb_env_file"'*) ok "launcher takes DYLD values from Highball's file for the game" ;;
+  *) bad "launcher takes DYLD values from Highball's file for the game" "a np_hb_env_file loop" "none" ;;
+esac
+
+echo "== Highball's own launch environment (highball-env) =="
+hb_env_fn=$(sed -n '/^highball_environment() {$/,/^} # highball_environment$/p' "$SRC")
+[ -n "$hb_env_fn" ] || { echo "FAIL: highball_environment not found"; exit 1; }
+# shellcheck disable=SC2016 # Match the literal script lines.
+hb_call=$(sed -n '/^  if \[ "$np_runtime" = highball \]; then$/,/^  fi$/p' "$SRC")
+case "$hb_call" in
+  *highball_environment*) ok "highball-env runs only for Highball runners" ;;
+  *) bad "highball-env runs only for Highball runners" "a call guarded by np_runtime = highball" "$hb_call" ;;
+esac
+eval "$hb_env_fn"
+np_support="$hb/support"; STEAM_COMPAT_DATA_PATH="$hb/compat"; WINEPREFIX="$hb/compat/pfx"
+np_build=x64-crossover26.3-r19; app_id=1086940; log="$hb/run.log"
+mkdir -p "$np_support" "$STEAM_COMPAT_DATA_PATH"
+helper() { printf '#!/bin/sh\n%s\n' "$1" > "$np_support/highball-env"; chmod +x "$np_support/highball-env"; }
+reset_hb() { WINEDLLPATH_PREPEND=/fallback/dxmt; np_hb_keys=""; np_hb_env_file=""; : > "$log"; }
+
+reset_hb
+# shellcheck disable=SC2016 # Single quotes keep the helper's text literal.
+helper 'echo "args: $*" >&2
+echo "# note: renderer d3dmetal"
+echo "GST_PLUGIN_PATH=/HB/gst"
+echo "WINEDLLPATH_PREPEND=/HB/d3dmetal/wine:/HB/dxmt/wine"
+echo "CX_D3DMETALPATH=/HB/d3dmetal/external"
+echo "DYLD_FALLBACK_FRAMEWORK_PATH=/HB/external:/HB/frameworks"
+echo "WINELOADER=/HB/wine"
+echo "lower=x"
+echo "\$(touch '"$hb"'/pwned)=x"
+echo "HB_VALUE=\$(touch '"$hb"'/pwned2)"'
+WINELOADER=/ours/wine
+highball_environment
+is "Highball's renderer folders replace the DXMT default" "/HB/d3dmetal/wine:/HB/dxmt/wine" "$WINEDLLPATH_PREPEND"
+is "Highball's variables are exported" "/HB/d3dmetal/external" "$CX_D3DMETALPATH"
+is "the loader stays Proton-ish's" "/ours/wine" "$WINELOADER"
+is "DYLD values wait for the launcher" "" "${DYLD_FALLBACK_FRAMEWORK_PATH:-}"
+is "the DYLD value is kept for the launcher" "1" "$(grep -c '^DYLD_FALLBACK_FRAMEWORK_PATH=/HB/external' "$np_hb_env_file")"
+is "a lowercase name is refused" "" "${lower:-}"
+is "nothing the helper prints is executed" "no" "$([ -e "$hb/pwned" ] || [ -e "$hb/pwned2" ] && echo yes || echo no)"
+# shellcheck disable=SC2016 # The literal text is the expected value.
+is "a value is exported as text" '$(touch '"$hb"'/pwned2)' "$HB_VALUE"
+is "the keys are remembered for the game" " GST_PLUGIN_PATH WINEDLLPATH_PREPEND CX_D3DMETALPATH HB_VALUE" "$np_hb_keys"
+is "notes are logged" "1" "$(grep -c 'highball-env: note: renderer d3dmetal' "$log")"
+is "the helper gets the prefix, engine, app id and database" \
+  "args: --prefix $WINEPREFIX --engine x64-crossover26.3-r19 --appid 1086940 --db $np_support/highball-db.json" \
+  "$(grep '^args:' "$log")"
+unset -v GST_PLUGIN_PATH CX_D3DMETALPATH HB_VALUE
+
+reset_hb
+rm -f "$np_support/highball-env"
+highball_environment
+is "without the helper the DXMT default stays" "/fallback/dxmt" "$WINEDLLPATH_PREPEND"
+is "without the helper the launcher has no Highball file" "" "$np_hb_env_file"
+
+reset_hb
+helper 'echo "GST_PLUGIN_PATH=/HB/gst"; exit 1'
+highball_environment
+is "a failing helper leaves the DXMT default" "/fallback/dxmt" "$WINEDLLPATH_PREPEND"
+is "a failing helper exports nothing" "" "${GST_PLUGIN_PATH:-}"
+
+reset_hb
+helper 'echo "# error: engine x64-crossover26.3-r19 not found"'
+highball_environment
+is "a helper with only an error keeps the DXMT default" "/fallback/dxmt" "$WINEDLLPATH_PREPEND"
+is "the error is logged" "1" "$(grep -c 'highball-env: error: engine' "$log")"
+
+reset_hb
+helper 'echo "# note: renderer wined3d"; echo "CX_FWD_COMPAT_GL_CTX=1"'
+highball_environment
+is "WineD3D from Highball leaves no renderer folder" "" "${WINEDLLPATH_PREPEND:-}"
+
+reset_hb
+helper 'sleep 30; echo "GST_PLUGIN_PATH=/HB/gst"'
+# shellcheck disable=SC2329 # Called by highball_environment's wait loop.
+sleep() { :; }
+highball_environment
+unset -f sleep
+is "a helper that hangs is given up on" "/fallback/dxmt" "$WINEDLLPATH_PREPEND"
+is "the timeout is logged" "1" "$(grep -c 'no answer in 10 s' "$log")"
+unset -v STEAM_COMPAT_DATA_PATH WINEPREFIX app_id log np_hb_env_file
 rm -rf "$hb"
 
 echo "== Wine's server directory permissions =="

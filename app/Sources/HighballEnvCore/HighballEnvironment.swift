@@ -4,12 +4,13 @@
 
 public enum HighballEnvironment {
 
+    // The run script keeps WINEDEBUG's fuller default and its per-prefix MSync choice
     public static let ownedKeys: Set<String> = [
         "WINEPREFIX", "WINELOADER", "WINESERVER", "WINEDLLPATH", "PATH", "WINEUSERNAME", "CX_ROOT",
+        "WINEDEBUG", "WINEMSYNC",
     ]
 
     static let userWinsPrefixes = ["DXMT_", "D3DM_", "DXVK_", "MTL_"]
-    static let userWinsKeys: Set<String> = ["WINEDEBUG"]
 
     public static func lines(highball: [String: String], user: [String: String], notes: [String]) -> [String] {
         var output = notes.map { "# note: " + oneLine($0) }
@@ -40,7 +41,7 @@ public enum HighballEnvironment {
     }
 
     static func userWins(_ key: String) -> Bool {
-        userWinsKeys.contains(key) || userWinsPrefixes.contains { key.hasPrefix($0) }
+        userWinsPrefixes.contains { key.hasPrefix($0) }
     }
 
     // DXMT reads ";"-separated settings and the last one wins, so the user's go last.
