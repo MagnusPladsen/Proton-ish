@@ -146,7 +146,7 @@ enum DeploymentContent {
     static func files(
         payload: InstallPayload.Located, bridgePayload: BridgePayload.Located,
         app: URL, bridge: URL, signatures: URL, fonts: URL, overlayShim: URL, iconmaker: URL, appinfo: URL,
-        highballEnv: URL, compatTools: URL, tools: [InstalledTool], runners: URL
+        highballEnv: URL, highballDB: URL, compatTools: URL, tools: [InstalledTool], runners: URL
     ) -> [File] {
         var files = [
             File(source: payload.dylib, destination: SupportPaths.Steam.deployedDylib(inBundle: app),
@@ -155,6 +155,7 @@ enum DeploymentContent {
             File(source: payload.iconmaker, destination: iconmaker, name: "iconmaker", executable: true),
             File(source: payload.appinfo, destination: appinfo, name: "appinfo", executable: true),
             File(source: payload.highballEnv, destination: highballEnv, name: "highball-env", executable: true),
+            File(source: payload.highballDB, destination: highballDB, name: "highball-db.json", needsClientStopped: false),
         ]
         files += payload.signatures.map {
             File(source: $0, destination: signatures.appending(path: $0.lastPathComponent),
@@ -197,6 +198,7 @@ enum DeploymentContent {
                               fonts: SupportPaths.fonts,
                               overlayShim: SupportPaths.overlayShim, iconmaker: SupportPaths.iconmaker,
                               appinfo: SupportPaths.appinfo, highballEnv: SupportPaths.highballEnv,
+                              highballDB: SupportPaths.highballDB,
                               compatTools: SupportPaths.Steam.compatTools,
                               tools: CompatToolList.installed(), runners: SupportPaths.runners)
             return try inspect(files: files, bundled: Build(version: version, builtAt: payload.builtAt),

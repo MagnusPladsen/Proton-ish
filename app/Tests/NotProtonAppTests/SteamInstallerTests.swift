@@ -45,6 +45,7 @@ struct SteamInstallerTests {
 
         let highballEnv = root.appending(path: "highball-env")
         try FileManager.default.copyItem(at: dylib, to: highballEnv)
+        try Data("{}".utf8).write(to: root.appending(path: "highball-db.json"))
         try Data("#!/bin/sh\nexit 0\n".utf8).write(to: root.appending(path: "run"))
         try Data("100\n".utf8).write(to: root.appending(path: "build-time"))
 
@@ -72,6 +73,7 @@ struct SteamInstallerTests {
         var iconmaker: URL { support.appending(path: "iconmaker") }
         var appinfo: URL { support.appending(path: "appinfo") }
         var highballEnv: URL { support.appending(path: "highball-env") }
+        var highballDB: URL { support.appending(path: "highball-db.json") }
         var deployedVersion: URL { support.appending(path: "dylib.version") }
         var backups: URL { support.appending(path: "backups") }
         var bridge: URL { support.appending(path: "bridge") }
@@ -121,6 +123,7 @@ struct SteamInstallerTests {
             iconmaker: fixture.iconmaker,
             appinfo: fixture.appinfo,
             highballEnv: fixture.highballEnv,
+            highballDB: fixture.highballDB,
             deployedVersion: fixture.deployedVersion,
             backups: fixture.backups,
             compatTools: fixture.work.appending(path: "compatibilitytools.d"),
@@ -160,6 +163,7 @@ struct SteamInstallerTests {
         #expect(files.fileExists(atPath: fixture.iconmaker.path(percentEncoded: false)))
         #expect(files.fileExists(atPath: fixture.appinfo.path(percentEncoded: false)))
         #expect(files.fileExists(atPath: fixture.highballEnv.path(percentEncoded: false)))
+        #expect(files.fileExists(atPath: fixture.highballDB.path(percentEncoded: false)))
         #expect(
             try String(contentsOf: fixture.deployedVersion, encoding: .utf8)
                 .trimmingCharacters(in: .whitespacesAndNewlines) == "9.9.9-test"
@@ -446,6 +450,7 @@ struct SteamInstallerTests {
         #expect(files.fileExists(atPath: fixture.iconmaker.path(percentEncoded: false)))
         #expect(files.fileExists(atPath: fixture.appinfo.path(percentEncoded: false)))
         #expect(files.fileExists(atPath: fixture.highballEnv.path(percentEncoded: false)))
+        #expect(files.fileExists(atPath: fixture.highballDB.path(percentEncoded: false)))
         #expect(
             try files.contentsOfDirectory(atPath: fixture.signatures.path(percentEncoded: false))
                 .sorted() == ["1788400362.json", "1788652215.json"]
@@ -614,7 +619,7 @@ struct SteamInstallerTests {
         let files = DeploymentContent.files(payload: fixture.payload, bridgePayload: bridge, app: fixture.app,
                                             bridge: fixture.bridge, signatures: fixture.signatures,
                                             fonts: fixture.fonts, overlayShim: fixture.overlayShim, iconmaker: fixture.iconmaker,
-                                            appinfo: fixture.appinfo, highballEnv: fixture.highballEnv,
+                                            appinfo: fixture.appinfo, highballEnv: fixture.highballEnv, highballDB: fixture.highballDB,
                                             compatTools: work.appending(path: "compatibilitytools.d"),
                                             tools: tools, runners: runners)
         #expect(try files.allSatisfy { try $0.matches() })

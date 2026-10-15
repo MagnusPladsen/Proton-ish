@@ -51,6 +51,7 @@ enum AppLog {
                 + "iconmaker=\(payload.iconmakerPresent) "
                 + "appinfo=\(payload.appinfoPresent) "
                 + "highballEnv=\(payload.highballEnvPresent) "
+                + "highballDB=\(payload.highballDBPresent) "
                 + "signatures=\(payload.signatureDatabase ?? "none") "
                 + "legacycompat=\(payload.legacyCompatPresent)/\(payload.legacyCompatExpected)"
         )

@@ -63,6 +63,7 @@ enum SteamInstaller {
         iconmaker: URL = SupportPaths.iconmaker,
         appinfo: URL = SupportPaths.appinfo,
         highballEnv: URL = SupportPaths.highballEnv,
+        highballDB: URL = SupportPaths.highballDB,
         deployedVersion: URL = SupportPaths.deployedVersion,
         backups: URL = SupportPaths.backups,
         compatTools: URL = SupportPaths.Steam.compatTools,
@@ -105,7 +106,7 @@ enum SteamInstaller {
         let files = DeploymentContent.files(
             payload: payload, bridgePayload: bridgeLocated, app: app, bridge: bridge,
             signatures: signatures, fonts: fonts, overlayShim: overlayShim, iconmaker: iconmaker, appinfo: appinfo,
-            highballEnv: highballEnv, compatTools: compatTools, tools: tools, runners: runners)
+            highballEnv: highballEnv, highballDB: highballDB, compatTools: compatTools, tools: tools, runners: runners)
         let content = try DeploymentContent.inspect(files: files, bundled: build, installed: previousBuild,
                                                    legacyVersion: SteamBundle.deployedVersion(at: deployedVersion))
         guard content != .newerInstalled else {
