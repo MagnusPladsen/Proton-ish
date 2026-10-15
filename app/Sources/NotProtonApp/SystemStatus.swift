@@ -26,6 +26,8 @@ struct StatusSnapshot: Sendable {
     var damagedRunners: [String] = []
     var installContent: DeploymentContent.Status = .unchecked
     var highball: [HighballEngine] = []
+    var defaultToolRequest: String?
+    var steamDefaultTool: String?
 
     static func capture(bundledVersion: String) -> StatusSnapshot {
         let installs = CrossOverSource.discover()
@@ -49,7 +51,9 @@ struct StatusSnapshot: Sendable {
             orphanedRunners: RunnerStore.orphanedClones(),
             damagedRunners: RunnerStore.damagedClones(),
             installContent: DeploymentContent.current(version: bundledVersion),
-            highball: HighballSource.discover()
+            highball: HighballSource.discover(),
+            defaultToolRequest: DefaultTool.request(),
+            steamDefaultTool: DefaultTool.steamDefault()
         )
     }
 }
@@ -445,7 +449,70 @@ final class SystemStatus {
                 }
             }.value
 
-            return runnerOutcome(result)
+            return runnerOutcome(result) + adoptHighballAsDefault()
+        }
+    }
+
+    // Option C: Highball becomes Steam's default for Windows games only when Steam has no default
+    private func adoptHighballAsDefault() -> String {
+        guard DefaultTool.shouldAdopt(request: DefaultTool.request(), steamDefault: DefaultTool.steamDefault()),
+              let tool = DefaultTool.highballTool(installed: RunnerStore.installedBuilds()),
+              (try? DefaultTool.set(tool)) != nil else { return "" }
+        return " " + String(localized: "Highball is now Steam's default for Windows games.")
+    }
+
+    func setDefaultTool(on wanted: Bool) async {
+        await perform(from: DefaultTool.step) { _ in
+            if wanted {
+                guard let tool = DefaultTool.highballTool(installed: RunnerStore.installedBuilds()) else {
+                    throw StepFailure(step: DefaultTool.step, detail: String(localized: "Set up the Highball engine first."))
+                }
+                try DefaultTool.set(tool)
+                return String(localized: "Highball is Steam's default for Windows games from the next Steam start.")
+            }
+            try DefaultTool.clear()
+            return String(localized: "Steam's default tool is cleared at the next Steam start.")
+        }
+    }
+
+    // Downloads the engine with Highball's own code, then sets it up like a found engine
+    func downloadHighballEngine(acceptD3DMetal: Bool) async {
+        await perform(from: HighballInstaller.step) { progress in
+            guard let build = HighballInstaller.build else {
+                throw StepFailure(step: HighballInstaller.step,
+                                  detail: String(localized: "This build of Proton-ish supports no Highball engine."))
+            }
+            let payload = try InstallPayload.locate()
+            try await HighballInstaller.run(
+                helper: payload.highballEnv,
+                arguments: HighballInstaller.arguments(manifest: HighballInstaller.manifest(in: payload, build: build),
+                                                       acceptD3DMetal: acceptD3DMetal),
+                progress: progress)
+            guard let engine = HighballSource.discover().first(where: { $0.id == build.bundleVersion && $0.isUsable }) else {
+                throw StepFailure(step: HighballInstaller.step,
+                                  detail: String(localized: "The engine downloaded, but Proton-ish cannot use it. Open Proton-ish's log for details."))
+            }
+            let lock = try DeploymentContent.acquireInstallationLock()
+            defer { lock.release() }
+            do {
+                try await requireInstallableContent()
+            } catch {
+                return String(localized: "Highball engine downloaded. Click Install, then Set Up next to the engine.")
+            }
+            let result = try await Task.detached(priority: .userInitiated) {
+                try RunnerSetup.run(from: engine) { progress($0.label) }
+            }.value
+            return runnerOutcome(result) + adoptHighballAsDefault()
+        }
+    }
+
+    func enableD3DMetal(_ engine: HighballEngine) async {
+        await perform(from: String(localized: "Enable D3DMetal")) { progress in
+            let payload = try InstallPayload.locate()
+            try await HighballInstaller.run(helper: payload.highballEnv,
+                                            arguments: ["accept", "--engine", engine.id], progress: progress)
+            do { try RendererList.sync() } catch { AppLog.note("renderer list not written: \(error)") }
+            return String(localized: "D3DMetal is enabled for \(engine.displayName).")
         }
     }
 

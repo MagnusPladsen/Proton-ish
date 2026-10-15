@@ -829,6 +829,151 @@ void np_compat_register_crossover(void *compat_mgr) {
     }
 }
 
+// The global default (app 0), what Steam's Compatibility settings call the default tool
+const char *np_compat_global_mapping(void *compat_mgr) {
+    if (!g_find_mapping || !compat_mgr)
+        return NULL;
+    return mapping_name(g_find_mapping(compat_mgr, 0));
+}
+
+static int is_listed_tool(const char *name) {
+    for (int i = 0; i < g_tool_count; i++)
+        if (strcmp(g_tools[i].name, name) == 0) return 1;
+    return 0;
+}
+
+// What the app asked for versus what Steam has. `request` is NULL without a request
+// file, "" to clear, else a tool name; `current` is NULL or "" when Steam has no default.
+np_default_tool_action_t np_compat_default_tool_action(const char *request, const char *current) {
+    if (!request)
+        return NP_DEFAULT_TOOL_KEEP;
+    if (!*request)
+        return current && is_tool_name(current) ? NP_DEFAULT_TOOL_CLEAR : NP_DEFAULT_TOOL_KEEP;
+    if (!is_tool_name(request) || !is_listed_tool(request))
+        return NP_DEFAULT_TOOL_KEEP;
+    return current && strcmp(current, request) == 0 ? NP_DEFAULT_TOOL_KEEP : NP_DEFAULT_TOOL_SET;
+}
+
+// One line, the tool name or nothing. Anything else reads as no request.
+static int read_default_tool_request(const char *path, char *name, size_t size) {
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    name[0] = 0;
+    char *got = fgets(name, (int)size, f);
+    // A line longer than a tool name can be is no request
+    int too_long = got && !strchr(name, '\n') && !feof(f);
+    fclose(f);
+    if (too_long) return 0;
+    name[strcspn(name, "\r\n")] = 0;
+    return 1;
+}
+
+// Records Steam's current default in <support>/steam-default-tool for the app, then applies
+// the request in <support>/default-tool. Returns 1 when the global mapping changed.
+int np_compat_apply_default_tool_in(void *compat_mgr, const char *support) {
+    if (!compat_mgr || !support) return 0;
+    const char *current = np_compat_global_mapping(compat_mgr);
+
+    char status_path[768];
+    snprintf(status_path, sizeof(status_path), "%s/steam-default-tool", support);
+    FILE *status = fopen(status_path, "w");
+    if (status) {
+        fprintf(status, "%s\n", current ? current : "");
+        fclose(status);
+    }
+
+    char request_path[768];
+    snprintf(request_path, sizeof(request_path), "%s/default-tool", support);
+    char request[64];
+    load_tool_list_once();
+    if (!read_default_tool_request(request_path, request, sizeof(request))) {
+        // No request yet: a Highball tool becomes the default only when Steam has none, once.
+        // The request file then records it, so the app's switch shows on and can undo it.
+        if (current && *current) return 0;
+        const char *highball = NULL;
+        for (int i = 0; i < g_tool_count && !highball; i++)
+            if (strcmp(g_tools[i].runtime, "highball") == 0) highball = g_tools[i].name;
+        if (!highball) return 0;
+        np_compat_map_tool(compat_mgr, 0, highball);
+        FILE *req = fopen(request_path, "w");
+        if (req) {
+            fprintf(req, "%s\n", highball);
+            fclose(req);
+        }
+        NP_LOG("np_compat_apply_default_tool: Steam had no default tool, %s is now the default", highball);
+        return 1;
+    }
+
+    switch (np_compat_default_tool_action(request, current)) {
+    case NP_DEFAULT_TOOL_SET:
+        np_compat_map_tool(compat_mgr, 0, request);
+        NP_LOG("np_compat_apply_default_tool: %s is now the default tool (was %s)",
+               request, current ? current : "none");
+        return 1;
+    case NP_DEFAULT_TOOL_CLEAR:
+        np_compat_map_tool(compat_mgr, 0, "");
+        NP_LOG("np_compat_apply_default_tool: cleared the default tool %s", current);
+        return 1;
+    case NP_DEFAULT_TOOL_KEEP:
+        break;
+    }
+    return 0;
+}
+
+// The app lists each Highball tool's renderers in <support>/renderers, one line per tool:
+// "<tool>\t<renderer>,<renderer>". A tool on the list without `renderer` lacks it; tools not
+// on the list (CrossOver's) are never reported. Names point into `storage`.
+size_t np_compat_tools_lacking_in(const char *path, const char *renderer, const char **names, size_t max,
+                                  char *storage, size_t storage_size) {
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    size_t n = 0, used = 0;
+    char line[512];
+    while (n < max && fgets(line, sizeof(line), f)) {
+        line[strcspn(line, "\r\n")] = 0;
+        char *tab = strchr(line, '\t');
+        if (!tab) continue;
+        *tab = 0;
+        if (!is_tool_name(line)) continue;
+        int has = 0;
+        for (char *item = tab + 1; item && *item;) {
+            char *comma = strchr(item, ',');
+            if (comma) *comma = 0;
+            if (strcmp(item, renderer) == 0) has = 1;
+            item = comma ? comma + 1 : NULL;
+        }
+        if (has) continue;
+        size_t len = strlen(line) + 1;
+        if (used + len > storage_size) break;
+        memcpy(storage + used, line, len);
+        names[n++] = storage + used;
+        used += len;
+    }
+    fclose(f);
+    return n;
+}
+
+size_t np_compat_tools_lacking(const char *renderer, const char **names, size_t max,
+                               char *storage, size_t storage_size) {
+    const char *home = np_home_dir();
+    if (!home) return 0;
+    char path[768];
+    snprintf(path, sizeof(path), "%s/Library/Application Support/protonish/renderers", home);
+    return np_compat_tools_lacking_in(path, renderer, names, max, storage, storage_size);
+}
+
+// Once per Steam run, the first time the compat manager is seen
+int np_compat_apply_default_tool(void *compat_mgr) {
+    static int applied = 0;
+    if (applied || !compat_mgr) return 0;
+    applied = 1;
+    const char *home = np_home_dir();
+    if (!home) return 0;
+    char support[768];
+    snprintf(support, sizeof(support), "%s/Library/Application Support/protonish", home);
+    return np_compat_apply_default_tool_in(compat_mgr, support);
+}
+
 const char *np_compat_fallback_tool_name(void) {
     load_tool_list_once();
     return g_tool_count > 0 ? g_tools[0].name : TOOL_DIR_NAME;

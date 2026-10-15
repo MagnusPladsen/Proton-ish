@@ -123,6 +123,11 @@ static int open_patched(const char *path) {
     np_webpatch_set_fallback_tool(np_compat_fallback_tool_name());
     const char *fex[NP_WEBPATCH_FEX_TOOLS_MAX];
     np_webpatch_set_fex_tools(fex, np_compat_fex_tools(fex, NP_WEBPATCH_FEX_TOOLS_MAX));
+    const char *no_d3dmetal[NP_WEBPATCH_FEX_TOOLS_MAX], *no_dxvk[NP_WEBPATCH_FEX_TOOLS_MAX];
+    char gap_names[2][NP_WEBPATCH_FEX_TOOLS_MAX * 128];
+    np_webpatch_set_renderer_gaps(
+        no_d3dmetal, np_compat_tools_lacking("d3dmetal", no_d3dmetal, NP_WEBPATCH_FEX_TOOLS_MAX, gap_names[0], sizeof(gap_names[0])),
+        no_dxvk, np_compat_tools_lacking("dxvk", no_dxvk, NP_WEBPATCH_FEX_TOOLS_MAX, gap_names[1], sizeof(gap_names[1])));
     size_t patched_len = 0;
     const char *shape = NULL;
     char *patched = np_webpatch_transform((const uint8_t *)raw, raw_len, &patched_len,

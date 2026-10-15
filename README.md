@@ -5,7 +5,8 @@ on Linux. Pick a Windows game in your normal macOS Steam library, choose a compa
 
 ## Quick start
 
-Free setup with Highball's Wine engine. Using CrossOver instead? See [Using CrossOver](#using-crossover).
+Free setup with Highball's Wine engine; no Highball app needed. Using CrossOver instead? See
+[Using CrossOver](#using-crossover).
 
 **You need:** an Apple Silicon Mac with macOS 15 or newer, [Steam for macOS](https://store.steampowered.com/about/)
 and Rosetta 2 (macOS offers to install it the first time something needs it, or run
@@ -15,17 +16,20 @@ and Rosetta 2 (macOS offers to install it the first time something needs it, or 
    [Releases page](https://github.com/MagnusPladsen/Proton-ish/releases) and move `Proton-ish.app` to Applications.
 2. **Open it once.** It is not notarized, so macOS blocks it; go to **System Settings → Privacy & Security** and click
    **Open Anyway**.
-3. **Get the Wine engine:** install [Highball](https://github.com/gauthierpiarrette/highball), open any environment's
-   settings and set **Advanced → Engine** to `x64-crossover26.3-r19` (Wine 11). Highball downloads it. Wine 10
-   engines do not work yet.
-4. **Set up Proton-ish:** allow **App Management** when macOS asks (Proton-ish modifies the Steam app), click
-   **Install** on the Status screen, then **Set Up** next to the engine in the Highball section.
-5. **Play:** quit and reopen Steam. In a Windows game's **Properties → Compatibility**, tick **Force the use of a
-   specific Steam Play compatibility tool**, pick **Highball Wine 11 (r19)** and press Play.
+3. **Install:** allow **App Management** when macOS asks (Proton-ish modifies the Steam app) and click **Install** on
+   the Status screen.
+4. **Get the engine:** click **Download…** next to **Highball engine**. Proton-ish shows Apple's licence for D3DMetal
+   (DirectX 12): choose **Accept and Download**, or **Download without D3DMetal** if you would rather not. It then
+   downloads Highball's Wine 11 engine (about 440 MB, from Highball's releases, checked against Highball's checksums)
+   and sets it up. Already using the [Highball](https://github.com/gauthierpiarrette/highball) app? Proton-ish finds
+   its `x64-crossover26.3-r19` engine instead; click **Set Up**.
+5. **Play:** quit and reopen Steam. If Steam had no default compatibility tool, Highball is now the default for
+   Windows games (the **Use Highball for all Windows games** switch on the Status screen), so a Windows-only game
+   just shows Play. A game that also has a macOS version runs that version unless you tick **Force the use of a
+   specific Steam Play compatibility tool** under its **Properties → Compatibility** and pick **Highball Wine 11 (r19)**.
 
-Updates arrive through **Proton-ish → Check for Updates…** (or `brew upgrade`). Something broken? Open an
-[issue](https://github.com/MagnusPladsen/Proton-ish/issues) and attach the game's `protonish-run.log`.
-
+Updates arrive through **Proton-ish → Check for Updates…** (or `brew upgrade`). Something broken? See
+[Reporting problems](#reporting-problems).
 ## Why Proton-ish exists
 
 [NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS, but it only
@@ -50,15 +54,15 @@ development that every free runtime, Highball included, is built on.
 - **[Valve](https://github.com/ValveSoftware/Proton)**, for Proton, lsteamclient and steam_helper.
 
 > Proton-ish is a fork of NotProton and is **not affiliated with or endorsed by** NotProton, Valve,
-> CodeWeavers or Highball. Please report Proton-ish problems at
-> https://github.com/MagnusPladsen/Proton-ish/issues, never to those projects.
+> CodeWeavers or Highball. See [Reporting problems](#reporting-problems) before filing an issue anywhere.
 
 ## Status
 
-Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Highball
-support works: a Windows game (Emberward) launched from the macOS Steam client through Highball's free Wine 11
-engine (`x64-crossover26.3-r19`) on an Apple Silicon Mac, with Steam sign-in and the overlay working. That is one
-game on one Mac so far; expect rough edges.
+Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Games run through
+Highball's free Wine 11 engine (`x64-crossover26.3-r19`) with Highball's own launch setup, so what works in
+Highball should work here. Verified so far on an Apple Silicon Mac: Emberward, Among Us (Steam sign-in and the
+overlay included). For what Highball's community has tested, see
+[highball-db](https://github.com/gauthierpiarrette/highball-db), the compatibility database Proton-ish bundles.
 
 ![Emberward running from macOS Steam through Proton-ish and Highball's Wine 11 engine](docs/screenshots/emberward-running-highball.png)
 
@@ -66,17 +70,21 @@ game on one Mac so far; expect rough edges.
 
 ## Using Highball
 
-The [Quick start](#quick-start) covers it. Keep Highball installed: Proton-ish sets up its engine from
-Highball's copy and uses Highball's graphics files.
+The [Quick start](#quick-start) covers it. The engine lives in Highball's standard folder
+(`~/Library/Application Support/Highball/engines`), whether Proton-ish downloaded it or the Highball app did, so the
+two share it; games use its graphics files from there. Proton-ish never downloads, hosts or modifies D3DMetal on its
+own: it is part of Highball's engine bundle and is only used after you accept Apple's licence, in the download sheet
+or later through the engine row's **Enable D3DMetal…**.
 
 **Graphics.** Games get the launch environment Highball itself would give them, computed by Highball's own code
 (HighballKit), so Highball's fixes arrive with each Proton-ish update:
 
 - **Automatic** (default): Highball's choice for the game from its database
   ([highball-db](https://github.com/gauthierpiarrette/highball-db), bundled), otherwise DXMT.
-- **D3DMetal, DXMT, DXVK, WineD3D** in the game's Proton-ish options override it. D3DMetal needs Apple's licence
-  accepted in Highball (an environment's **Graphics → Review licence…**); without it the game runs on DXMT and
-  `protonish-run.log` says why. WineD3D is a last resort and renders many games wrongly.
+- **D3DMetal, DXMT, DXVK, WineD3D** in the game's Proton-ish options override it. The list only shows what the engine
+  can run: D3DMetal appears once Apple's licence is accepted. WineD3D is a last resort and renders many games wrongly.
+- **DirectX 12-only games** (no DirectX 11 fallback) go to D3DMetal on Automatic, as in Highball. Without the licence
+  the game stays on DXMT and `protonish-run.log` points to **Enable D3DMetal…**.
 - Per-game fixes from highball-db that only set variables, DLL overrides or DXVK options apply automatically.
   Fixes that change the Windows prefix (registry, winetricks) are not applied yet.
 - `protonish-run.log` ends with a "renderer report": the Direct3D logs the game wrote, e.g. DXVK's version.
@@ -104,6 +112,20 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
 - **No Valve Anti-Cheat.** VAC is not supported (Proton does not support it either). VAC games start in insecure
   mode and cannot join secure matchmaking.
 
+## Reporting problems
+
+Start at [Proton-ish's issues](https://github.com/MagnusPladsen/Proton-ish/issues) with the game's
+`protonish-run.log`: the Steam integration, the setup and the launch belong to Proton-ish, even when Highball's
+engine does the running. If a problem turns out to be in the engine or a renderer, the issue will say so and
+point to the right place:
+
+- A game that also misbehaves in the Highball app: [highball-db](https://github.com/gauthierpiarrette/highball-db)
+  collects per-game reports and fixes, which Proton-ish picks up with every update.
+- A bug in Highball's engine itself: [Highball's issues](https://github.com/gauthierpiarrette/highball/issues),
+  reproduced in the Highball app, since the Highball project does not support Proton-ish setups.
+
+Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
+
 ## Changes from upstream
 
 - 2026-10-14: Rebranded to Proton-ish (bundle ID `com.magnuspladsen.protonish`, support
@@ -122,6 +144,12 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
   works (D3DMetal, DXMT, DXVK, WineD3D), Automatic follows highball-db, and highball-db's environment fixes apply.
   New `highball-env` helper; the run log reports which renderer served the game. Synced with NotProton `dae593c`.
 - 2026-10-15: 0.1.0-beta.3: Highball graphics choice and per-game fixes, renderer report, NotProton console-output fix.
+- 2026-10-15: Proton-ish downloads Highball's engine itself (Highball's own installer, Apple's licence shown first); the Highball app is optional.
+- 2026-10-15: "Use Highball for all Windows games" sets Steam's default tool; on by itself only when Steam had none.
+- 2026-10-15: DirectX 12-only games go to D3DMetal on Automatic; the Graphics list shows only what the engine can run.
+- 2026-10-15: Steam keeps its Accessibility permission across installs (the grant was reset on every install before).
+- 2026-10-15: README: Status reflects Highball's game support, "Reporting problems" says where to report what.
+- 2026-10-15: 0.1.0-beta.4: engine download from Proton-ish, default tool for all Windows games, DirectX 12 games on D3DMetal, Accessibility kept across installs.
 - 2026-10-15: Upstream sync workflow: NotProton merges, Highball pin and highball-db bumps as PRs, new engine builds as issues.
 
 ## What Install changes
@@ -129,8 +157,11 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
 - **Signing certificate:** the first install creates a "Proton-ish Local Signing" certificate in Proton-ish's own
   keychain (`~/Library/Application Support/protonish/signing.keychain-db`) and signs Steam with it, so Steam keeps
-  its Accessibility permission across Proton-ish updates. No password prompt: Proton-ish holds that keychain's
-  password.
+  its Accessibility permission across Proton-ish installs and updates. No password prompt: Proton-ish holds that
+  keychain's password.
+- **Steam's default tool:** the **Use Highball for all Windows games** switch sets Steam's default compatibility tool
+  (what Steam's own Compatibility settings call the default). It turns itself on only when Steam had no default; a
+  CrossOver or other default is never replaced. Applies at the next Steam start.
 - **Not notarized:** notarizing needs a paid Apple developer account, hence the Open Anyway step.
 - **Undo:** **Remove Everything** in Proton-ish restores Steam and deletes the support folder and the keychain
   (`brew uninstall --zap --cask proton-ish` does the same).

@@ -17,6 +17,11 @@ void np_webpatch_set_fallback_tool(const char *name);
 // fallback would drop are skipped, as is anything past NP_WEBPATCH_FEX_TOOLS_MAX.
 void np_webpatch_set_fex_tools(const char *const *names, size_t count);
 
+// Sets the tools whose engine cannot run D3DMetal or DXVK; this thread's panel drops
+// those entries for them. Same name rules and limit as the FEX list.
+void np_webpatch_set_renderer_gaps(const char *const *no_d3dmetal, size_t d3dmetal_count,
+                                   const char *const *no_dxvk, size_t dxvk_count);
+
 // The compat UIs, named so a caller can compare against the table rather than a literal
 // of its own that a rename would leave behind. forcetool calls SpecifyCompatTool straight
 // out; selecttool reads its list from the CompatManager routes.

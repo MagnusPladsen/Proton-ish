@@ -46,6 +46,9 @@ struct SteamInstallerTests {
         let highballEnv = root.appending(path: "highball-env")
         try FileManager.default.copyItem(at: dylib, to: highballEnv)
         try Data("{}".utf8).write(to: root.appending(path: "highball-db.json"))
+        let engines = root.appending(path: "highball-engines")
+        try FileManager.default.createDirectory(at: engines, withIntermediateDirectories: true)
+        for name in InstallPayload.highballEngineFiles { try Data("{}".utf8).write(to: engines.appending(path: name)) }
         try Data("#!/bin/sh\nexit 0\n".utf8).write(to: root.appending(path: "run"))
         try Data("100\n".utf8).write(to: root.appending(path: "build-time"))
 
@@ -110,7 +113,8 @@ struct SteamInstallerTests {
         stopped: Bool = false,
         running: Bool = false,
         recordBuild: Bool = true,
-        verifyRunner: (RunnerBuild, URL) throws -> Void = { _, _ in }
+        verifyRunner: (RunnerBuild, URL) throws -> Void = { _, _ in },
+        requirement: (URL) -> String? = SteamInstaller.designatedRequirement(of:)
     ) throws -> InstallOutcome {
         let outcome = try SteamInstaller.run(
             payload: fixture.payload,
@@ -134,7 +138,8 @@ struct SteamInstallerTests {
             patchRunner: { _, _, _ in },
             stopClient: { _, onStopping in if stopped { onStopping() }; return stopped },
             register: { calls.register($0) },
-            resetInputAccess: { calls.resetInputAccess() }
+            resetInputAccess: { calls.resetInputAccess() },
+            requirement: requirement
         )
         if recordBuild {
             try SteamInstaller.finish(outcome, deployedVersion: fixture.deployedVersion, isCurrent: { _ in true })
@@ -155,6 +160,33 @@ struct SteamInstallerTests {
         #expect(outcome.signatureDatabases == 2)
         #expect(outcome.backedUpPlist)
         #expect(!outcome.stoppedClient)
+        #expect(calls.inputAccessResets == 1)
+    }
+
+    @Test("A re-sign that keeps Steam's designated requirement keeps its Accessibility grant")
+    func unchangedRequirementKeepsGrant() async throws {
+        let work = try scratchDirectory("install-same-requirement")
+        defer { try? FileManager.default.removeItem(at: work) }
+        let fixture = try await self.fixture(into: work)
+        let calls = Calls()
+
+        _ = try install(fixture, calls: calls, requirement: { _ in
+            "identifier \"com.valvesoftware.steam\" and certificate leaf = H\"e5b107465037b7d8f597bf3acfa48ec7e1beaf3a\""
+        })
+
+        #expect(calls.inputAccessResets == 0)
+    }
+
+    @Test("A re-sign that changes the requirement, as an ad hoc signature does, resets the grant")
+    func changedRequirementResetsGrant() async throws {
+        let work = try scratchDirectory("install-new-requirement")
+        defer { try? FileManager.default.removeItem(at: work) }
+        let fixture = try await self.fixture(into: work)
+        let calls = Calls()
+        let seen = Counter()
+
+        _ = try install(fixture, calls: calls, requirement: { _ in "cdhash H\"\(seen.next())\"" })
+
         #expect(calls.inputAccessResets == 1)
 
         let files = FileManager.default
@@ -722,4 +754,10 @@ struct SteamInstallerTests {
         #expect(!FileManager.default.fileExists(atPath: DeploymentContent.record(beside: fixture.deployedVersion).path))
         #expect(!FileManager.default.fileExists(atPath: fixture.deployedVersion.path))
     }
+}
+
+private final class Counter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = 0
+    func next() -> Int { lock.lock(); defer { lock.unlock() }; value += 1; return value }
 }

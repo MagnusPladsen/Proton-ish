@@ -12,6 +12,7 @@ enum InstallPayload {
         let appinfo: URL
         let highballEnv: URL
         let highballDB: URL
+        let highballEngines: URL
         let run: URL
         let builtAt: Int64
 
@@ -30,6 +31,12 @@ enum InstallPayload {
         return url
     }
 
+    // A manifest for every Highball build Proton-ish supports, and Apple's licence text for D3DMetal
+    static var highballEngineFiles: [String] {
+        SupportedRunners.all.filter { $0.runtime == .highball }.map { "\($0.bundleVersion).json" }
+            + ["d3dmetal-license.txt"]
+    }
+
     static func locate(in bundle: Bundle = .module) throws -> Located {
         try locate(root: try root(in: bundle))
     }
@@ -43,6 +50,7 @@ enum InstallPayload {
         let appinfo = root.appending(path: "appinfo")
         let highballEnv = root.appending(path: "highball-env")
         let highballDB = root.appending(path: "highball-db.json")
+        let highballEngines = root.appending(path: "highball-engines")
         let run = root.appending(path: "run")
         let stamp = try? String(contentsOf: root.appending(path: "build-time"), encoding: .utf8)
         let builtAt = stamp.flatMap { Int64($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
@@ -65,6 +73,10 @@ enum InstallPayload {
         }
         if !files.fileExists(atPath: highballDB.path(percentEncoded: false)) {
             missing.append("highball-db.json")
+        }
+        for name in highballEngineFiles where !files.fileExists(
+            atPath: highballEngines.appending(path: name).path(percentEncoded: false)) {
+            missing.append("highball-engines/\(name)")
         }
         if !files.fileExists(atPath: run.path(percentEncoded: false)) { missing.append("run") }
         if (builtAt ?? 0) <= 0 { missing.append("build-time") }
@@ -90,7 +102,7 @@ enum InstallPayload {
 
         return Located(
             dylib: dylib, overlayShim: shim, iconmaker: iconmaker,
-            appinfo: appinfo, highballEnv: highballEnv, highballDB: highballDB, run: run, builtAt: builtAt, signatures: signatures,
+            appinfo: appinfo, highballEnv: highballEnv, highballDB: highballDB, highballEngines: highballEngines, run: run, builtAt: builtAt, signatures: signatures,
             fontsRoot: fontsRoot, fonts: fonts
         )
     }

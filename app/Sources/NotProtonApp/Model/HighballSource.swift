@@ -13,6 +13,7 @@ struct HighballEngine: Sendable, Identifiable {
     let directory: URL
     let displayName: String
     let support: HighballSupport
+    var d3dmetalAccepted = false
     var isUsable: Bool { if case .supported = support { true } else { false } }
     var engineRoot: URL { directory.appending(path: "engine") }
 }
@@ -58,6 +59,8 @@ enum HighballSource {
         } else {
             support = .unsupported
         }
-        return HighballEngine(id: id, directory: directory, displayName: name, support: support)
+        let accepted = (object["acceptedLicenses"] as? [String] ?? []).contains { $0.hasPrefix("apple-gptk-license-") }
+        return HighballEngine(id: id, directory: directory, displayName: name, support: support,
+                              d3dmetalAccepted: accepted)
     }
 }

@@ -40,6 +40,8 @@ static bool hook_CCompatManager_BIsEnabled(void *self, uint32_t appid) {
     }
     np_compat_force_enable(self);
     np_compat_register_crossover(self);
+    if (np_compat_apply_default_tool(self))
+        np_compatsvc_state_changed();
     return orig(self, appid);
 }
 

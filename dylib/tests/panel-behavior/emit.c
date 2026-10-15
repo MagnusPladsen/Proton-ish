@@ -22,6 +22,19 @@ int main(int argc, char **argv) {
         np_webpatch_set_fallback_tool(argc >= 3 ? argv[2] : NULL);
         np_webpatch_set_fex_tools((const char *const *)argv + 3,
                                   argc > 3 ? (size_t)(argc - 3) : 0);
+        // Comma-separated tool names, what the hook reads from the app's renderer list
+        const char *gaps[2][NP_WEBPATCH_FEX_TOOLS_MAX];
+        size_t counts[2] = { 0, 0 };
+        static char lists[2][4096];
+        const char *vars[2] = { "NP_PANEL_NO_D3DMETAL", "NP_PANEL_NO_DXVK" };
+        for (int k = 0; k < 2; k++) {
+            const char *env = getenv(vars[k]);
+            if (!env) continue;
+            snprintf(lists[k], sizeof(lists[k]), "%s", env);
+            for (char *item = strtok(lists[k], ","); item && counts[k] < NP_WEBPATCH_FEX_TOOLS_MAX; item = strtok(NULL, ","))
+                gaps[k][counts[k]++] = item;
+        }
+        np_webpatch_set_renderer_gaps(gaps[0], counts[0], gaps[1], counts[1]);
         put_panel(strcmp(argv[1], "component") == 0 ? NP_CX_OPTIONS_COMPONENT
                                                     : NP_CX_OPTIONS_STATEMENT);
         return 0;

@@ -53,6 +53,7 @@ behaviour change) and `HighballRuntime`. Each implementation supplies:
 | Identity | SHA-256 of `lib/wine/x86_64-unix/wine` (existing) | engine id + SHA-256 of `engine/bin/wine` |
 | Layout | loader `lib/wine/x86_64-unix/wine`, FEX `lib/wine/aarch64-unix/wine.app/...`, `bin/wineserver*` | loader `engine/bin/wine`, server `engine/bin/wineserver`, libs `engine/lib/wine/{i386,x86_64}-windows`, `engine/lib/wine/x86_64-unix` |
 | Access gate | `CrossOverLicense.requireValid` (unchanged) | none for the runtime; D3DMetal requires `apple-gptk-license-*` in the manifest's `acceptedLicenses` |
+| Engine install (M2d, 2026-10-15) | the user's CrossOver | `highball-env install` (HighballKit's `EngineStore.install`) into Highball's standard home, manifest and licence text from the pinned Highball package; licence accepted only by the user in the app |
 | Base env | `CX_ROOT`, `CX_HOME`, GPTK path (existing) | manifest `baseEnv` with `${frameworks}` → `root/frameworks` |
 | Renderers | `CX_GRAPHICS_BACKEND` values (existing) | folders present under `root/renderers/` |
 | Signing | extend existing entitlements (existing) | write fresh entitlements (section 4.6) |
@@ -187,8 +188,15 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
   the GPTK licence gate, the D3DMetal timestamp shim and fallbacks (DXMT → DXVK → WineD3D)
   are Highball's. Proton-ish keeps `WINELOADER`, `WINESERVER`, `WINEPREFIX`, `WINEDLLPATH`,
   `PATH`, `WINEDEBUG` and `WINEMSYNC`. Any helper failure keeps `runtime.env` + DXMT. The
-  panel still lists every renderer (filtering moves to M2d); prefix-changing recipe steps
-  are M2c.
+  prefix-changing recipe steps are M2c.
+- Graphics, M2d (2026-10-15): the app writes `<support>/renderers` (per Highball tool, the
+  renderers `highball-env renderers` reports available) and the dylib passes the tools lacking
+  D3DMetal or DXVK to the panel, which hides those entries. `highball-env --exe` applies
+  Highball's DirectX 12-only take-over; without the licence the game stays and the log says so.
+- Default tool (M2d): `<support>/default-tool` is the app's request (name sets, empty clears
+  when ours); the dylib applies it at Steam start through `SetCompatToolMapping(0, …)`, records
+  Steam's current default in `<support>/steam-default-tool`, and with no request adopts a
+  Highball tool only when Steam has no default (option C, user decision).
 - Windows user: after `wineboot`, the script reads the real profile folder under
   `drive_c/users/` (excluding `Public`) and links it to `steamuser`, instead of assuming
   `users/crossover`. This handles Highball engine patch 0001.
