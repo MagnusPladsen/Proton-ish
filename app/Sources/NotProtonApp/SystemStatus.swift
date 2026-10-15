@@ -449,6 +449,46 @@ final class SystemStatus {
         }
     }
 
+    // Downloads the engine with Highball's own code, then sets it up like a found engine
+    func downloadHighballEngine(acceptD3DMetal: Bool) async {
+        await perform(from: HighballInstaller.step) { progress in
+            guard let build = HighballInstaller.build else {
+                throw StepFailure(step: HighballInstaller.step,
+                                  detail: String(localized: "This build of Proton-ish supports no Highball engine."))
+            }
+            let payload = try InstallPayload.locate()
+            try await HighballInstaller.run(
+                helper: payload.highballEnv,
+                arguments: HighballInstaller.arguments(manifest: HighballInstaller.manifest(in: payload, build: build),
+                                                       acceptD3DMetal: acceptD3DMetal),
+                progress: progress)
+            guard let engine = HighballSource.discover().first(where: { $0.id == build.bundleVersion && $0.isUsable }) else {
+                throw StepFailure(step: HighballInstaller.step,
+                                  detail: String(localized: "The engine downloaded, but Proton-ish cannot use it. Open Proton-ish's log for details."))
+            }
+            let lock = try DeploymentContent.acquireInstallationLock()
+            defer { lock.release() }
+            do {
+                try await requireInstallableContent()
+            } catch {
+                return String(localized: "Highball engine downloaded. Click Install, then Set Up next to the engine.")
+            }
+            let result = try await Task.detached(priority: .userInitiated) {
+                try RunnerSetup.run(from: engine) { progress($0.label) }
+            }.value
+            return runnerOutcome(result)
+        }
+    }
+
+    func enableD3DMetal(_ engine: HighballEngine) async {
+        await perform(from: String(localized: "Enable D3DMetal")) { progress in
+            let payload = try InstallPayload.locate()
+            try await HighballInstaller.run(helper: payload.highballEnv,
+                                            arguments: ["accept", "--engine", engine.id], progress: progress)
+            return String(localized: "D3DMetal is enabled for \(engine.displayName).")
+        }
+    }
+
     enum HighballCopy: Sendable, Equatable { case notSetUp, ready, needsRepair }
 
     nonisolated static func highballCopy(_ build: String, installed: [RunnerBuild], runner: RunnerState) -> HighballCopy {

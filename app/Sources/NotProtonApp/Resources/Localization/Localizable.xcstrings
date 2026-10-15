@@ -632,6 +632,36 @@
         }
       }
     },
+    "Accept" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接受"
+          }
+        }
+      }
+    },
+    "Accept Apple's licence so games can use D3DMetal." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接受 Apple 许可协议，以便游戏使用 D3DMetal。"
+          }
+        }
+      }
+    },
+    "Accept and Download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接受并下载"
+          }
+        }
+      }
+    },
     "Add" : {
       "localizations" : {
         "zh-Hans" : {
@@ -748,6 +778,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "应用 ID"
+          }
+        }
+      }
+    },
+    "Apple's licence for D3DMetal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 的 D3DMetal 许可协议"
           }
         }
       }
@@ -1425,6 +1465,26 @@
         }
       }
     },
+    "D3DMetal is already part of %@. Accepting Apple's licence below lets games use it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D3DMetal 已包含在 %@ 中。接受下方 Apple 许可协议后，游戏即可使用它。"
+          }
+        }
+      }
+    },
+    "D3DMetal is enabled for %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已为 %@ 启用 D3DMetal。"
+          }
+        }
+      }
+    },
     "Delete" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1665,12 +1725,52 @@
         }
       }
     },
+    "Download the Highball engine" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载 Highball 引擎"
+          }
+        }
+      }
+    },
+    "Download without D3DMetal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载但不启用 D3DMetal"
+          }
+        }
+      }
+    },
     "Downloaded missing components." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "已下载缺失的组件。"
+          }
+        }
+      }
+    },
+    "Downloading %@: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下载 %1$@：%2$@"
+          }
+        }
+      }
+    },
+    "Downloading %@: %@ of %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下载 %1$@：%2$@ / %3$@"
           }
         }
       }
@@ -1691,6 +1791,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在下载缺失的组件"
+          }
+        }
+      }
+    },
+    "Download…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载…"
+          }
+        }
+      }
+    },
+    "Enable D3DMetal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用 D3DMetal"
+          }
+        }
+      }
+    },
+    "Enable D3DMetal…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用 D3DMetal…"
           }
         }
       }
@@ -1795,12 +1925,32 @@
         }
       }
     },
+    "Highball engine" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highball 引擎"
+          }
+        }
+      }
+    },
     "Highball engine %@ isn't supported yet." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Highball 引擎 %@ 尚不受支持。"
+          }
+        }
+      }
+    },
+    "Highball engine downloaded. Click Install, then Set Up next to the engine." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highball 引擎已下载。请点击“安装”，然后点击引擎旁的“设置”。"
           }
         }
       }
@@ -2245,16 +2395,6 @@
         }
       }
     },
-    "Not found. Install Highball from gethighball.com." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未找到。请从 gethighball.com 安装 Highball。"
-          }
-        }
-      }
-    },
     "Not found. Supported: %@." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2271,6 +2411,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尚未安装。"
+          }
+        }
+      }
+    },
+    "Not installed. Proton-ish can download it; the Highball app is not needed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装。Proton-ish 可以下载它，无需安装 Highball 应用。"
           }
         }
       }
@@ -2534,6 +2684,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Proton-ish 不会通过 Winetricks 运行 %@。"
+          }
+        }
+      }
+    },
+    "Proton-ish downloads Highball's free Wine engine (%@) from Highball's releases on GitHub, with Highball's own installer, into Highball's folder. D3DMetal, Apple's DirectX 12 translator, comes with it and is used only if you accept Apple's licence below. Without it, games use DXMT or DXVK and DirectX 12-only games will not start." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 会使用 Highball 自己的安装程序，从 Highball 在 GitHub 上的发布页下载其免费的 Wine 引擎（%@）到 Highball 的文件夹。Apple 的 DirectX 12 转换层 D3DMetal 随之附带，仅在您接受下方 Apple 许可协议后才会使用。若不接受，游戏将使用 DXMT 或 DXVK，仅支持 DirectX 12 的游戏将无法启动。"
           }
         }
       }
@@ -3801,6 +3961,16 @@
         }
       }
     },
+    "The engine downloaded, but Proton-ish cannot use it. Open Proton-ish's log for details." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引擎已下载，但 Proton-ish 无法使用它。请查看 Proton-ish 的日志了解详情。"
+          }
+        }
+      }
+    },
     "The game SAVE DATA inside the prefix WILL BE LOST." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3917,6 +4087,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此版本的 Proton-ish 未包含任何组件。"
+          }
+        }
+      }
+    },
+    "This build of Proton-ish supports no Highball engine." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此版本的 Proton-ish 不支持任何 Highball 引擎。"
           }
         }
       }
@@ -4273,6 +4453,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "包含未知行类型 %@。已知类型：base、package、file、bundle。"
+          }
+        }
+      }
+    },
+    "highball-env failed with status %d." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "highball-env 失败，状态码 %d。"
           }
         }
       }
