@@ -4,7 +4,7 @@
 # Usage: scripts/sync/notproton.sh   (run from any directory of the checkout)
 set -eu
 cd "$(dirname "$0")/../.."
-# shellcheck source=scripts/sync/common.sh
+# shellcheck source=scripts/sync/common.sh disable=SC1091
 . scripts/sync/common.sh
 
 UPSTREAM_URL="${UPSTREAM_URL:-https://github.com/NotProtonNot/NotProton.git}"

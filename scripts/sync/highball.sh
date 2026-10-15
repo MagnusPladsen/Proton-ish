@@ -5,7 +5,7 @@
 # Usage: scripts/sync/highball.sh
 set -eu
 cd "$(dirname "$0")/../.."
-# shellcheck source=scripts/sync/common.sh
+# shellcheck source=scripts/sync/common.sh disable=SC1091
 . scripts/sync/common.sh
 
 SWIFT="${SWIFT:-swift}"

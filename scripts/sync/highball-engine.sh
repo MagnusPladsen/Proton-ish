@@ -4,7 +4,7 @@
 # Usage: scripts/sync/highball-engine.sh
 set -eu
 cd "$(dirname "$0")/../.."
-# shellcheck source=scripts/sync/common.sh
+# shellcheck source=scripts/sync/common.sh disable=SC1091
 . scripts/sync/common.sh
 
 known=$(tr -d ' \n' < scripts/sync/known-highball-engine)
