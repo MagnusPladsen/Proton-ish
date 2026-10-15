@@ -50,15 +50,15 @@ development that every free runtime, Highball included, is built on.
 - **[Valve](https://github.com/ValveSoftware/Proton)**, for Proton, lsteamclient and steam_helper.
 
 > Proton-ish is a fork of NotProton and is **not affiliated with or endorsed by** NotProton, Valve,
-> CodeWeavers or Highball. Please report Proton-ish problems at
-> https://github.com/MagnusPladsen/Proton-ish/issues, never to those projects.
+> CodeWeavers or Highball. See [Reporting problems](#reporting-problems) before filing an issue anywhere.
 
 ## Status
 
-Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Highball
-support works: a Windows game (Emberward) launched from the macOS Steam client through Highball's free Wine 11
-engine (`x64-crossover26.3-r19`) on an Apple Silicon Mac, with Steam sign-in and the overlay working. That is one
-game on one Mac so far; expect rough edges.
+Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Games run through
+Highball's free Wine 11 engine (`x64-crossover26.3-r19`) with Highball's own launch setup, so what works in
+Highball should work here. Verified so far on an Apple Silicon Mac: Emberward, Among Us (Steam sign-in and the
+overlay included). For what Highball's community has tested, see
+[highball-db](https://github.com/gauthierpiarrette/highball-db), the compatibility database Proton-ish bundles.
 
 ![Emberward running from macOS Steam through Proton-ish and Highball's Wine 11 engine](docs/screenshots/emberward-running-highball.png)
 
@@ -103,6 +103,20 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
   and pick a tool. Unticking it switches back to the macOS version.
 - **No Valve Anti-Cheat.** VAC is not supported (Proton does not support it either). VAC games start in insecure
   mode and cannot join secure matchmaking.
+
+## Reporting problems
+
+Start at [Proton-ish's issues](https://github.com/MagnusPladsen/Proton-ish/issues) with the game's
+`protonish-run.log`: the Steam integration, the setup and the launch belong to Proton-ish, even when Highball's
+engine does the running. If a problem turns out to be in the engine or a renderer, the issue will say so and
+point to the right place:
+
+- A game that also misbehaves in the Highball app: [highball-db](https://github.com/gauthierpiarrette/highball-db)
+  collects per-game reports and fixes, which Proton-ish picks up with every update.
+- A bug in Highball's engine itself: [Highball's issues](https://github.com/gauthierpiarrette/highball/issues),
+  reproduced in the Highball app, since the Highball project does not support Proton-ish setups.
+
+Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 
 ## Changes from upstream
 
