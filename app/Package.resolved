@@ -1,6 +1,15 @@
 {
-  "originHash" : "808975bc467a500b60b730fbebe797a562a102ee2818509f91e59ebfb710b7e8",
+  "originHash" : "c883ca990e109a301473b7212e87c3584df1d95be97f2c1f2a1bf2160bd3dd44",
   "pins" : [
+    {
+      "identity" : "highball",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gauthierpiarrette/highball",
+      "state" : {
+        "revision" : "84107c938cdd63eac06ac0a33cd413450e660bcf",
+        "version" : "0.10.15"
+      }
+    },
     {
       "identity" : "sparkle",
       "kind" : "remoteSourceControl",
@@ -8,6 +17,15 @@
       "state" : {
         "revision" : "eef1a539a373c1f1a320624b1130fc5de7b2e100",
         "version" : "2.10.0"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser.git",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
       }
     }
   ],

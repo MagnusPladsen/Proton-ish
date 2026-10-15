@@ -50,6 +50,7 @@ enum AppLog {
                 + "overlayShim=\(payload.overlayShimPresent) "
                 + "iconmaker=\(payload.iconmakerPresent) "
                 + "appinfo=\(payload.appinfoPresent) "
+                + "highballEnv=\(payload.highballEnvPresent) "
                 + "signatures=\(payload.signatureDatabase ?? "none") "
                 + "legacycompat=\(payload.legacyCompatPresent)/\(payload.legacyCompatExpected)"
         )

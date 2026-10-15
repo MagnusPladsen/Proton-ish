@@ -9,6 +9,7 @@ struct PayloadState: Sendable {
     var overlayShimPresent: Bool
     var iconmakerPresent: Bool
     var appinfoPresent: Bool
+    var highballEnvPresent: Bool
     var signatureDatabase: String?
     var legacyCompatPresent: Int
     var legacyCompatExpected: Int
@@ -23,6 +24,7 @@ struct PayloadState: Sendable {
         if !overlayShimPresent { names.append("overlay-shim.dylib") }
         if !iconmakerPresent { names.append("iconmaker") }
         if !appinfoPresent { names.append("appinfo") }
+        if !highballEnvPresent { names.append("highball-env") }
         return names
     }
 
@@ -31,7 +33,7 @@ struct PayloadState: Sendable {
     }
 
     var isEmpty: Bool {
-        present == 0 && !overlayShimPresent && !iconmakerPresent && !appinfoPresent
+        present == 0 && !overlayShimPresent && !iconmakerPresent && !appinfoPresent && !highballEnvPresent
             && signatureDatabase == nil
     }
 
@@ -79,6 +81,7 @@ enum PayloadInspector {
             overlayShimPresent: fm.fileExists(atPath: SupportPaths.overlayShim.path(percentEncoded: false)),
             iconmakerPresent: fm.fileExists(atPath: SupportPaths.iconmaker.path(percentEncoded: false)),
             appinfoPresent: fm.fileExists(atPath: SupportPaths.appinfo.path(percentEncoded: false)),
+            highballEnvPresent: fm.fileExists(atPath: SupportPaths.highballEnv.path(percentEncoded: false)),
             signatureDatabase: newestSignatureDatabase(),
             legacyCompatPresent: legacyPresent,
             legacyCompatExpected: legacyNames.count,

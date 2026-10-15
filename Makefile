@@ -562,6 +562,8 @@ app-payload: $(TARGET) $(OVERLAY_SHIM) $(ICONMAKER) $(APPINFO)
 	cp -f $(OVERLAY_SHIM) "$(APP_PAYLOAD)/overlay-shim.dylib"
 	cp -f $(ICONMAKER) "$(APP_PAYLOAD)/iconmaker"
 	cp -f $(APPINFO) "$(APP_PAYLOAD)/appinfo"
+	swift build --package-path app -c release --product highball-env
+	cp -f "$$(swift build --package-path app -c release --show-bin-path)/highball-env" "$(APP_PAYLOAD)/highball-env"
 	cp -f dylib/feats/compat_run.sh "$(APP_PAYLOAD)/run"
 	cp -f signatures/macos.arm64/*.json "$(APP_PAYLOAD)/signatures/macos.arm64/"
 	@set -e; for spec in $(BRIDGE_FILES); do \

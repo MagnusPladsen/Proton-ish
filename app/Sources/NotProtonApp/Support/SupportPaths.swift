@@ -33,6 +33,7 @@ enum SupportPaths {
     static var overlayShim: URL { support.appending(path: "overlay-shim.dylib") }
     static var iconmaker: URL { support.appending(path: "iconmaker") }
     static var appinfo: URL { support.appending(path: "appinfo") }
+    static var highballEnv: URL { support.appending(path: "highball-env") }
 
     static var packageDownloads: URL {
         home.appending(path: "Library/Caches/\(supportDirName)/valve-packages")

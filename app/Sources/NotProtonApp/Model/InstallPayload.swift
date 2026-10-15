@@ -10,6 +10,7 @@ enum InstallPayload {
         let overlayShim: URL
         let iconmaker: URL
         let appinfo: URL
+        let highballEnv: URL
         let run: URL
         let builtAt: Int64
 
@@ -39,6 +40,7 @@ enum InstallPayload {
         let shim = root.appending(path: "overlay-shim.dylib")
         let iconmaker = root.appending(path: "iconmaker")
         let appinfo = root.appending(path: "appinfo")
+        let highballEnv = root.appending(path: "highball-env")
         let run = root.appending(path: "run")
         let stamp = try? String(contentsOf: root.appending(path: "build-time"), encoding: .utf8)
         let builtAt = stamp.flatMap { Int64($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
@@ -55,6 +57,9 @@ enum InstallPayload {
         }
         if !files.fileExists(atPath: appinfo.path(percentEncoded: false)) {
             missing.append("appinfo")
+        }
+        if !files.fileExists(atPath: highballEnv.path(percentEncoded: false)) {
+            missing.append("highball-env")
         }
         if !files.fileExists(atPath: run.path(percentEncoded: false)) { missing.append("run") }
         if (builtAt ?? 0) <= 0 { missing.append("build-time") }
@@ -80,7 +85,7 @@ enum InstallPayload {
 
         return Located(
             dylib: dylib, overlayShim: shim, iconmaker: iconmaker,
-            appinfo: appinfo, run: run, builtAt: builtAt, signatures: signatures,
+            appinfo: appinfo, highballEnv: highballEnv, run: run, builtAt: builtAt, signatures: signatures,
             fontsRoot: fontsRoot, fonts: fonts
         )
     }
