@@ -70,6 +70,9 @@ DEPS := $(OBJS:.o=.d)
         compatsvc-check shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck launch-shell FORCE
 
 APP_PAYLOAD := app/Sources/NotProtonApp/Resources/payload
+# Highball engines Proton-ish can download; manifests come from the pinned Highball package
+HIGHBALL_ENGINES := x64-crossover26.3-r19
+HIGHBALL_PKG := app/.build/checkouts/highball
 
 all: $(TARGET) $(APP_PAYLOAD)
 
@@ -565,6 +568,13 @@ app-payload: $(TARGET) $(OVERLAY_SHIM) $(ICONMAKER) $(APPINFO)
 	swift build --package-path app -c release --product highball-env
 	cp -f "$$(swift build --package-path app -c release --show-bin-path)/highball-env" "$(APP_PAYLOAD)/highball-env"
 	cp -f third_party/highball-db/highball-db.json "$(APP_PAYLOAD)/highball-db.json"
+	@rm -rf "$(APP_PAYLOAD)/highball-engines" && mkdir -p "$(APP_PAYLOAD)/highball-engines"
+	@for id in $(HIGHBALL_ENGINES); do \
+		src="$(HIGHBALL_PKG)/spike/engines/$$id.json"; \
+		[ -f "$$src" ] || { echo "$$src is missing from the pinned Highball package" >&2; exit 1; }; \
+		cp -f "$$src" "$(APP_PAYLOAD)/highball-engines/$$id.json"; \
+	done
+	cp -f "$(HIGHBALL_PKG)/spike/d3dmetal-license.txt" "$(APP_PAYLOAD)/highball-engines/d3dmetal-license.txt"
 	cp -f dylib/feats/compat_run.sh "$(APP_PAYLOAD)/run"
 	cp -f signatures/macos.arm64/*.json "$(APP_PAYLOAD)/signatures/macos.arm64/"
 	@set -e; for spec in $(BRIDGE_FILES); do \

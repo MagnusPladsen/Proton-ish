@@ -46,6 +46,9 @@ struct SteamInstallerTests {
         let highballEnv = root.appending(path: "highball-env")
         try FileManager.default.copyItem(at: dylib, to: highballEnv)
         try Data("{}".utf8).write(to: root.appending(path: "highball-db.json"))
+        let engines = root.appending(path: "highball-engines")
+        try FileManager.default.createDirectory(at: engines, withIntermediateDirectories: true)
+        for name in InstallPayload.highballEngineFiles { try Data("{}".utf8).write(to: engines.appending(path: name)) }
         try Data("#!/bin/sh\nexit 0\n".utf8).write(to: root.appending(path: "run"))
         try Data("100\n".utf8).write(to: root.appending(path: "build-time"))
 
