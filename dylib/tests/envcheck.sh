@@ -192,6 +192,25 @@ highball_environment
 unset -f sleep
 is "a helper that hangs is given up on" "/fallback/dxmt" "$WINEDLLPATH_PREPEND"
 is "the timeout is logged" "1" "$(grep -c 'no answer in 10 s' "$log")"
+
+echo "== Renderer report after the game exits =="
+hb_report_fn=$(sed -n '/^highball_renderer_report() {$/,/^} # highball_renderer_report$/p' "$SRC")
+[ -n "$hb_report_fn" ] || { echo "FAIL: highball_renderer_report not found"; exit 1; }
+eval "$hb_report_fn"
+hb_logdir="$WINEPREFIX/drive_c/highball/logs"
+mkdir -p "$hb_logdir"
+printf 'info:  old run\n' > "$hb_logdir/Old_d3d11.log"
+touch -t 202001010000 "$hb_logdir/Old_d3d11.log"
+np_hb_launch_mark="$STEAM_COMPAT_DATA_PATH/protonish-launch.mark"
+touch -t 202001010001 "$np_hb_launch_mark"
+printf 'warn:  D3D11CoreCreateDevice: Adapter is not a DXVK adapter\ninfo:  Game: Game.exe\ninfo:  DXVK-Kegworks: v1.10.4-async\n' > "$hb_logdir/Game_d3d11.log"
+: > "$hb_logdir/Game_dxgi.log"
+: > "$log"
+highball_renderer_report
+is "the DXVK log is reported by its version line" "1" "$(grep -c 'renderer report: Game_d3d11.log: info:  DXVK-Kegworks: v1.10.4-async' "$log")"
+is "an empty log is reported as empty" "1" "$(grep -c 'renderer report: Game_dxgi.log: empty' "$log")"
+is "logs from earlier launches are left out" "0" "$(grep -c 'Old_d3d11' "$log")"
+is "the launch marker is removed" "no" "$([ -e "$np_hb_launch_mark" ] && echo yes || echo no)"
 unset -v STEAM_COMPAT_DATA_PATH WINEPREFIX app_id log np_hb_env_file
 rm -rf "$hb"
 

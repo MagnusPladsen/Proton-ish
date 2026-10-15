@@ -1075,6 +1075,7 @@ link_fonts() {
 # Highball: the launch environment Highball itself would use, from highball-env (HighballKit).
 # On any failure the engine defaults from runtime.env and DXMT stay in place.
 np_hb_env_file=""
+np_hb_launch_mark=""
 highball_environment() {
   hb_helper="$np_support/highball-env"
   hb_file="$STEAM_COMPAT_DATA_PATH/protonish-highball.env"
@@ -1138,6 +1139,21 @@ highball_environment() {
   np_hb_env_file="$hb_file"
   echo "highball-env: $hb_count variables from Highball" >> "$log" 2>&1 || true
 } # highball_environment
+
+# Highball: which Direct3D the game got, from the logs the renderers write into C:\highball\logs
+highball_renderer_report() {
+  hb_logs="$WINEPREFIX/drive_c/highball/logs"
+  [ -n "$np_hb_launch_mark" ] && [ -d "$hb_logs" ] || return 0
+  find "$hb_logs" -name '*.log' -newer "$np_hb_launch_mark" 2>/dev/null | LC_ALL=C sort |
+    while IFS= read -r hb_log; do
+      hb_what=$(grep -m 1 -E '(DXVK|DXMT|vkd3d)[A-Za-z-]*: v' "$hb_log" 2>/dev/null | cut -c1-120) || hb_what=""
+      if [ -z "$hb_what" ]; then
+        if [ -s "$hb_log" ]; then hb_what="no version line"; else hb_what="empty"; fi
+      fi
+      echo "renderer report: ${hb_log##*/}: $hb_what" >> "$log" 2>&1 || true
+    done
+  rm -f "$np_hb_launch_mark"
+} # highball_renderer_report
 
 if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   export WINEPREFIX="$STEAM_COMPAT_DATA_PATH/pfx"
@@ -1643,11 +1659,16 @@ set -- \
 lsregister="/System/Library/Frameworks/CoreServices.framework/Versions/A"
 lsregister="$lsregister/Frameworks/LaunchServices.framework/Support/lsregister"
 [ -x "$lsregister" ] && "$lsregister" -f "$loader_app" >> "$log" 2>&1 || true
+if [ "$np_runtime" = highball ] && [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
+  np_hb_launch_mark="$STEAM_COMPAT_DATA_PATH/protonish-launch.mark"
+  : > "$np_hb_launch_mark" 2>/dev/null || np_hb_launch_mark=""
+fi
 open -n -W -a "$loader_app" "$@" >> "$log" 2>&1 &
 open_pid=$!
 status=0
 wait "$open_pid" || status=$?
 echo "=== game exited status=$status, killing wine prefix ===" >> "$log" 2>&1 || true
+[ "$np_runtime" != highball ] || highball_renderer_report
 kill_wine_prefix
 echo "=== wine prefix killed, session ending ===" >> "$log" 2>&1 || true
 exit $status

@@ -100,6 +100,10 @@
 - [ ] Implement in the Highball block (`compat_run.sh:178-199`): call `"$np_support/highball-env" --prefix "$WINEPREFIX" --engine "$np_build" --appid "$SteamAppId"` with a timeout, validate each line with the existing key filter, export, record the keys in `np_hb_keys` so they are forwarded with `--env`; keep `runtime.env` as the fallback when the helper gives nothing. Extend the launcher's DYLD re-export list.
 - [ ] `make -s runcheck envcheck` green. Commit (after approval).
 
+### Task 5b: Renderer report (user decision 2026-10-15)
+
+- [x] After the game exits, the run script lists the renderer logs written during this launch in `C:\highball\logs` (Highball's `DXVK_LOG_PATH`/`DXMT_LOG_PATH`) with each one's version line, so `protonish-run.log` shows what rendered without `WINEDEBUG=+loaddll`. DXMT writes no version line at its default log level; the report then shows Highball's choice (`highball-env: note: renderer …`) and the empty log.
+
 ### Task 6: Panel options for Highball tools
 
 - [ ] Failing panel-behavior cases: a Highball tool shows Automatic, D3DMetal, DXMT, DXVK, WineD3D (D3DMetal hidden when the tool's engine lacks the GPTK licence); CrossOver and FEX unchanged.
