@@ -8,7 +8,7 @@ enum DeploymentContent {
         var dylibHashes: [String]? = nil
 
         func isNewer(than other: Build) -> Bool {
-            let order = version.compare(other.version, options: .numeric)
+            let order = VersionOrder.compare(version, other.version)
             return order == .orderedDescending || (order == .orderedSame && builtAt > other.builtAt)
         }
     }
@@ -119,14 +119,14 @@ enum DeploymentContent {
     static func inspect(files: [File], bundled: Build, installed: Build?, legacyVersion: String? = nil,
                         additionalDifferences: [String] = []) throws -> Status {
         if let installed, installed.isNewer(than: bundled) { return .newerInstalled }
-        if let legacyVersion, legacyVersion.compare(bundled.version, options: .numeric) == .orderedDescending {
+        if let legacyVersion, VersionOrder.compare(legacyVersion, bundled.version) == .orderedDescending {
             return .newerInstalled
         }
         let changed = try files.filter { try !$0.matches() }
         let differences = changed.map(\.name) + additionalDifferences
         guard !differences.isEmpty else { return .current }
         guard let installed else {
-            if let legacyVersion, legacyVersion.compare(bundled.version, options: .numeric) == .orderedAscending {
+            if let legacyVersion, VersionOrder.compare(legacyVersion, bundled.version) == .orderedAscending {
                 return .update(differences)
             }
             return .unrecorded(differences)

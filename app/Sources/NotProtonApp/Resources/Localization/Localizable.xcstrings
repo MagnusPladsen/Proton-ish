@@ -1172,6 +1172,16 @@
         }
       }
     },
+    "Clear Steam's default tool" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除 Steam 的默认工具"
+          }
+        }
+      }
+    },
     "Clone CrossOver" : {
       "localizations" : {
         "zh-Hans" : {

@@ -59,6 +59,7 @@ enum Uninstall {
         updateBlocks: [URL] = UpdateBlock.paths,
         legacyCompat: URL = SupportPaths.Steam.legacyCompat,
         compatTools: [URL] = SupportPaths.Steam.notprotonTools(),
+        compatConfig: URL = SupportPaths.Steam.compatConfig,
         directories: [URL] = [
             SupportPaths.support,
             SupportPaths.packageDownloads.deletingLastPathComponent(),
@@ -102,6 +103,10 @@ enum Uninstall {
                 try modifications.mark(target)
                 stopped = try stop(target) { report(.stoppingClient) } || stopped
                 checkedClient = true
+                // Steam is stopped now: take our tool out of its default-tool setting
+                if try SteamCompatConfig.clearDefaultTool(in: compatConfig) {
+                    AppLog.note("uninstall: cleared Steam's default tool")
+                }
                 report(.detaching)
                 detached = try detach(from: target, innerPlist: innerPlist, updateBlocks: updateBlocks) || detached
                 steamInstalled = true
