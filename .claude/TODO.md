@@ -7,12 +7,13 @@
 - [ ] Highball parity for Steam games: every game that works in Highball should work here (added: 2026-10-14)
   - [x] M2b: Highball's own launch environment via HighballKit (highball-env): Graphics choice, Automatic from highball-db, environment-only recipe steps, renderer report (completed: 2026-10-15)
   - M2c: apply highball-db recipe steps that change the prefix (registry, winetricks, winver, copy, file, installer)
-  - M2d also: hide renderers in the Graphics dropdown that the engine can't run (deferred from M2b Task 6)
+  - [x] M2d also: hide renderers in the Graphics dropdown that the engine can't run (completed: 2026-10-15)
   - [x] Import per-game fixes from highball-db (CC0): bundled snapshot, renderer and environment-only steps (M2b); prefix steps in M2c
   - Track a compatibility list (game, engine revision, result) in the README or a docs page
-- [ ] M2d: Proton-ish installs the Highball engine itself with HighballKit's EngineStore.install (Highball's release URLs, sha256-checked; D3DMetal only after the user accepts Apple's licence in Proton-ish), so users no longer need the Highball app. After M2b's run-script task, before the Reddit post (added: 2026-10-15)
-  - Also: a "Use Highball for all Windows games" switch that sets Steam's default compatibility tool (CompatToolMapping app 0 in config.vdf, Steam stopped), so no per-game tool choice (user decision 2026-10-15)
-  - Automatic should send DirectX 12-only games to D3DMetal like Highball (ProgramNeeds from the game's exe; pass the exe to highball-env)
+- [x] M2d: Proton-ish installs the Highball engine itself with HighballKit's EngineStore.install (Highball's release URLs, sha256-checked; D3DMetal only after the user accepts Apple's licence in Proton-ish), so users no longer need the Highball app. After M2b's run-script task, before the Reddit post (added: 2026-10-15)
+  - [x] Also: a "Use Highball for all Windows games" switch that sets Steam's default compatibility tool (CompatToolMapping app 0 in config.vdf, Steam stopped), so no per-game tool choice (user decision 2026-10-15)
+  - [x] Automatic should send DirectX 12-only games to D3DMetal like Highball (ProgramNeeds from the game's exe; pass the exe to highball-env)
+- [ ] Remove Everything leaves Steam's global default tool (CompatToolMapping app 0 in Steam's config.vdf) pointing at a removed Proton-ish tool; needs a small VDF editor run while Steam is stopped (added: 2026-10-15)
 - [ ] Upstream sync automation (plan: docs/superpowers/plans/2026-10-15-upstream-sync-automation.md), after M2b; needs a SYNC_TOKEN PAT (added: 2026-10-15)
 
 ## Low Priority / Future
