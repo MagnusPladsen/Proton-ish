@@ -35,6 +35,19 @@ These third party files carry their original notices from the project authors:
   vendor/cJSON.c                     cJSON, MIT (header)
   vendor/cJSON.h                     cJSON, MIT (header)
 
+Highball
+========
+
+The highball-env helper (app/Sources/highball-env, app/Sources/HighballEnvCore) links
+HighballKit from Highball by Gauthier Piarrette, https://github.com/gauthierpiarrette/highball,
+licensed under GPLv3. The exact version is pinned in app/Package.swift and app/Package.resolved.
+
+third_party/highball-db/highball-db.json is a snapshot of game rows and game recipes from
+highball-db, https://github.com/gauthierpiarrette/highball-db, dedicated to the public domain
+under CC0-1.0 (third_party/highball-db/LICENSE). Its commit is recorded in the file's "source"
+field. highball-db's ODbL-licensed predictions (db/derived) and its MIT-licensed anti-cheat map
+are not included.
+
 Proton-ish modifications
 ========================
 

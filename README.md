@@ -44,7 +44,9 @@ development that every free runtime, Highball included, is built on.
 - **[NotProton](https://github.com/NotProtonNot/NotProton)** by NotProtonNot, for the Steam integration,
   the macOS lsteamclient port and steam-shim. Proton-ish is a fork of NotProton; all of that work is theirs.
 - **[Highball](https://github.com/gauthierpiarrette/highball)** by Gauthier Piarrette, for a free, open-source
-  Wine runtime for Apple Silicon that makes a CrossOver-free setup possible.
+  Wine runtime for Apple Silicon that makes a CrossOver-free setup possible. Proton-ish runs Highball games with
+  Highball's own launch code (HighballKit, GPLv3) and its per-game database
+  ([highball-db](https://github.com/gauthierpiarrette/highball-db), CC0).
 - **[Valve](https://github.com/ValveSoftware/Proton)**, for Proton, lsteamclient and steam_helper.
 
 > Proton-ish is a fork of NotProton and is **not affiliated with or endorsed by** NotProton, Valve,
@@ -65,7 +67,19 @@ game on one Mac so far; expect rough edges.
 ## Using Highball
 
 The [Quick start](#quick-start) covers it. Keep Highball installed: Proton-ish sets up its engine from
-Highball's copy.
+Highball's copy and uses Highball's graphics files.
+
+**Graphics.** Games get the launch environment Highball itself would give them, computed by Highball's own code
+(HighballKit), so Highball's fixes arrive with each Proton-ish update:
+
+- **Automatic** (default): Highball's choice for the game from its database
+  ([highball-db](https://github.com/gauthierpiarrette/highball-db), bundled), otherwise DXMT.
+- **D3DMetal, DXMT, DXVK, WineD3D** in the game's Proton-ish options override it. D3DMetal needs Apple's licence
+  accepted in Highball (an environment's **Graphics → Review licence…**); without it the game runs on DXMT and
+  `protonish-run.log` says why. WineD3D is a last resort and renders many games wrongly.
+- Per-game fixes from highball-db that only set variables, DLL overrides or DXVK options apply automatically.
+  Fixes that change the Windows prefix (registry, winetricks) are not applied yet.
+- `protonish-run.log` ends with a "renderer report": the Direct3D logs the game wrote, e.g. DXVK's version.
 
 Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
 
@@ -104,6 +118,9 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
 - 2026-10-14: "Check for Updates" works for pre-releases (fixed feed address). Releases are published automatically when a version is merged into main.
 - 2026-10-15: README rewritten in Proton-ish's own words; the copied NotProton README text is gone, and NotProton's thanks to earlier projects are kept, clearly attributed.
 - 2026-10-15: README starts with a single Quick start, from installing Proton-ish to pressing Play.
+- 2026-10-15: Highball games run with Highball's own launch environment (HighballKit 0.10.15): the Graphics choice
+  works (D3DMetal, DXMT, DXVK, WineD3D), Automatic follows highball-db, and highball-db's environment fixes apply.
+  New `highball-env` helper; the run log reports which renderer served the game. Synced with NotProton `dae593c`.
 
 ## What Install changes
 

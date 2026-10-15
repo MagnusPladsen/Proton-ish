@@ -2568,12 +2568,12 @@
         }
       }
     },
-    "Proton-ish is a fork of NotProton by NotProtonNot (https://github.com/NotProtonNot/NotProton), released under GPLv3. It is not affiliated with or endorsed by NotProton, Valve, CodeWeavers or Highball." : {
+    "Proton-ish is a fork of NotProton by NotProtonNot (https://github.com/NotProtonNot/NotProton), released under GPLv3. It is not affiliated with or endorsed by NotProton, Valve, CodeWeavers or Highball. It uses Highball's HighballKit (GPLv3) and highball-db game data (CC0) by Gauthier Piarrette (https://github.com/gauthierpiarrette/highball)." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Proton-ish 是 NotProtonNot 开发的 NotProton（https://github.com/NotProtonNot/NotProton）的分支，以 GPLv3 发布。它与 NotProton、Valve、CodeWeavers 或 Highball 无关，也未获得其认可。"
+            "value" : "Proton-ish 是 NotProtonNot 开发的 NotProton（https://github.com/NotProtonNot/NotProton）的分支，以 GPLv3 发布。它与 NotProton、Valve、CodeWeavers 或 Highball 无关，也未获得其认可。它使用 Gauthier Piarrette 开发的 Highball 的 HighballKit（GPLv3）和 highball-db 游戏数据（CC0）（https://github.com/gauthierpiarrette/highball）。"
           }
         }
       }
