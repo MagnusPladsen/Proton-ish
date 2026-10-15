@@ -24,11 +24,16 @@
 #define NP_FALLBACK_TOOL "\021"
 // Stands for the JS array set by np_webpatch_set_fex_tools.
 #define NP_FEX_TOOLS "\022"
+// Stand for the JS arrays set by np_webpatch_set_renderer_gaps.
+#define NP_NO_D3DMETAL_TOOLS "\016"
+#define NP_NO_DXVK_TOOLS "\017"
 
 #define NP_TOOL_NAME_MAX 128
 
 static _Thread_local char g_fallback_tool[NP_TOOL_NAME_MAX];
 static _Thread_local char g_fex_tools[NP_WEBPATCH_FEX_TOOLS_MAX * (NP_TOOL_NAME_MAX + 3) + 3] = "[]";
+static _Thread_local char g_no_d3dmetal_tools[NP_WEBPATCH_FEX_TOOLS_MAX * (NP_TOOL_NAME_MAX + 3) + 3] = "[]";
+static _Thread_local char g_no_dxvk_tools[NP_WEBPATCH_FEX_TOOLS_MAX * (NP_TOOL_NAME_MAX + 3) + 3] = "[]";
 
 typedef struct {
     const char *find;
@@ -64,25 +69,38 @@ void np_webpatch_set_fallback_tool(const char *name) {
         memcpy(g_fallback_tool, name, strlen(name) + 1);
 }
 
-void np_webpatch_set_fex_tools(const char *const *names, size_t count) {
+// A JS array literal of the tool names that pass the name check
+static void tool_array(char *out, const char *const *names, size_t count) {
     size_t n = 0;
-    g_fex_tools[n++] = '[';
+    out[n++] = '[';
     for (size_t i = 0; i < count && i < NP_WEBPATCH_FEX_TOOLS_MAX; i++) {
         if (!names[i] || !*names[i] || !is_tool_name(names[i])) continue;
         size_t len = strlen(names[i]);
-        if (n > 1) g_fex_tools[n++] = ',';
-        g_fex_tools[n++] = '"';
-        memcpy(g_fex_tools + n, names[i], len);
+        if (n > 1) out[n++] = ',';
+        out[n++] = '"';
+        memcpy(out + n, names[i], len);
         n += len;
-        g_fex_tools[n++] = '"';
+        out[n++] = '"';
     }
-    g_fex_tools[n++] = ']';
-    g_fex_tools[n] = '\0';
+    out[n++] = ']';
+    out[n] = '\0';
+}
+
+void np_webpatch_set_fex_tools(const char *const *names, size_t count) {
+    tool_array(g_fex_tools, names, count);
+}
+
+void np_webpatch_set_renderer_gaps(const char *const *no_d3dmetal, size_t d3dmetal_count,
+                                   const char *const *no_dxvk, size_t dxvk_count) {
+    tool_array(g_no_d3dmetal_tools, no_d3dmetal, d3dmetal_count);
+    tool_array(g_no_dxvk_tools, no_dxvk, dxvk_count);
 }
 
 static const char *marker_text(char c) {
     if (c == NP_FALLBACK_TOOL[0]) return g_fallback_tool;
     if (c == NP_FEX_TOOLS[0]) return g_fex_tools;
+    if (c == NP_NO_D3DMETAL_TOOLS[0]) return g_no_d3dmetal_tools;
+    if (c == NP_NO_DXVK_TOOLS[0]) return g_no_dxvk_tools;
     return NULL;
 }
 
@@ -251,14 +269,15 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
 #define NP_CX_OPTIONS_BODY(ARG, RT, BARREL) \
     ARG "=>{" \
     "const t=" ARG ".details,o=t.strLaunchOptions||\"\"," \
-    "fex=" NP_FEX_TOOLS ".indexOf(t.strCompatToolName||\"" NP_FALLBACK_TOOL "\")>=0," \
+    "tn=t.strCompatToolName||\"" NP_FALLBACK_TOOL "\",fex=" NP_FEX_TOOLS ".indexOf(tn)>=0," \
+    "nd=" NP_NO_D3DMETAL_TOOLS ".indexOf(tn)>=0,nx=" NP_NO_DXVK_TOOLS ".indexOf(tn)>=0," \
     "npZh=" NP_WEB_IS_ZH ",npL=(en,zh)=>npZh?zh:en," \
     "L=MSCXLaunch(o,t.unAppID),g=L.g,s=L.s," \
     "T=(ks,l,on,off)=>(0," RT ".jsx)(" BARREL ".Yh,{className:\"MSCXRow\",label:l," \
     "checked:g(ks[0])===on," \
     "onChange:v=>s(ks.map(k=>[k,v?on:(off||\"\")]))},ks[0])," \
-    "bv=g(\"CX_GRAPHICS_BACKEND\"),b=fex&&\"d3dmetal\"===bv?\"\":bv," \
-    "dm=!fex&&(\"\"===b||\"d3dmetal\"===b)," \
+    "bv=g(\"CX_GRAPHICS_BACKEND\"),b=(fex||nd)&&\"d3dmetal\"===bv||nx&&\"dxvk\"===bv?\"\":bv," \
+    "dm=!fex&&!nd&&(\"\"===b||\"d3dmetal\"===b)," \
     "dx=\"\"===b||\"dxmt\"===b," \
     "sw=\"1\"===g(\"DXMT_METALFX_SPATIAL_SWAPCHAIN\")," \
     "F=\"d3d11.metalSpatialUpscaleFactor=\"," \
@@ -276,7 +295,8 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "{data:\"d3dmetal\",label:\"D3DMetal\"}," \
     "{data:\"dxmt\",label:\"DXMT\"}," \
     "{data:\"dxvk\",label:\"DXVK\"}," \
-    "{data:\"wined3d\",label:\"WineD3D\"}].filter(x=>!fex||x.data!==\"d3dmetal\");" \
+    "{data:\"wined3d\",label:\"WineD3D\"}].filter(x=>!(fex||nd)||x.data!==\"d3dmetal\")" \
+    ".filter(x=>!nx||x.data!==\"dxvk\");" \
     "if(t.unAppID<2147483648&&(t.vecPlatforms||[]).indexOf(\"osx\")>=0" \
     "&&!t.strCompatToolName)return null;" \
     "return(0," RT ".jsx)(\"div\",{className:\"MSCXPanel\",children:(0," RT ".jsxs)(" RT ".Fragment,{children:[" \

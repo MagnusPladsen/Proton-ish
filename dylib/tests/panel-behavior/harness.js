@@ -24,10 +24,11 @@ const FORMS = {
   statement: { react: '\u0003', barrel: '\u0004' },
 };
 
-// `fallback` and `fexTools` stand in for what the hook sets before the transform.
+// `fallback`, `fexTools`, `noD3DMetal` and `noDXVK` stand in for what the hook sets before the transform.
 function panel(emit, form, globals = { document: { documentElement: { lang: 'en' } } },
-               { fallback = 'protonish', fexTools = [], names = ['R0', 'B0'] } = {}) {
-  const raw = execFileSync(emit, [form, fallback, ...fexTools], { encoding: 'utf8' }).trim();
+               { fallback = 'protonish', fexTools = [], noD3DMetal = [], noDXVK = [], names = ['R0', 'B0'] } = {}) {
+  const env = { ...process.env, NP_PANEL_NO_D3DMETAL: noD3DMetal.join(','), NP_PANEL_NO_DXVK: noDXVK.join(',') };
+  const raw = execFileSync(emit, [form, fallback, ...fexTools], { encoding: 'utf8', env }).trim();
   const f = FORMS[form];
   const body = expand(raw, { [f.react]: names[0], [f.barrel]: names[1] });
   const src = form === 'component' ? 'var ' + body.replace(/,$/, '') : body.replace(/;$/, '');

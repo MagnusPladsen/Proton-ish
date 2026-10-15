@@ -100,6 +100,29 @@ const char *np_compat_app_mapping(void *compat_mgr, uint32_t appid);
 void np_compat_set_mapping_fn(uintptr_t set_compat_tool_mapping);
 void np_compat_map_tool(void *compat_mgr, uint32_t appid, const char *tool_name);
 
+// The global default tool (app 0), or NULL when Steam has none.
+const char *np_compat_global_mapping(void *compat_mgr);
+
+// The app's default-tool request (~/Library/Application Support/protonish/default-tool:
+// a tool name sets it, an empty line clears it when it is one of ours) against Steam's
+// current default. With no request file, np_compat_apply_default_tool_in makes a listed
+// Highball tool the default when Steam has none, and writes the request.
+typedef enum { NP_DEFAULT_TOOL_KEEP, NP_DEFAULT_TOOL_SET, NP_DEFAULT_TOOL_CLEAR } np_default_tool_action_t;
+np_default_tool_action_t np_compat_default_tool_action(const char *request, const char *current);
+
+// Writes Steam's current default to <support>/steam-default-tool for the app, then applies
+// the request in <support>/default-tool. Returns 1 when the global mapping changed.
+int np_compat_apply_default_tool_in(void *compat_mgr, const char *support);
+// The same against ~/Library/Application Support/protonish, once per Steam run.
+int np_compat_apply_default_tool(void *compat_mgr);
+
+// Tools whose engine cannot run `renderer` ("d3dmetal", "dxvk"), from the app's renderer
+// list (<support>/renderers). `names` point into `storage`.
+size_t np_compat_tools_lacking_in(const char *path, const char *renderer, const char **names, size_t max,
+                                  char *storage, size_t storage_size);
+size_t np_compat_tools_lacking(const char *renderer, const char **names, size_t max,
+                               char *storage, size_t storage_size);
+
 // CCompatManager::YldRegisterTool, resolved at install time.
 void np_compat_set_register_fn(uintptr_t yld_register_tool);
 

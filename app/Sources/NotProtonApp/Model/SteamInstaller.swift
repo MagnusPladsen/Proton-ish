@@ -79,6 +79,7 @@ enum SteamInstaller {
         stopClient: ClientStopper = stopTheClient,
         register: BundleRegistrar = { SteamBundle.register($0) },
         resetInputAccess: () -> Void = resetInputAccess,
+        requirement: (URL) -> String? = designatedRequirement(of:),
         report: @escaping @Sendable (InstallPhase) -> Void = { _ in }
     ) throws -> InstallOutcome {
         report(.checkingPayload)
@@ -164,7 +165,9 @@ enum SteamInstaller {
             backedUp = try backUpPlist(plist, into: backups)
 
             let priorPlist = try? Data(contentsOf: plist)
-            let priorHash = cdhash(of: app)
+            // macOS keys Steam's Accessibility grant on the designated requirement; the local
+            // identity keeps it the same across re-signs, an ad hoc signature changes it every time
+            let priorRequirement = requirement(app)
             do {
                 try setInsert(at: plist, to: dylib)
 
@@ -176,7 +179,7 @@ enum SteamInstaller {
                 revertPlist(priorPlist, at: plist, app: app)
                 throw error
             }
-            if cdhash(of: app) != priorHash {
+            if priorRequirement == nil || requirement(app) != priorRequirement {
                 resetInputAccess()
             }
         }
@@ -404,11 +407,11 @@ enum SteamInstaller {
         }
     }
 
-    static func cdhash(of app: URL) -> String? {
-        guard let result = try? Shell.run("/usr/bin/codesign", ["-dvvv", app.path(percentEncoded: false)]) else { return nil }
+    static func designatedRequirement(of app: URL) -> String? {
+        guard let result = try? Shell.run("/usr/bin/codesign", ["-d", "-r-", app.path(percentEncoded: false)]) else { return nil }
         return (result.stdout + result.stderr).split(separator: "\n")
-            .first { $0.hasPrefix("CDHash=") }
-            .map { String($0.dropFirst("CDHash=".count)) }
+            .first { $0.hasPrefix("designated => ") }
+            .map { String($0.dropFirst("designated => ".count)) }
     }
 
     // macOS does not automatically clear a pre-existing input access approval, so it needs to be cleared

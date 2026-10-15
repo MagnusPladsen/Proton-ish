@@ -6,7 +6,7 @@ import Testing
 @Suite("Install payload")
 struct InstallPayloadTests {
 
-    private func stage(_ root: URL, dylib: Bool = true, shim: Bool = true, iconmaker: Bool = true, appinfo: Bool = true, highballEnv: Bool = true, highballDB: Bool = true, signatures: [String] = ["1788400362.json"], fonts: [String] = ["arial.ttf"]) throws {
+    private func stage(_ root: URL, dylib: Bool = true, shim: Bool = true, iconmaker: Bool = true, appinfo: Bool = true, highballEnv: Bool = true, highballDB: Bool = true, highballEngines: Bool = true, signatures: [String] = ["1788400362.json"], fonts: [String] = ["arial.ttf"]) throws {
         let files = FileManager.default
         let signatureDir = root.appending(path: "signatures/macos.arm64")
         try files.createDirectory(at: signatureDir, withIntermediateDirectories: true)
@@ -16,6 +16,11 @@ struct InstallPayloadTests {
         if appinfo { try Data("appinfo".utf8).write(to: root.appending(path: "appinfo")) }
         if highballEnv { try Data("highball-env".utf8).write(to: root.appending(path: "highball-env")) }
         if highballDB { try Data("{}".utf8).write(to: root.appending(path: "highball-db.json")) }
+        if highballEngines {
+            let engines = root.appending(path: "highball-engines")
+            try files.createDirectory(at: engines, withIntermediateDirectories: true)
+            for name in InstallPayload.highballEngineFiles { try Data("{}".utf8).write(to: engines.appending(path: name)) }
+        }
         try Data("#!/bin/sh\nexit 0\n".utf8).write(to: root.appending(path: "run"))
         try Data("100\n".utf8).write(to: root.appending(path: "build-time"))
         for name in signatures {
@@ -37,6 +42,7 @@ struct InstallPayloadTests {
         #expect(located.appinfo.lastPathComponent == "appinfo")
         #expect(located.highballEnv.lastPathComponent == "highball-env")
         #expect(located.highballDB.lastPathComponent == "highball-db.json")
+        #expect(located.highballEngines.lastPathComponent == "highball-engines")
         #expect(!located.signatures.isEmpty)
         #expect(located.fonts.contains("arial.ttf"))
         #expect(located.fonts.contains("alt/arial.ttf"))
@@ -98,7 +104,7 @@ struct InstallPayloadTests {
     func reportsEverythingMissing() throws {
         let root = try scratchDirectory("payload")
         defer { try? FileManager.default.removeItem(at: root) }
-        try stage(root, dylib: false, shim: false, iconmaker: false, appinfo: false, highballEnv: false, highballDB: false, signatures: [], fonts: [])
+        try stage(root, dylib: false, shim: false, iconmaker: false, appinfo: false, highballEnv: false, highballDB: false, highballEngines: false, signatures: [], fonts: [])
 
         do {
             _ = try InstallPayload.locate(root: root)
@@ -110,6 +116,8 @@ struct InstallPayloadTests {
             #expect(failure.detail.contains("appinfo"))
             #expect(failure.detail.contains("highball-env"))
             #expect(failure.detail.contains("highball-db.json"))
+            #expect(failure.detail.contains("highball-engines/x64-crossover26.3-r19.json"))
+            #expect(failure.detail.contains("highball-engines/d3dmetal-license.txt"))
             #expect(failure.detail.contains("signatures/macos.arm64"))
             #expect(failure.detail.contains("fonts"))
         }

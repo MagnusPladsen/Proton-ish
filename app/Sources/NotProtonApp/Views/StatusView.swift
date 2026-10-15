@@ -160,6 +160,7 @@ struct StatusRow: View {
 
 struct StatusView: View {
     @Environment(SystemStatus.self) private var status
+    @State private var licenceSheet: HighballLicenceSheet.Mode?
 
     private static let updateBlockPrompt =
         String(localized: "Steam client updates may break Proton-ish. If you don't want to wait for Proton-ish to be updated to be compatible with future Steam versions at the cost of not getting updates to the Steam client, you can stop the Steam client from updating itself.")
@@ -180,6 +181,16 @@ struct StatusView: View {
                     .visibilityPriority(.high)
             } else {
                 ToolbarItem(placement: .primaryAction) { refreshButton }
+            }
+        }
+        .sheet(item: $licenceSheet) { mode in
+            HighballLicenceSheet(mode: mode, licence: Self.d3dmetalLicence) { choice in
+                switch mode {
+                case .download:
+                    Task { await status.downloadHighballEngine(acceptD3DMetal: choice == .accept) }
+                case .enable(let engine):
+                    if choice == .accept { Task { await status.enableD3DMetal(engine) } }
+                }
             }
         }
         .confirmationDialog(
@@ -576,13 +587,28 @@ struct StatusView: View {
         }
     }
 
+    private static var d3dmetalLicence: String {
+        (try? InstallPayload.locate()).map(HighballInstaller.licenceText(in:)) ?? ""
+    }
+
+    private static var engineDownloadBytes: Int64 {
+        guard let payload = try? InstallPayload.locate(), let build = HighballInstaller.build else { return 0 }
+        return HighballInstaller.downloadBytes(manifest: HighballInstaller.manifest(in: payload, build: build))
+    }
+
     @ViewBuilder
     private func highballSection(_ snapshot: StatusSnapshot) -> some View {
-        if snapshot.highball.isEmpty {
+        if !snapshot.highball.contains(where: \.isUsable), let build = HighballInstaller.build {
             StatusRow(
-                title: "Highball",
-                value: String(localized: "Not found. Install Highball from gethighball.com."),
-                tone: .neutral
+                title: String(localized: "Highball engine"),
+                value: String(localized: "Not installed. Proton-ish can download it; the Highball app is not needed."),
+                tone: .info,
+                detail: build.bundleVersion,
+                action: StatusAction(
+                    label: String(localized: "Download\u{2026}"),
+                    isProminent: true,
+                    isEnabled: status.canInstall
+                ) { licenceSheet = .download(bytes: Self.engineDownloadBytes) }
             )
         }
         ForEach(snapshot.highball) { engine in
@@ -600,6 +626,29 @@ struct StatusView: View {
         if let notice = SystemStatus.highballNotice(engines: snapshot.highball) {
             StatusRow(title: String(localized: "Compatibility Tool"), value: notice, tone: .warning)
         }
+        if snapshot.installedRunners.contains(where: { $0.runtime == .highball }) {
+            defaultToolRow(snapshot)
+        }
+    }
+
+    private func defaultToolRow(_ snapshot: StatusSnapshot) -> some View {
+        let requested = snapshot.defaultToolRequest.map { !$0.isEmpty } ?? false
+        let value: String = if requested {
+            String(localized: "Windows games without their own choice run through Highball. Applies when Steam starts.")
+        } else if let current = snapshot.steamDefaultTool, !current.isEmpty, !DefaultTool.isOurs(current) {
+            String(localized: "Steam's default is \(current). Turn on to use Highball instead.")
+        } else {
+            String(localized: "Each game needs Highball chosen under Properties → Compatibility.")
+        }
+        return StatusRow(
+            title: String(localized: "Use Highball for all Windows games"),
+            value: value,
+            toggle: Binding(
+                get: { requested },
+                set: { wanted in Task { await status.setDefaultTool(on: wanted) } }
+            )
+        )
+        .disabled(!status.isIdle)
     }
 
     private func highballRow(_ engine: HighballEngine, snapshot: StatusSnapshot) -> StatusRow {
@@ -634,7 +683,12 @@ struct StatusView: View {
                 isProminent: copy != .ready,
                 isEnabled: status.canInstall
             ) { Task { await status.setUpHighball(engine, replacingExisting: copy == .ready) } },
-            menu: copy == .notSetUp ? [] : [removeCopyAction(build.id, label: String(localized: "Remove Copy\u{2026}"))]
+            menu: (engine.d3dmetalAccepted ? [] : [StatusAction(
+                label: String(localized: "Enable D3DMetal\u{2026}"),
+                help: String(localized: "Accept Apple's licence so games can use D3DMetal."),
+                isEnabled: status.canInstall
+            ) { licenceSheet = .enable(engine) }])
+                + (copy == .notSetUp ? [] : [removeCopyAction(build.id, label: String(localized: "Remove Copy\u{2026}"))])
         )
     }
 
