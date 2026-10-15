@@ -8,6 +8,8 @@
   - M2b: map the in-Steam graphics panel to Highball's renderers (DXMT, D3DMetal when the Apple licence is accepted, DXVK, vkd3d) per game
   - Import per-game fixes from highball-db (CC0): renderer, DLL overrides, env vars, Windows version, keyed by Steam app id
   - Track a compatibility list (game, engine revision, result) in the README or a docs page
+- [ ] M2d: Proton-ish installs the Highball engine itself with HighballKit's EngineStore.install (Highball's release URLs, sha256-checked; D3DMetal only after the user accepts Apple's licence in Proton-ish), so users no longer need the Highball app. After M2b's run-script task, before the Reddit post (added: 2026-10-15)
+- [ ] Upstream sync automation (plan: docs/superpowers/plans/2026-10-15-upstream-sync-automation.md), after M2b; needs a SYNC_TOKEN PAT (added: 2026-10-15)
 
 ## Low Priority / Future
 - [ ] Reach out to Highball after the beta has testers: stable engine manifest, steamclient patch in highball-engine, shared compat data (added: 2026-10-14)
