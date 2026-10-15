@@ -35,6 +35,7 @@ for (const form of Object.keys(FORMS)) {
   const { render: Q } = panel(emit, form);
   r = walk(Q({ details: details(' %command%', { strCompatToolName: HB }) }));
   t.ok(backends(r).includes('d3dmetal') && backends(r).includes('dxvk'), 'without gaps the Highball tool offers everything');
-  failed += t.done();
+  failed += t.failed;
 }
+console.log(failed ? `\n${failed} failure(s)` : '\na Highball tool offers only what its engine can run');
 process.exit(failed ? 1 : 0);
