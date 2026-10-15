@@ -145,6 +145,9 @@ l10ncheck:
 # the embedded __text baseline
 SCRIPTS := $(shell git ls-files '*.sh' 2>/dev/null | grep -v '^dylib/feats/compat_run\.sh$$')
 
+synccheck:
+	@sh scripts/sync/test-sync.sh
+
 scriptcheck:
 	@if ! command -v shellcheck >/dev/null 2>&1; then \
 		$(call SKIP,scriptcheck,shellcheck); exit 0; fi; \

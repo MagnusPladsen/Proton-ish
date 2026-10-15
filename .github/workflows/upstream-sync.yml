@@ -1,0 +1,83 @@
+# Keeps Proton-ish current with its upstreams: NotProton merges, Highball pin and database bumps
+# as pull requests, new Highball engine builds as issues. Nothing merges or releases by itself.
+name: upstream sync
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notproton:
+    name: NotProton
+    runs-on: ubuntu-latest
+    steps:
+      - name: Need the sync token
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::notice::SYNC_TOKEN is not set; see README.md, Maintenance"
+            echo "skip=1" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@v4
+        if: env.skip != '1'
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+      - name: Merge NotProton's main
+        if: env.skip != '1'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: sh scripts/sync/notproton.sh
+
+  highball:
+    name: Highball
+    runs-on: xcode-27
+    steps:
+      - name: Need the sync token
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::notice::SYNC_TOKEN is not set; see README.md, Maintenance"
+            echo "skip=1" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@v4
+        if: env.skip != '1'
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+      - name: Select Xcode
+        if: env.skip != '1'
+        run: sudo xcode-select -s /Applications/Xcode_27.0.app
+      - name: Bump HighballKit and the highball-db snapshot
+        if: env.skip != '1'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: sh scripts/sync/highball.sh
+
+  engines:
+    name: Highball engines
+    runs-on: ubuntu-latest
+    steps:
+      - name: Need the sync token
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::notice::SYNC_TOKEN is not set; see README.md, Maintenance"
+            echo "skip=1" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@v4
+        if: env.skip != '1'
+        with:
+          token: ${{ secrets.SYNC_TOKEN }}
+      - name: Open issues for new engine builds
+        if: env.skip != '1'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: sh scripts/sync/highball-engine.sh
