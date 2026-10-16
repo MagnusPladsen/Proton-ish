@@ -2,11 +2,27 @@
 
 Proton-ish lets the macOS Steam client run Windows games through Wine, the way Steam Play and Proton do
 on Linux. Pick a Windows game in your normal macOS Steam library, choose a compatibility tool, press Play.
+It runs games with [Highball](https://github.com/gauthierpiarrette/highball)'s free Wine engine or with
+[CrossOver](https://www.codeweavers.com/crossover).
+
+## Use CrossOver if you can
+
+Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make.
+[CodeWeavers](https://www.codeweavers.com/) employs most of the people who work on
+[Wine](https://www.winehq.org/) and funds nearly all of the Wine work for macOS. Highball's engine is built
+from the CrossOver sources CodeWeavers publishes, so most of what runs your game in a free engine is CodeWeavers'
+work with the price tag removed. Sales of CrossOver pay for that work. Without a healthy CodeWeavers there is no Wine on the
+Mac, and Wine in general loses its largest contributor.
+
+So: if you can, buy CrossOver and use it in Proton-ish. It gives the best support and performance, and it
+keeps the work funded. If you cannot, play on with Highball's engine, and come back to this when you can.
+The app says the same once on first launch, and again under **Help → Why Buy CrossOver** whenever you want it.
 
 ## Quick start
 
-Free setup with Highball's Wine engine; no Highball app needed. Using CrossOver instead? See
-[Using CrossOver](#using-crossover).
+[CrossOver](https://www.codeweavers.com/crossover) gives the best support and performance, and buying it funds
+Wine on the Mac; if you have it or can get it, follow [Using CrossOver](#using-crossover). Highball's Wine
+engine is the free alternative, and the steps below set it up; no Highball app needed.
 
 **You need:** an Apple Silicon Mac with macOS 15 or newer, [Steam for macOS](https://store.steampowered.com/about/)
 and Rosetta 2 (macOS offers to install it the first time something needs it, or run
@@ -15,7 +31,7 @@ and Rosetta 2 (macOS offers to install it the first time something needs it, or 
 1. **Install Proton-ish:** `brew install --cask magnuspladsen/tap/proton-ish`, or download `Proton-ish.zip` from the
    [Releases page](https://github.com/MagnusPladsen/Proton-ish/releases) and move `Proton-ish.app` to Applications.
 2. **Open it once.** It is not notarized, so macOS blocks it; go to **System Settings → Privacy & Security** and click
-   **Open Anyway**.
+   **Open Anyway**. The first launch opens with the note on who funds Wine; read it and click **Continue**.
 3. **Install:** allow **App Management** when macOS asks (Proton-ish modifies the Steam app) and click **Install** on
    the Status screen.
 4. **Get the engine:** click **Download…** next to **Highball engine**. Proton-ish shows Apple's licence for D3DMetal
@@ -32,14 +48,12 @@ Updates arrive through **Proton-ish → Check for Updates…** (or `brew upgrade
 [Reporting problems](#reporting-problems).
 ## Why Proton-ish exists
 
-[NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS, but it only
-supports [CrossOver](https://www.codeweavers.com/crossover), which is a paid product. Today there are
-good free and open-source Wine runtimes for the Mac, such as [Highball](https://github.com/gauthierpiarrette/highball).
-Proton-ish adds support for those, starting with Highball's Wine 11 engine, so nobody has to pay just to
-play the Windows games they already own. CrossOver stays fully supported.
-
-If you can afford it, please consider buying CrossOver anyway: CodeWeavers funds most of the Wine
-development that every free runtime, Highball included, is built on.
+[NotProton](https://github.com/NotProtonNot/NotProton) made Steam Play work on macOS on top of
+[CrossOver](https://www.codeweavers.com/crossover). Proton-ish puts
+[Highball](https://github.com/gauthierpiarrette/highball)'s free Wine engine into that same Steam integration,
+so the games Highball runs can be played from the Steam library with Steam's own launch flow, Steam Cloud and
+controller support, and so one app covers both engines. CrossOver stays fully supported and gives the best
+results; see [Use CrossOver if you can](#use-crossover-if-you-can) for why that matters.
 
 ## Thanks
 
@@ -99,7 +113,8 @@ Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-hi
 
 ## Using CrossOver
 
-Follow the [Quick start](#quick-start) but skip step 3 and set up your CrossOver install in step 4 instead.
+Follow the [Quick start](#quick-start), but in step 4 click **Set Up** next to your CrossOver install instead of
+downloading Highball's engine.
 CrossOver works exactly as in NotProton. Supported: CrossOver 26.3 and the CrossOver Preview builds 20260821,
 20261006 and 20261015. Preview builds come in a Rosetta (x86) and an ARM64 variant; the ARM64 variant offers both a FEX and a
 Rosetta compatibility tool. The Status screen shows which of your CrossOver installs can be set up.
@@ -161,6 +176,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: Highball prefixes keep saves under `steamuser`, where Steam and Steam Cloud look (games saved under the Mac user's name before; existing prefixes are brought over on launch, see Using Highball).
 - 2026-10-16: NotProton 1.1.8 merged: CrossOver Preview 20261015 (27.0.0.41073) supported, the Mac stays awake while a game runs (caffeinate), settings FEX cannot use are cleared for Steam's new Compatibility UI, and a steam.cfg that is not UTF-8 is left intact.
 - 2026-10-16: The Status screen recommends CrossOver for the best support and performance and asks those who can to buy it and support CodeWeavers; a Thanks section links to NotProton and Highball on GitHub.
+- 2026-10-16: A note on who funds Wine on the Mac opens on first launch (again under Help → Why Buy CrossOver) with a Buy CrossOver button; Help → Support CodeWeavers opens the CrossOver page. Repair Steam and Remove Everything sit under their own header above Thanks. README leads with "Use CrossOver if you can" and "Why Proton-ish exists" now describes Highball's engine in Steam rather than a way around paying.
 
 ## What Install changes
 

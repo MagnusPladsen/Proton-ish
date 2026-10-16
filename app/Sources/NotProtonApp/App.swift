@@ -7,6 +7,7 @@ struct NotProtonApp: App {
     @State private var status = SystemStatus()
     @State private var prefixes = PrefixesModel()
     @State private var pane: Pane = .status
+    @State private var showsFundingNotice = FundingNotice.isDue()
     private let updater = AppUpdater()
 
     init() {
@@ -23,6 +24,9 @@ struct NotProtonApp: App {
                 .onChange(of: status.snapshot?.installedRunners.map(\.id)) {
                     if prefixes.hasLoaded { Task { await prefixes.load() } }
                 }
+                .sheet(isPresented: $showsFundingNotice) {
+                    FundingNoticeSheet { FundingNotice.markSeen() }
+                }
         }
         .defaultSize(width: 900, height: 760)
         .commands { menus }
@@ -38,6 +42,12 @@ struct NotProtonApp: App {
 
         CommandGroup(after: .appInfo) {
             Button("Check for Updates…") { updater.check() }
+        }
+
+        CommandGroup(after: .help) {
+            Divider()
+            Button("Why Buy CrossOver…") { showsFundingNotice = true }
+            Button("Support CodeWeavers") { NSWorkspace.shared.open(ProjectLinks.crossOver) }
         }
 
         CommandGroup(after: .sidebar) {

@@ -1052,6 +1052,16 @@
         }
       }
     },
+    "Buy CrossOver" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买 CrossOver"
+          }
+        }
+      }
+    },
     "Calculating…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1202,6 +1212,16 @@
         }
       }
     },
+    "CodeWeavers employs most of the people who work on Wine and funds nearly all of the Wine work for macOS. Highball's engine is built from the CrossOver sources CodeWeavers publishes. Sales of CrossOver pay for all of it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CodeWeavers 雇用了大多数 Wine 开发者，并资助了几乎全部面向 macOS 的 Wine 工作。Highball 的引擎基于 CodeWeavers 公开的 CrossOver 源码构建。这一切都由 CrossOver 的销售收入支付。"
+          }
+        }
+      }
+    },
     "Compatibility Tool" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1268,6 +1288,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在配置 Steam"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
           }
         }
       }
@@ -2021,6 +2051,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "如果 Proton-ish 安装在那里，它将保持安装状态。仍要继续吗？"
+          }
+        }
+      }
+    },
+    "If you can, buy CrossOver and use it in Proton-ish: it gives the best support and performance, and it keeps Wine on the Mac alive. If you cannot, play on, and come back to this when you can. This note is always under Help → Why Buy CrossOver." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果条件允许，请购买 CrossOver 并在 Proton-ish 中使用它：它提供最好的支持与性能，也让 Mac 上的 Wine 得以延续。如果暂时不行，照常游玩，有条件时再回来。此说明始终可在“帮助 → 为什么购买 CrossOver”中找到。"
           }
         }
       }
@@ -2828,6 +2868,16 @@
         }
       }
     },
+    "Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 是免费的，Highball 的引擎也是。但它们底层的 Wine 并非无需成本。"
+          }
+        }
+      }
+    },
     "Proton-ish is installed in %@. Use Repair Steam to remove it before choosing another copy of Steam." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3224,6 +3274,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "修复 Steam"
+          }
+        }
+      }
+    },
+    "Repair and Remove" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修复与移除"
           }
         }
       }
@@ -3827,6 +3887,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在停止 Steam"
+          }
+        }
+      }
+    },
+    "Support CodeWeavers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 CodeWeavers"
           }
         }
       }
@@ -4447,6 +4517,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不支持版本 %@（支持：%@）"
+          }
+        }
+      }
+    },
+    "Who pays for Wine on the Mac" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "谁在为 Mac 上的 Wine 付费"
+          }
+        }
+      }
+    },
+    "Why Buy CrossOver…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为什么购买 CrossOver…"
           }
         }
       }

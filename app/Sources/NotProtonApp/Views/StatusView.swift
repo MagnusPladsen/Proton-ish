@@ -378,6 +378,8 @@ struct StatusView: View {
 
             componentsSection(snapshot.payload)
 
+            dangerSection
+
             Section("Thanks") {
                 Text("Proton-ish is a fork of NotProtonNot/NotProton and runs games with Highball's engine. Thank you both.")
                 HStack(spacing: 16) {
@@ -385,14 +387,12 @@ struct StatusView: View {
                     Link("gauthierpiarrette/highball on GitHub", destination: ProjectLinks.highball)
                 }
             }
-
-            dangerSection
         }
         .formStyle(.grouped)
     }
 
     private var dangerSection: some View {
-        Section {
+        Section("Repair and Remove") {
             StatusRow(
                 title: String(localized: "Repair Steam"),
                 value: String(localized: "Restore Steam to its original state."),
