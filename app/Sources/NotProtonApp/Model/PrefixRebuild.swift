@@ -161,9 +161,22 @@ extension PrefixTools {
             try? fm.createSymbolicLink(
                 atPath: link.path(percentEncoded: false), withDestinationPath: target)
         }
-        try? fm.createSymbolicLink(
-            atPath: users.appending(path: "crossover").path(percentEncoded: false),
-            withDestinationPath: "steamuser")
+        for alias in profileAliases {
+            try? fm.createSymbolicLink(
+                atPath: users.appending(path: alias).path(percentEncoded: false),
+                withDestinationPath: "steamuser")
+        }
+    }
+
+    // CrossOver fixes the Windows user name to "crossover" and Highball's Wine takes the Mac
+    // user's; both names link to steamuser, where Steam reads and syncs saves. Mirrors
+    // mac_user_name in compat_run.sh.
+    static var profileAliases: [String] {
+        let macUser = NSUserName()
+        let reserved = ["", "steamuser", "crossover", "Public"]
+        guard !reserved.contains(macUser), !macUser.hasPrefix("."), !macUser.contains("/")
+        else { return ["crossover"] }
+        return ["crossover", macUser]
     }
 }
 
@@ -225,7 +238,7 @@ private final class Carry {
 
     private func landing(forProfile profile: URL, under users: URL) -> URL {
         let name = profile.lastPathComponent
-        let shared = name == "crossover" || name == "steamuser"
+        let shared = name == "steamuser" || PrefixTools.profileAliases.contains(name)
         return users.appending(path: shared ? "steamuser" : name)
     }
 
