@@ -89,13 +89,19 @@ or later through the engine row's **Enable D3DMetal…**.
   Fixes that change the Windows prefix (registry, winetricks) are not applied yet.
 - `protonish-run.log` ends with a "renderer report": the Direct3D logs the game wrote, e.g. DXVK's version.
 
+**Saves.** Highball's Wine names the Windows user after your Mac user, so Proton-ish links that name to
+`steamuser`, the profile Steam reads and syncs with Steam Cloud, the way NotProton links CrossOver's `crossover`.
+A prefix built before this (beta.4 and earlier saved under the Mac user's name) is brought over on its next launch:
+files move into `steamuser`, of two differing copies the newer wins, and the loser stays in `<user> BACKUP` next to
+it. Links Wine made to your Mac folders (Documents, Downloads, …) are dropped, never followed.
+
 Design and roadmap: [design spec](docs/superpowers/specs/2026-10-14-protonish-highball-design.md).
 
 ## Using CrossOver
 
 Follow the [Quick start](#quick-start) but skip step 3 and set up your CrossOver install in step 4 instead.
-CrossOver works exactly as in NotProton. Supported: CrossOver 26.3 and the CrossOver Preview builds 20260821 and
-20261006. Preview builds come in a Rosetta (x86) and an ARM64 variant; the ARM64 variant offers both a FEX and a
+CrossOver works exactly as in NotProton. Supported: CrossOver 26.3 and the CrossOver Preview builds 20260821,
+20261006 and 20261015. Preview builds come in a Rosetta (x86) and an ARM64 variant; the ARM64 variant offers both a FEX and a
 Rosetta compatibility tool. The Status screen shows which of your CrossOver installs can be set up.
 
 A Steam client update can break Proton-ish until Proton-ish catches up; the Status screen has a
@@ -152,6 +158,8 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-15: 0.1.0-beta.4: engine download from Proton-ish, default tool for all Windows games, DirectX 12 games on D3DMetal, Accessibility kept across installs.
 - 2026-10-15: Upstream sync workflow: NotProton merges, Highball pin and highball-db bumps as PRs, new engine builds as issues.
 - 2026-10-15: A final release counts as newer than an installed beta (it was refused before); Remove Everything clears Steam's default tool when it was Proton-ish's.
+- 2026-10-16: Highball prefixes keep saves under `steamuser`, where Steam and Steam Cloud look (games saved under the Mac user's name before; existing prefixes are brought over on launch, see Using Highball).
+- 2026-10-16: NotProton 1.1.8 merged: CrossOver Preview 20261015 (27.0.0.41073) supported, the Mac stays awake while a game runs (caffeinate), settings FEX cannot use are cleared for Steam's new Compatibility UI, and a steam.cfg that is not UTF-8 is left intact.
 - 2026-10-16: The Status screen recommends CrossOver for the best support and performance and asks those who can to buy it and support CodeWeavers; a Thanks section links to NotProton and Highball on GitHub.
 
 ## What Install changes
