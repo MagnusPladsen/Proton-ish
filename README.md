@@ -178,6 +178,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: The Status screen recommends CrossOver for the best support and performance and asks those who can to buy it and support CodeWeavers; a Thanks section links to NotProton and Highball on GitHub.
 - 2026-10-16: A note on who funds Wine on the Mac opens on first launch (again under Help → Why Buy CrossOver) with a Buy CrossOver button; Help → Support CodeWeavers opens the CrossOver page. Repair Steam and Remove Everything sit under their own header above Thanks. README leads with "Use CrossOver if you can" and "Why Proton-ish exists" now describes Highball's engine in Steam rather than a way around paying.
 - 2026-10-16: 0.1.0-beta.5: Highball saves kept under steamuser with migration of existing prefixes, NotProton 1.1.8 (CrossOver Preview 20261015, no display sleep during games), CrossOver recommended on the Status screen, first-launch note on who funds Wine.
+- 2026-10-16: The CrossOver row's "Supported:" list names only CrossOver versions (Highball's r19 was listed too).
 
 ## What Install changes
 

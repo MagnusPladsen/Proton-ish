@@ -3,7 +3,7 @@
 ## High Priority
 ## Medium Priority
 - [x] Version ordering: pre-release-aware VersionOrder replaces String.compare(.numeric) (completed: 2026-10-15)
-- [ ] CrossOver row lists Highball's "r19" in "Supported:" (SupportedRunners.versionList includes Highball builds) (added: 2026-10-14)
+- [x] CrossOver row lists Highball's "r19" in "Supported:" (SupportedRunners.versionList includes Highball builds) (completed: 2026-10-16)
 - [ ] Highball parity for Steam games: every game that works in Highball should work here (added: 2026-10-14)
   - [x] M2b: Highball's own launch environment via HighballKit (highball-env): Graphics choice, Automatic from highball-db, environment-only recipe steps, renderer report (completed: 2026-10-15)
   - M2c: apply highball-db recipe steps that change the prefix (registry, winetricks, winver, copy, file, installer)
@@ -14,7 +14,7 @@
   - [x] Also: a "Use Highball for all Windows games" switch that sets Steam's default compatibility tool (CompatToolMapping app 0 in config.vdf, Steam stopped), so no per-game tool choice (user decision 2026-10-15)
   - [x] Automatic should send DirectX 12-only games to D3DMetal like Highball (ProgramNeeds from the game's exe; pass the exe to highball-env)
 - [x] Remove Everything clears Steam's default tool when it is ours (SteamCompatConfig, config.vdf edited while Steam is stopped) (completed: 2026-10-15)
-- [ ] Upstream sync automation (plan: docs/superpowers/plans/2026-10-15-upstream-sync-automation.md), after M2b; needs a SYNC_TOKEN PAT (added: 2026-10-15)
+- [x] Upstream sync automation (plan: docs/superpowers/plans/2026-10-15-upstream-sync-automation.md), after M2b; needs a SYNC_TOKEN PAT (completed: 2026-10-15)
 
 ## Low Priority / Future
 - [ ] Reach out to Highball after the beta has testers: stable engine manifest, steamclient patch in highball-engine, shared compat data (added: 2026-10-14)
