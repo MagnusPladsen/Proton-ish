@@ -26,6 +26,11 @@ HB_R19_CLEAN_X86_64=6fc64ddf477780ea949cf3b02ce5d6bc147da596c9feb9f7379d3ea7f554
 HB_R19_CLEAN_I386=e0c057cfd6d12bb62df58b7f71cfcf9a07704b4ffd1095442e784eea3f3f0bd2
 HB_R19_PATCHED_X86_64=1238348ffd41f25a03d8dc5d0b019e6fffa789069fc15481fb30ed4fc75043bc
 HB_R19_PATCHED_I386=836c05b939fcb56022f14476ce6e25ea71574a3287d1dda70f141b2a564e4da7
+# r25 (engine build 0024) hooks at the same offsets and takes r19's payloads
+HB_R25_CLEAN_X86_64=e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3
+HB_R25_CLEAN_I386=54137f366a4f15403d9eecbbf3ce575b3129251e2eebdad125b55bd4b532e5ce
+HB_R25_PATCHED_X86_64=e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163
+HB_R25_PATCHED_I386=9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c
 
 FEX_CLEAN_X86_64=f4fa556a3dc20f6e966a803f5de554359227a61a24cd5b5a2ad88a427ceeec58
 FEX_CLEAN_I386=09474795d6f306163cebab6429819999fcff50e07dbc4b067a90ec4f74a3a7d7
@@ -87,10 +92,11 @@ flavor_of() {
             "$ROSETTA41073_CLEAN_X86_64") echo rosetta-41073; return 0 ;;
             "$CX26_CLEAN_X86_64")         echo cx26; return 0 ;;
             "$HB_R19_CLEAN_X86_64")       echo hb-r19; return 0 ;;
+            "$HB_R25_CLEAN_X86_64")       echo hb-r25; return 0 ;;
         esac
     done
     die "no ntdll under $CX_ROOT/lib/wine matches a pinned build
-       pass FLAVOR=rosetta, rosetta-41069, rosetta-41073, cx26, hb-r19, fex, fex-41069 or fex-41073 to choose the pins anyway"
+       pass FLAVOR=rosetta, rosetta-41069, rosetta-41073, cx26, hb-r19, hb-r25, fex, fex-41069 or fex-41073 to choose the pins anyway"
 }
 
 if [ -z "${FLAVOR:-}" ]; then
@@ -103,6 +109,7 @@ case "$FLAVOR" in
     rosetta-41073) tools="x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc"; BUILD=27.0.0.41073 ;;
     cx26)          tools="x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc"; BUILD=26.3.0.39832 ;;
     hb-r19)        tools="x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc"; BUILD=x64-crossover26.3-r19 ;;
+    hb-r25)        tools="x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc"; BUILD=x64-crossover26.3-r25 ;;
     fex)           tools="x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc clang ld.lld"
                    BUILD=27.0.0.40921-fex ;;
     fex-41069)     tools="x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc clang ld.lld"
@@ -174,6 +181,13 @@ case "$FLAVOR" in
             "$HB_R19_CLEAN_X86_64" "$HB_R19_PATCHED_X86_64"
         patch_one i386-windows   build32.sh hb-r19 detour32-hb-r19.bin \
             "$HB_R19_CLEAN_I386"   "$HB_R19_PATCHED_I386"
+        ;;
+    hb-r25)
+        ARCHES="x86_64-windows i386-windows"
+        patch_one x86_64-windows build.sh   hb-r19 detour2-hb-r19.bin \
+            "$HB_R25_CLEAN_X86_64" "$HB_R25_PATCHED_X86_64"
+        patch_one i386-windows   build32.sh hb-r19 detour32-hb-r19.bin \
+            "$HB_R25_CLEAN_I386"   "$HB_R25_PATCHED_I386"
         ;;
     fex)
         # The FEX build ships a version of Wine that runs through Rosetta as well as

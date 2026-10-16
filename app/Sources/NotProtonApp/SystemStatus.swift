@@ -453,12 +453,20 @@ final class SystemStatus {
         }
     }
 
-    // Option C: Highball becomes Steam's default for Windows games only when Steam has no default
+    // Option C: Highball becomes Steam's default for Windows games only when Steam has no default;
+    // a default that is already ours follows the newest Highball build set up
     private func adoptHighballAsDefault() -> String {
-        guard DefaultTool.shouldAdopt(request: DefaultTool.request(), steamDefault: DefaultTool.steamDefault()),
-              let tool = DefaultTool.highballTool(installed: RunnerStore.installedBuilds()),
-              (try? DefaultTool.set(tool)) != nil else { return "" }
-        return " " + String(localized: "Highball is now Steam's default for Windows games.")
+        let request = DefaultTool.request()
+        guard let tool = DefaultTool.highballTool(installed: RunnerStore.installedBuilds()) else { return "" }
+        if DefaultTool.shouldAdopt(request: request, steamDefault: DefaultTool.steamDefault()) {
+            guard (try? DefaultTool.set(tool)) != nil else { return "" }
+            return " " + String(localized: "Highball is now Steam's default for Windows games.")
+        }
+        if DefaultTool.shouldFollow(request: request, newest: tool) {
+            guard (try? DefaultTool.set(tool)) != nil else { return "" }
+            return " " + String(localized: "Steam's default for Windows games is now \(DefaultTool.display(of: tool)).")
+        }
+        return ""
     }
 
     func setDefaultTool(on wanted: Bool) async {

@@ -2415,6 +2415,16 @@
         }
       }
     },
+    "Newer than the engine you have set up. Proton-ish can download it; games keep their engine until you pick the new one." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比你已设置的引擎更新。Proton-ish 可以下载它；在你选择新引擎之前，游戏继续使用原有引擎。"
+          }
+        }
+      }
+    },
     "No Backups" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3847,6 +3857,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steam 已停止，请重新启动。"
+          }
+        }
+      }
+    },
+    "Steam's default for Windows games is now %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 的 Windows 游戏默认工具现已改为 %@。"
           }
         }
       }

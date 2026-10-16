@@ -18,9 +18,19 @@ enum DefaultTool {
 
     static func isOurs(_ name: String) -> Bool { name.hasPrefix("protonish") }
 
-    // The Highball compatibility tool, when one is set up
+    // The newest Highball compatibility tool that is set up
     static func highballTool(installed: [RunnerBuild]) -> String? {
-        installed.first { $0.runtime == .highball }?.tools.first?.name
+        SupportedRunners.all.last { $0.runtime == .highball && installed.contains($0) }?.tools.first?.name
+    }
+
+    // A request for our Highball tool follows the newest Highball build that is set up
+    static func shouldFollow(request: String?, newest: String) -> Bool {
+        guard let request, isOurs(request), request.contains("-highball-") else { return false }
+        return request != newest
+    }
+
+    static func display(of tool: String) -> String {
+        SupportedRunners.all.flatMap(\.tools).first { $0.name == tool }?.display ?? tool
     }
 
     static func set(_ tool: String, at url: URL = requestFile) throws { try write(tool, to: url) }
