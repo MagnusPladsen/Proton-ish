@@ -704,6 +704,27 @@ struct PrefixToolsTests {
         }
     }
 
+    // Highball's Wine names the Windows user after the Mac user, so a prefix it built keeps
+    // the profile under that name. A rebuild lands it on steamuser like crossover's.
+    @Test("A rebuild brings a Highball profile under the Mac user's name onto steamuser")
+    func rebuildAdoptsMacUserProfile() throws {
+        let (dir, runner, prefix) = try usedPrefixAndRunner()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let fm = FileManager.default
+        let users = prefix.pfx.appending(path: "drive_c/users")
+        let macUser = NSUserName()
+        let highball = users.appending(path: "\(macUser)/AppData/Local/Game")
+        try fm.createDirectory(at: highball, withIntermediateDirectories: true)
+        try Data("progress".utf8).write(to: highball.appending(path: "slot.sav"))
+
+        try PrefixTools.recreate(prefix, runner: runner)
+
+        #expect(try fm.destinationOfSymbolicLink(
+            atPath: users.appending(path: macUser).path(percentEncoded: false)) == "steamuser")
+        let landed = users.appending(path: "steamuser/AppData/Local/Game/slot.sav")
+        #expect(try String(contentsOf: landed, encoding: .utf8) == "progress")
+    }
+
     // Only folders were carried, so a game that keeps its settings in a file beside them
     // lost the file while its save folder came through.
     @Test("A rebuild keeps a file sitting loose in a profile")
@@ -1089,9 +1110,10 @@ struct PrefixToolsTests {
     func profileLinkPointsInward() throws {
         let source = try Self.compatSource()
 
-        // CrossOver fixes the profile name, so crossover is the link and steamuser is
-        // the real directory holding the files Steam syncs.
-        #expect(source.contains(#"ln -s steamuser "$users/crossover""#))
+        // CrossOver fixes the profile name and Highball's Wine takes the Mac user's, so both
+        // are links and steamuser is the real directory holding the files Steam syncs.
+        #expect(source.contains(#"for alias in crossover $mac_user; do"#))
+        #expect(source.contains(#"ln -s steamuser "$users/$alias""#))
         // The reverse direction is what routed cloud saves out to the mac home.
         #expect(!source.contains(#"ln -s "$profile" "$users/steamuser""#))
     }
