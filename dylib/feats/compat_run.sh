@@ -504,6 +504,71 @@ migrate_user_paths() {
   [ "$migration_failed" -eq 0 ]
 }
 
+# Highball's Wine names the Windows user after the Mac user; WINEUSERNAME changes nothing
+# there. That name gets the same link to steamuser that CrossOver's fixed "crossover" gets.
+mac_user_name() {
+  name=$(id -un 2>/dev/null) || return 1
+  case "$name" in
+    ''|steamuser|crossover|Public|.*|*[!A-Za-z0-9._-]*) return 1 ;;
+  esac
+  printf '%s\n' "$name"
+}
+
+# A profile Wine already built under the Mac user's name moves into steamuser: a file only
+# there moves over, an identical one is dropped, and of two that differ the newer wins. What
+# loses stays behind in "<name> BACKUP". Wine's links to the Mac folders are dropped, never
+# followed.
+adopt_mac_user_profile() {
+  old=$1
+  landing_root=$2
+  old_rel=${old##*/}
+  echo "=== moving Wine's $old_rel profile into steamuser ===" >> "$log" 2>&1 || true
+  find "$old" -type l -exec rm -f {} + 2>/dev/null || true
+  find "$old" -type f 2>/dev/null | while IFS= read -r file; do
+    rel=${file#"$old"/}
+    landing="$landing_root/$rel"
+    if [ -L "$landing" ]; then
+      echo "=== $rel is a link in steamuser, left in $old_rel BACKUP ===" >> "$log" 2>&1 || true
+      continue
+    fi
+    if [ ! -e "$landing" ]; then
+      mkdir -p "${landing%/*}" 2>/dev/null && mv "$file" "$landing" 2>/dev/null \
+        || echo "=== $rel could not move into steamuser ===" >> "$log" 2>&1 || true
+      continue
+    fi
+    if [ ! -f "$landing" ]; then
+      echo "=== $rel is a folder in steamuser, left in $old_rel BACKUP ===" >> "$log" 2>&1 || true
+      continue
+    fi
+    if cmp -s "$file" "$landing"; then
+      rm -f "$file" 2>/dev/null || true
+      continue
+    fi
+    if [ -n "$(find "$file" -prune -newer "$landing" 2>/dev/null)" ]; then
+      if mv "$landing" "$file.steamuser" 2>/dev/null && mv "$file" "$landing" 2>/dev/null \
+        && mv "$file.steamuser" "$file" 2>/dev/null; then
+        echo "=== $rel: newer file from $old_rel kept, the steamuser one is in $old_rel BACKUP ===" \
+          >> "$log" 2>&1 || true
+      else
+        echo "=== $rel could not move into steamuser ===" >> "$log" 2>&1 || true
+      fi
+    else
+      echo "=== $rel: newer steamuser file kept, the $old_rel one is in $old_rel BACKUP ===" \
+        >> "$log" 2>&1 || true
+    fi
+  done
+  find "$old" -depth -type d -exec rmdir {} \; 2>/dev/null || true
+  [ -e "$old" ] || return 0
+  backup="$old BACKUP"
+  backup_number=2
+  while [ -e "$backup" ] || [ -L "$backup" ]; do
+    backup="$old BACKUP $backup_number"
+    backup_number=$((backup_number + 1))
+  done
+  mv "$old" "$backup" 2>/dev/null || return 1
+  echo "=== files that did not move are in ${backup##*/} ===" >> "$log" 2>&1 || true
+}
+
 lay_out_proton_profile() {
   users="${1:-$WINEPREFIX}/drive_c/users"
   if [ -d "$users/crossover" ] && [ ! -L "$users/crossover" ]; then
@@ -522,14 +587,20 @@ lay_out_proton_profile() {
       AppData/Local AppData/Roaming; do
     mkdir -p "$profile/$folder" 2>/dev/null || true
   done
+  mac_user=$(mac_user_name) || mac_user=""
+  if [ -n "$mac_user" ] && [ -d "$users/$mac_user" ] && [ ! -L "$users/$mac_user" ]; then
+    adopt_mac_user_profile "$users/$mac_user" "$profile" || return 1
+  fi
   migrate_user_paths "$profile" || return 1
-  if [ -L "$users/crossover" ] && [ ! -e "$users/crossover" ]; then
-    rm -f "$users/crossover" 2>/dev/null || true
-  fi
-  if [ ! -e "$users/crossover" ] \
-    && ln -s steamuser "$users/crossover" 2>/dev/null; then
-    echo "=== pointed crossover at steamuser ===" >> "$log" 2>&1 || true
-  fi
+  for alias in crossover $mac_user; do
+    if [ -L "$users/$alias" ] && [ ! -e "$users/$alias" ]; then
+      rm -f "$users/$alias" 2>/dev/null || true
+    fi
+    if [ ! -e "$users/$alias" ] \
+      && ln -s steamuser "$users/$alias" 2>/dev/null; then
+      echo "=== pointed $alias at steamuser ===" >> "$log" 2>&1 || true
+    fi
+  done
 }
 
 controller_ids() {
@@ -857,8 +928,10 @@ prefix_is_bare() (
         if [ "$part" = /dosdevices/s: ] && [ "$(readlink "$node")" = "$(game_drive_record)" ]; then
           continue
         fi
+        mac_alias="/drive_c/users/$(mac_user_name 2>/dev/null || true):steamuser"
         case "$part:$(readlink "$node")" in
           /dosdevices/c::../drive_c|/dosdevices/z::/|/drive_c/users/crossover:steamuser|\
+          "$mac_alias"|\
           '/drive_c/users/steamuser/My Documents:./Documents'|\
           '/drive_c/users/steamuser/Application Data:./AppData/Roaming'|\
           '/drive_c/users/steamuser/Local Settings/Application Data:../AppData/Local') continue ;;

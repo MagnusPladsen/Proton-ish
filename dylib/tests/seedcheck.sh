@@ -171,6 +171,58 @@ check lay_out_proton_profile
 check test -L "$profile/Documents/Game"
 check test "$(readlink "$profile/Documents/Game")" = "$case_root/offline"
 
+# Highball's Wine names the Windows user after the Mac user, so that name is linked too
+mac_user=$(id -un)
+fixture
+check lay_out_proton_profile
+check test "$(readlink "$WINEPREFIX/drive_c/users/$mac_user")" = steamuser
+check test "$(readlink "$WINEPREFIX/drive_c/users/crossover")" = steamuser
+check prefix_is_bare
+pointed=$(grep -c "pointed $mac_user at steamuser" "$log")
+check lay_out_proton_profile
+check test "$(grep -c "pointed $mac_user at steamuser" "$log")" = "$pointed"
+
+fixture
+profile="$WINEPREFIX/drive_c/users/steamuser"
+mac_profile="$WINEPREFIX/drive_c/users/$mac_user"
+mkdir -p "$mac_profile/AppData/Local/Game" "$mac_profile/Desktop" "$profile/AppData/Local/Game" \
+  "$case_root/mac-documents"
+printf fresh > "$mac_profile/AppData/Local/Game/new.sav"
+printf same > "$mac_profile/AppData/Local/Game/same.sav"
+printf same > "$profile/AppData/Local/Game/same.sav"
+printf played > "$mac_profile/AppData/Local/Game/newer.sav"
+printf cloud > "$profile/AppData/Local/Game/newer.sav"
+touch -t 202001010000 "$profile/AppData/Local/Game/newer.sav"
+printf stale > "$mac_profile/AppData/Local/Game/older.sav"
+touch -t 202001010000 "$mac_profile/AppData/Local/Game/older.sav"
+printf synced > "$profile/AppData/Local/Game/older.sav"
+printf private > "$case_root/mac-documents/private.txt"
+ln -s "$case_root/mac-documents" "$mac_profile/Documents"
+ln -s /nowhere/Desktop "$mac_profile/Desktop/My Mac Desktop"
+check lay_out_proton_profile
+check test "$(readlink "$mac_profile")" = steamuser
+check test "$(cat "$profile/AppData/Local/Game/new.sav")" = fresh
+check test "$(cat "$profile/AppData/Local/Game/same.sav")" = same
+check test "$(cat "$profile/AppData/Local/Game/newer.sav")" = played
+check test "$(cat "$profile/AppData/Local/Game/older.sav")" = synced
+check test "$(cat "$mac_profile BACKUP/AppData/Local/Game/newer.sav")" = cloud
+check test "$(cat "$mac_profile BACKUP/AppData/Local/Game/older.sav")" = stale
+check test ! -e "$mac_profile BACKUP/AppData/Local/Game/new.sav"
+check test ! -e "$mac_profile BACKUP/AppData/Local/Game/same.sav"
+check test "$(cat "$case_root/mac-documents/private.txt")" = private
+check test ! -L "$profile/Documents"
+check test ! -e "$profile/Desktop/My Mac Desktop"
+check test ! -e "$mac_profile BACKUP/Documents"
+
+fixture
+mac_profile="$WINEPREFIX/drive_c/users/$mac_user"
+mkdir -p "$mac_profile/AppData/Local/Game"
+printf fresh > "$mac_profile/AppData/Local/Game/new.sav"
+check lay_out_proton_profile
+check test "$(readlink "$mac_profile")" = steamuser
+check test ! -e "$mac_profile BACKUP"
+check test "$(cat "$WINEPREFIX/drive_c/users/steamuser/AppData/Local/Game/new.sav")" = fresh
+
 fixture
 mkdir -p "$WINEPREFIX/drive_c/users/steamuser/Documents/Game"
 printf original > "$WINEPREFIX/drive_c/users/steamuser/Documents/Game/save"
