@@ -160,6 +160,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-15: A final release counts as newer than an installed beta (it was refused before); Remove Everything clears Steam's default tool when it was Proton-ish's.
 - 2026-10-16: Highball prefixes keep saves under `steamuser`, where Steam and Steam Cloud look (games saved under the Mac user's name before; existing prefixes are brought over on launch, see Using Highball).
 - 2026-10-16: NotProton 1.1.8 merged: CrossOver Preview 20261015 (27.0.0.41073) supported, the Mac stays awake while a game runs (caffeinate), settings FEX cannot use are cleared for Steam's new Compatibility UI, and a steam.cfg that is not UTF-8 is left intact.
+- 2026-10-16: The Status screen recommends CrossOver for the best support and performance and asks those who can to buy it and support CodeWeavers; a Thanks section links to NotProton and Highball on GitHub.
 
 ## What Install changes
 
