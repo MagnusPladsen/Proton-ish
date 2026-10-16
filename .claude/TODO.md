@@ -16,6 +16,8 @@
 - [x] Remove Everything clears Steam's default tool when it is ours (SteamCompatConfig, config.vdf edited while Steam is stopped) (completed: 2026-10-15)
 - [x] Upstream sync automation (plan: docs/superpowers/plans/2026-10-15-upstream-sync-automation.md), after M2b; needs a SYNC_TOKEN PAT (completed: 2026-10-15)
 
+- [x] Highball engine r25 (engine build 0024) supported next to r19; HighballKit 0.10.16 (completed: 2026-10-16)
+
 ## Low Priority / Future
 - [ ] Reach out to Highball after the beta has testers: stable engine manifest, steamclient patch in highball-engine, shared compat data (added: 2026-10-14)
 

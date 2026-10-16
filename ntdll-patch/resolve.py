@@ -64,6 +64,20 @@ PINNED = {
          'exports': {'LdrGetDllHandle': 0x7bc12900, 'LdrLoadDll': 0x7bc134a0,
                      'NtProtectVirtualMemory': 0x7bc0d584, 'NtOpenFile': 0x7bc0d3b4,
                      'NtReadFile': 0x7bc0d0e4, 'NtClose': 0x7bc0d174}},
+    # x64-crossover26.3-r25 (Wine 11.0, CrossOver 26.3 sources, engine build 0024): same offsets as r19
+    'e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3':
+        {'hookRVA': 0x484f3, 'stolen': '4883bc24f000000000', 'caveRVA': 0x7a0a0, 'caveSize': 3936,
+         'wm': 'r15', 'resume': 0x484fc, 'load_path': 0xd0,
+         'payload': '05b7d32080d0cc1d919494c2c3076d7f0e31d14669c3c06e15c537a76a41d91b',
+         'exports': {'LdrGetDllHandle': 0x170014fe0, 'LdrLoadDll': 0x170015b50,
+                     'NtProtectVirtualMemory': 0x17000f380}},
+    '54137f366a4f15403d9eecbbf3ce575b3129251e2eebdad125b55bd4b532e5ce':
+        {'hookRVA': 0x453d0, 'stolen': 'f64510017526', 'caveRVA': 0xaf000, 'caveSize': 4096,
+         'resume': 0x453d6, 'wm': 'ebx', 'load_path': -0x3c,
+         'payload': 'a57199071c12bc80c2e5d4fb5740d09753a74127c10dfa8111dc41d5eb9cfe62',
+         'exports': {'LdrGetDllHandle': 0x7bc12900, 'LdrLoadDll': 0x7bc134a0,
+                     'NtProtectVirtualMemory': 0x7bc0d584, 'NtOpenFile': 0x7bc0d3b4,
+                     'NtReadFile': 0x7bc0d0e4, 'NtClose': 0x7bc0d174}},
     '7823d71fbce6c9947163bf8b96beb299eabb02878245bcaf6759f2a22e81f071':
         {'caveRVA': 0xf1185, 'caveSize': 61051,
          # This image carries the loader twice, once for the native side and once for the

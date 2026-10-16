@@ -71,7 +71,7 @@ DEPS := $(OBJS:.o=.d)
 
 APP_PAYLOAD := app/Sources/NotProtonApp/Resources/payload
 # Highball engines Proton-ish can download; manifests come from the pinned Highball package
-HIGHBALL_ENGINES := x64-crossover26.3-r19
+HIGHBALL_ENGINES := x64-crossover26.3-r19 x64-crossover26.3-r25
 HIGHBALL_PKG := app/.build/checkouts/highball
 
 all: $(TARGET) $(APP_PAYLOAD)

@@ -38,11 +38,11 @@ and Rosetta 2 (macOS offers to install it the first time something needs it, or 
    (DirectX 12): choose **Accept and Download**, or **Download without D3DMetal** if you would rather not. It then
    downloads Highball's Wine 11 engine (about 440 MB, from Highball's releases, checked against Highball's checksums)
    and sets it up. Already using the [Highball](https://github.com/gauthierpiarrette/highball) app? Proton-ish finds
-   its `x64-crossover26.3-r19` engine instead; click **Set Up**.
+   its engine instead when it is a supported one (`x64-crossover26.3-r25` or r19); click **Set Up**.
 5. **Play:** quit and reopen Steam. If Steam had no default compatibility tool, Highball is now the default for
    Windows games (the **Use Highball for all Windows games** switch on the Status screen), so a Windows-only game
    just shows Play. A game that also has a macOS version runs that version unless you tick **Force the use of a
-   specific Steam Play compatibility tool** under its **Properties → Compatibility** and pick **Highball Wine 11 (r19)**.
+   specific Steam Play compatibility tool** under its **Properties → Compatibility** and pick **Highball Wine 11 (r25)**.
 
 Updates arrive through **Proton-ish → Check for Updates…** (or `brew upgrade`). Something broken? See
 [Reporting problems](#reporting-problems).
@@ -73,7 +73,7 @@ results; see [Use CrossOver if you can](#use-crossover-if-you-can) for why that 
 ## Status
 
 Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Games run through
-Highball's free Wine 11 engine (`x64-crossover26.3-r19`) with Highball's own launch setup, so what works in
+Highball's free Wine 11 engine (`x64-crossover26.3-r25`, r19 still supported) with Highball's own launch setup, so what works in
 Highball should work here. Verified so far on an Apple Silicon Mac: Emberward, Among Us (Steam sign-in and the
 overlay included). For what Highball's community has tested, see
 [highball-db](https://github.com/gauthierpiarrette/highball-db), the compatibility database Proton-ish bundles.
@@ -179,6 +179,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: A note on who funds Wine on the Mac opens on first launch (again under Help → Why Buy CrossOver) with a Buy CrossOver button; Help → Support CodeWeavers opens the CrossOver page. Repair Steam and Remove Everything sit under their own header above Thanks. README leads with "Use CrossOver if you can" and "Why Proton-ish exists" now describes Highball's engine in Steam rather than a way around paying.
 - 2026-10-16: 0.1.0-beta.5: Highball saves kept under steamuser with migration of existing prefixes, NotProton 1.1.8 (CrossOver Preview 20261015, no display sleep during games), CrossOver recommended on the Status screen, first-launch note on who funds Wine.
 - 2026-10-16: The CrossOver row's "Supported:" list names only CrossOver versions (Highball's r19 was listed too).
+- 2026-10-16: Highball engine r25 (engine build 0024: spatial audio for surround mixes, retina display sizes, the VCLibs packages Forza Horizon 4 waits for) supported next to r19. The Download row offers it when a newer supported engine is missing, and a Highball default tool follows the newest engine set up; the engine list shows usable engines first, newest on top. HighballKit 0.10.16.
 
 ## What Install changes
 

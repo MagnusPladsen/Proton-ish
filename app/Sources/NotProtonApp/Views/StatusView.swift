@@ -611,10 +611,12 @@ struct StatusView: View {
 
     @ViewBuilder
     private func highballSection(_ snapshot: StatusSnapshot) -> some View {
-        if !snapshot.highball.contains(where: \.isUsable), let build = HighballInstaller.build {
+        if let build = HighballInstaller.build, !snapshot.highball.contains(where: { $0.id == build.bundleVersion }) {
             StatusRow(
                 title: String(localized: "Highball engine"),
-                value: String(localized: "Not installed. Proton-ish can download it; the Highball app is not needed."),
+                value: snapshot.highball.contains(where: \.isUsable)
+                    ? String(localized: "Newer than the engine you have set up. Proton-ish can download it; games keep their engine until you pick the new one.")
+                    : String(localized: "Not installed. Proton-ish can download it; the Highball app is not needed."),
                 tone: .info,
                 detail: build.bundleVersion,
                 action: StatusAction(

@@ -369,6 +369,41 @@ enum NtdllPatcher {
                 placement: .section
             ),
         ],
+        // Highball engine x64-crossover26.3-r25 (engine build 0024): r19's hooks and payloads, new image hashes
+        "x64-crossover26.3-r25": [
+            NtdllPatch(
+                arch: .x86_64Windows,
+                payloadResource: "detour2-hb-r19",
+                payloadSHA256: "05b7d32080d0cc1d919494c2c3076d7f0e31d14669c3c06e15c537a76a41d91b",
+                caveRVA: 0x7a0a0,
+                payloadRVA: 0x7a0a0,
+                hooks: [
+                    NtdllHook(rva: 0x484f3,
+                              stolen: [0x48, 0x83, 0xbc, 0x24, 0xf0, 0x00, 0x00, 0x00, 0x00]),
+                ],
+                caveSize: 3936,
+                cavePad: 0x00,
+                machine: 0x8664,
+                magic: 0x20b,
+                imageBase: 0x1_7000_0000
+            ),
+            NtdllPatch(
+                arch: .i386Windows,
+                payloadResource: "detour32-hb-r19",
+                payloadSHA256: "a57199071c12bc80c2e5d4fb5740d09753a74127c10dfa8111dc41d5eb9cfe62",
+                caveRVA: 0xaf000,
+                payloadRVA: 0xaf000,
+                hooks: [
+                    NtdllHook(rva: 0x453d0, stolen: [0xf6, 0x45, 0x10, 0x01, 0x75, 0x26]),
+                ],
+                caveSize: 0x1000,
+                cavePad: 0x00,
+                machine: 0x14c,
+                magic: 0x10b,
+                imageBase: 0x7bc0_0000,
+                placement: .section
+            ),
+        ],
     ]
 
     static func patches(for build: RunnerBuild) -> [NtdllPatch] {
