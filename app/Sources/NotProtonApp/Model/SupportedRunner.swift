@@ -311,9 +311,10 @@ enum SupportedRunners {
         build(id: id)?.displayVersion ?? id
     }
 
-    static var versionList: String {
+    // The CrossOver versions Proton-ish can clone, for the CrossOver row and the clone step
+    static var crossOverVersionList: String {
         var seen = Set<String>()
-        return all.map(\.releaseVersion)
+        return all.filter { $0.runtime == .crossover }.map(\.releaseVersion)
             .filter { seen.insert($0).inserted }
             .joined(separator: ", ")
     }

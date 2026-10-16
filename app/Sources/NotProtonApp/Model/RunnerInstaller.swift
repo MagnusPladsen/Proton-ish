@@ -15,7 +15,7 @@ enum RunnerInstaller {
         guard case .supported(let build) = install.support else {
             throw StepFailure(
                 step: step,
-                detail: String(localized: "\(install.name) is not a supported build. Supported: \(SupportedRunners.versionList).")
+                detail: String(localized: "\(install.name) is not a supported build. Supported: \(SupportedRunners.crossOverVersionList).")
             )
         }
 
