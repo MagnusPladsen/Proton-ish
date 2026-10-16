@@ -1445,12 +1445,32 @@
         }
       }
     },
+    "CrossOver at CodeWeavers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CodeWeavers 的 CrossOver"
+          }
+        }
+      }
+    },
     "CrossOver does not appear to be activated." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "CrossOver 似乎尚未激活。"
+          }
+        }
+      }
+    },
+    "CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CrossOver 的支持和性能最好。如果条件允许，请购买 CrossOver：CodeWeavers 资助了大量 Wine 开发工作，包括 Highball 在内的每个免费引擎都建立在这些工作之上。"
           }
         }
       }
@@ -1995,6 +2015,16 @@
         }
       }
     },
+    "Highball on GitHub" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 上的 Highball"
+          }
+        }
+      }
+    },
     "If Proton-ish is installed there, it will stay installed. Continue anyway?" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2505,6 +2535,16 @@
         }
       }
     },
+    "NotProton on GitHub" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 上的 NotProton"
+          }
+        }
+      }
+    },
     "OK" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2744,6 +2784,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Proton-ish 会使用 Highball 自己的安装程序，从 Highball 在 GitHub 上的发布页下载其免费的 Wine 引擎（%@）到 Highball 的文件夹。Apple 的 DirectX 12 转换层 D3DMetal 随之附带，仅在您接受下方 Apple 许可协议后才会使用。若不接受，游戏将使用 DXMT 或 DXVK，仅支持 DirectX 12 的游戏将无法启动。"
+          }
+        }
+      }
+    },
+    "Proton-ish exists because of NotProton and Highball." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 的存在要归功于 NotProton 和 Highball。"
           }
         }
       }
@@ -3817,6 +3867,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "模板 %@"
+          }
+        }
+      }
+    },
+    "Thanks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "致谢"
           }
         }
       }

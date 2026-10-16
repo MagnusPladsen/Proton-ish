@@ -357,11 +357,16 @@ struct StatusView: View {
             } header: {
                 Text("CrossOver")
             } footer: {
-                HStack {
-                    Spacer()
-                    Button("Add CrossOver\u{2026}") { Task { await status.addCrossOver() } }
-                        .disabled(!status.isIdle)
-                        .help("Add a copy of CrossOver from another folder.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on.")
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Link("CrossOver at CodeWeavers", destination: ProjectLinks.crossOver)
+                        Spacer()
+                        Button("Add CrossOver\u{2026}") { Task { await status.addCrossOver() } }
+                            .disabled(!status.isIdle)
+                            .help("Add a copy of CrossOver from another folder.")
+                    }
                 }
             }
 
@@ -372,6 +377,14 @@ struct StatusView: View {
             }
 
             componentsSection(snapshot.payload)
+
+            Section("Thanks") {
+                Text("Proton-ish exists because of NotProton and Highball.")
+                HStack(spacing: 16) {
+                    Link("NotProton on GitHub", destination: ProjectLinks.notProton)
+                    Link("Highball on GitHub", destination: ProjectLinks.highball)
+                }
+            }
 
             dangerSection
         }
