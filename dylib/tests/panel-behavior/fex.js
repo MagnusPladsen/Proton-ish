@@ -79,9 +79,9 @@ for (const form of Object.keys(FORMS)) {
   failed += tp.failed;
 }
 
-{
-  const { pick, written } = panel(emit, 'component', undefined, { fexTools: FEX_TOOLS });
-  const t = runner('component, picking a tool');
+for (const form of Object.keys(FORMS)) {
+  const { pick, written } = panel(emit, form, undefined, { fexTools: FEX_TOOLS });
+  const t = runner(`${form}, picking a tool`);
   const choose = (opts, tool) => {
     written.length = 0;
     pick(details(opts), tool);
@@ -102,6 +102,41 @@ for (const form of Object.keys(FORMS)) {
        'another backend is not a reason to write');
   t.ok(choose('-novid CX_GRAPHICS_BACKEND=d3dmetal', 'protonish-fex') === null,
        'text after the game, not set before %command%, is left alone');
+  failed += t.failed;
+}
+
+{
+  const opts = 'CX_GRAPHICS_BACKEND=d3dmetal MTL_HUD_ENABLED=1 %command%';
+  const globals = { document: { documentElement: { lang: 'en' } },
+                    appDetailsStore: { GetAppDetails: id => id === 287700 ? details(opts) : undefined } };
+  const { toolQuery, written } = panel(emit, 'statement', globals,
+                                       { fallback: 'protonish-fex', fexTools: FEX_TOOLS });
+  const t = runner('statement, the new tool picker');
+  const data = { default_tool_identifier: 'protonish-fex',
+                 aliases: [{ alias: 'np-latest', current_tool_name: 'protonish-fex' },
+                           { alias: 'np-rosetta', current_tool_name: 'protonish-rosetta' }] };
+  const choose = (value, id = 287700, d = data) => {
+    const saved = [];
+    written.length = 0;
+    const [query, set] = toolQuery([{ data: d }, v => saved.push(v)], id);
+    set(value);
+    return { query, saved, opts: written.length ? written[written.length - 1].opts : null };
+  };
+  let r = choose('protonish-fex');
+  t.ok(r.saved[0] === 'protonish-fex' && r.query.data === data, 'the query and the pick still reach Steam');
+  t.ok(r.opts === 'MTL_HUD_ENABLED=1 %command%', `picking FEX drops the D3DMetal entry (${r.opts})`);
+  t.ok(choose('').opts === 'MTL_HUD_ENABLED=1 %command%', 'the default entry counts as the default tool');
+  t.ok(choose('', 287700, { ...data, default_tool_identifier: '' }).opts === 'MTL_HUD_ENABLED=1 %command%',
+       'with no default saved, the default entry counts as the fallback tool');
+  t.ok(choose('', 287700, { ...data, default_tool_identifier: 'protonish-rosetta' }).opts === null,
+       'a Rosetta default wins over a FEX fallback');
+  t.ok(choose('np-latest').opts === 'MTL_HUD_ENABLED=1 %command%', 'an alias counts as its current tool');
+  t.ok(choose('np-rosetta').opts === null, 'an alias for a Rosetta tool writes nothing');
+  t.ok(choose('protonish-rosetta').opts === null, 'picking a Rosetta tool writes nothing');
+  r = choose('protonish-fex', null);
+  t.ok(r.saved[0] === 'protonish-fex' && r.opts === null, 'the settings page picker has no game to edit');
+  t.ok(choose('protonish-fex', 4000).opts === null, 'a game with no loaded details is left alone');
+  t.ok(choose('protonish-fex', 287700, null).opts === null, 'a picker with no tool list writes nothing');
   failed += t.failed;
 }
 console.log(failed ? `\n${failed} failure(s)` : '\nFEX hides what it cannot run, Rosetta keeps everything');
