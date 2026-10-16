@@ -379,10 +379,10 @@ struct StatusView: View {
             componentsSection(snapshot.payload)
 
             Section("Thanks") {
-                Text("Proton-ish exists because of NotProton and Highball.")
+                Text("Proton-ish is a fork of NotProtonNot/NotProton and runs games with Highball's engine. Thank you both.")
                 HStack(spacing: 16) {
-                    Link("NotProton on GitHub", destination: ProjectLinks.notProton)
-                    Link("Highball on GitHub", destination: ProjectLinks.highball)
+                    Link("NotProtonNot/NotProton on GitHub", destination: ProjectLinks.notProton)
+                    Link("gauthierpiarrette/highball on GitHub", destination: ProjectLinks.highball)
                 }
             }
 

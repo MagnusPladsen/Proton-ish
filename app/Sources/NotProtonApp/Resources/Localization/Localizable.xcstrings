@@ -2015,16 +2015,6 @@
         }
       }
     },
-    "Highball on GitHub" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GitHub 上的 Highball"
-          }
-        }
-      }
-    },
     "If Proton-ish is installed there, it will stay installed. Continue anyway?" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2535,12 +2525,12 @@
         }
       }
     },
-    "NotProton on GitHub" : {
+    "NotProtonNot/NotProton on GitHub" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub 上的 NotProton"
+            "value" : "GitHub 上的 NotProtonNot/NotProton"
           }
         }
       }
@@ -2788,16 +2778,6 @@
         }
       }
     },
-    "Proton-ish exists because of NotProton and Highball." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Proton-ish 的存在要归功于 NotProton 和 Highball。"
-          }
-        }
-      }
-    },
     "Proton-ish has been partially removed, because Steam at %@ cannot be found. Delete that copy of Steam and reinstall it to fully remove Proton-ish." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2834,6 +2814,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Proton-ish 是 NotProtonNot 开发的 NotProton（https://github.com/NotProtonNot/NotProton）的分支，以 GPLv3 发布。它与 NotProton、Valve、CodeWeavers 或 Highball 无关，也未获得其认可。它使用 Gauthier Piarrette 开发的 Highball 的 HighballKit（GPLv3）和 highball-db 游戏数据（CC0）（https://github.com/gauthierpiarrette/highball）。"
+          }
+        }
+      }
+    },
+    "Proton-ish is a fork of NotProtonNot/NotProton and runs games with Highball's engine. Thank you both." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proton-ish 是 NotProtonNot/NotProton 的分支，并使用 Highball 的引擎运行游戏。感谢你们两者。"
           }
         }
       }
@@ -4613,6 +4603,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不包含有效的 HTTPS URL：%@"
+          }
+        }
+      }
+    },
+    "gauthierpiarrette/highball on GitHub" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 上的 gauthierpiarrette/highball"
           }
         }
       }
