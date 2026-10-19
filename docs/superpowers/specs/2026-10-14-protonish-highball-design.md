@@ -195,10 +195,11 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
   bundled database has none.
   - `highball-env --install-path <game folder> --applied <marker>` plans the prefix steps next
     to the environment. Registry steps become one REGEDIT4 file,
-    `$STEAM_COMPAT_DATA_PATH/protonish-recipe.reg`; the run script imports it with
-    `wine reg import` under the game's own environment, right after `highball_environment`,
-    the way `import_prefix_settings` already does, so Highball's msync mismatch (highball#32)
-    cannot occur. `file` and `copy` steps are written by `highball-env` itself, no Wine run. A
+    `$WINEPREFIX/drive_c/protonish-recipe.reg`, imported as `C:\protonish-recipe.reg` (amended
+    2026-10-19 during implementation: inside `drive_c`, so the import does not depend on the
+    `Z:` drive); the run script imports it with `wine reg import` under the game's own
+    environment, right after `highball_environment`, the way `import_prefix_settings` already
+    does, so Highball's msync mismatch (highball#32) cannot occur. `file` and `copy` steps are written by `highball-env` itself, no Wine run. A
     target under `Program Files (x86)/Steam/steamapps/common/<installdir>/` is rewritten to the
     real game folder from `--install-path`, because the game lives on the Mac disk and reaches
     the prefix through a drive letter, not under drive C. Other targets stay under `drive_c`.
