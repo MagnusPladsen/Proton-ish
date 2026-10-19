@@ -139,7 +139,8 @@ struct SteamInstallerTests {
             stopClient: { _, onStopping in if stopped { onStopping() }; return stopped },
             register: { calls.register($0) },
             resetInputAccess: { calls.resetInputAccess() },
-            requirement: requirement
+            requirement: requirement,
+            signedRequirement: fixture.work.appending(path: "signed-requirement")
         )
         if recordBuild {
             try SteamInstaller.finish(outcome, deployedVersion: fixture.deployedVersion, isCurrent: { _ in true })
@@ -175,6 +176,26 @@ struct SteamInstallerTests {
         })
 
         #expect(calls.inputAccessResets == 0)
+    }
+
+    @Test("An install after Repair Steam keeps the grant when it signs with the identity recorded last time")
+    func repairThenInstallKeepsGrant() async throws {
+        let work = try scratchDirectory("install-after-repair")
+        defer { try? FileManager.default.removeItem(at: work) }
+        let fixture = try await self.fixture(into: work)
+        let calls = Calls()
+        let seen = Counter()
+        // Before signing Steam carries Valve's requirement, after signing ours; twice over
+        let requirement: (URL) -> String? = { _ in
+            seen.next().isMultiple(of: 2)
+                ? "identifier \"com.valvesoftware.steam\" and certificate leaf = H\"99f018fc\""
+                : "identifier \"com.valvesoftware.steam\" and anchor apple generic"
+        }
+
+        _ = try install(fixture, calls: calls, requirement: requirement)
+        _ = try install(fixture, calls: calls, requirement: requirement)
+
+        #expect(calls.inputAccessResets == 1)
     }
 
     @Test("A re-sign that changes the requirement, as an ad hoc signature does, resets the grant")

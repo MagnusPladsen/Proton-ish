@@ -182,14 +182,15 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: Highball engine r25 (engine build 0024: spatial audio for surround mixes, retina display sizes, the VCLibs packages Forza Horizon 4 waits for) supported next to r19. The Download row offers it when a newer supported engine is missing, and a Highball default tool follows the newest engine set up; the engine list shows usable engines first, newest on top. HighballKit 0.10.16.
 - 2026-10-16: The Status screen's Highball section is headed "Highball (free)".
 - 2026-10-19: Each Highball engine row says where it stands with Steam: the engine Steam's config names is "Steam's default for Windows games", a requested one is the default "once Steam starts again", and the newest engine says so with a hint to pick it per game under Properties → Compatibility (recommended when not set up yet). The "Use Highball for all Windows games" row names the engine it uses. Repair Steam and Remove Everything moved into the Steam section.
+- 2026-10-19: Steam keeps its Accessibility permission when Install follows Repair Steam (the restored Steam carries Valve's signature, so the grant was reset). Proton-ish records the signature it last applied in `signed-requirement`.
 
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
 - **Signing certificate:** the first install creates a "Proton-ish Local Signing" certificate in Proton-ish's own
   keychain (`~/Library/Application Support/protonish/signing.keychain-db`) and signs Steam with it, so Steam keeps
-  its Accessibility permission across Proton-ish installs and updates. No password prompt: Proton-ish holds that
-  keychain's password.
+  its Accessibility permission across Proton-ish installs and updates, and when Install follows Repair Steam. No
+  password prompt: Proton-ish holds that keychain's password.
 - **Steam's default tool:** the **Use Highball for all Windows games** switch sets Steam's default compatibility tool
   (what Steam's own Compatibility settings call the default). It turns itself on only when Steam had no default; a
   CrossOver or other default is never replaced. Applies at the next Steam start.
