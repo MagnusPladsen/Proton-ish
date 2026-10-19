@@ -80,6 +80,7 @@ enum SteamInstaller {
         register: BundleRegistrar = { SteamBundle.register($0) },
         resetInputAccess: () -> Void = resetInputAccess,
         requirement: (URL) -> String? = designatedRequirement(of:),
+        signedRequirement: URL = SignedRequirement.file,
         report: @escaping @Sendable (InstallPhase) -> Void = { _ in }
     ) throws -> InstallOutcome {
         report(.checkingPayload)
@@ -179,8 +180,15 @@ enum SteamInstaller {
                 revertPlist(priorPlist, at: plist, app: app)
                 throw error
             }
-            if priorRequirement == nil || requirement(app) != priorRequirement {
+            let signed = requirement(app)
+            if SignedRequirement.needsReset(prior: priorRequirement,
+                                            recorded: SignedRequirement.read(at: signedRequirement), signed: signed) {
                 resetInputAccess()
+            }
+            if let signed {
+                do { try SignedRequirement.record(signed, at: signedRequirement) } catch {
+                    AppLog.note("install: signed requirement not recorded: \(error)")
+                }
             }
         }
 

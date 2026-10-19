@@ -180,14 +180,15 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: 0.1.0-beta.5: Highball saves kept under steamuser with migration of existing prefixes, NotProton 1.1.8 (CrossOver Preview 20261015, no display sleep during games), CrossOver recommended on the Status screen, first-launch note on who funds Wine.
 - 2026-10-16: The CrossOver row's "Supported:" list names only CrossOver versions (Highball's r19 was listed too).
 - 2026-10-16: Highball engine r25 (engine build 0024: spatial audio for surround mixes, retina display sizes, the VCLibs packages Forza Horizon 4 waits for) supported next to r19. The Download row offers it when a newer supported engine is missing, and a Highball default tool follows the newest engine set up; the engine list shows usable engines first, newest on top. HighballKit 0.10.16.
+- 2026-10-19: Steam keeps its Accessibility permission when Install follows Repair Steam (the restored Steam carries Valve's signature, so the grant was reset). Proton-ish records the signature it last applied in `signed-requirement`.
 
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
 - **Signing certificate:** the first install creates a "Proton-ish Local Signing" certificate in Proton-ish's own
   keychain (`~/Library/Application Support/protonish/signing.keychain-db`) and signs Steam with it, so Steam keeps
-  its Accessibility permission across Proton-ish installs and updates. No password prompt: Proton-ish holds that
-  keychain's password.
+  its Accessibility permission across Proton-ish installs and updates, and when Install follows Repair Steam. No
+  password prompt: Proton-ish holds that keychain's password.
 - **Steam's default tool:** the **Use Highball for all Windows games** switch sets Steam's default compatibility tool
   (what Steam's own Compatibility settings call the default). It turns itself on only when Steam had no default; a
   CrossOver or other default is never replaced. Applies at the next Steam start.
