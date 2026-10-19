@@ -81,4 +81,51 @@ struct PrefixRecipeTests {
         let steps = try recipe([["type": "environment", "name": "A", "value": "1"]]).steps
         #expect(PrefixRecipe.registryText(steps).text == nil)
     }
+
+    static let driveC = URL(fileURLWithPath: "/pfx/drive_c")
+    static let install = URL(fileURLWithPath: "/Volumes/Games/SteamLibrary/steamapps/common/Portal 2")
+
+    @Test("A path in the game's Steam folder is rewritten to the real install folder")
+    func targetInGameFolder() {
+        let url = PrefixRecipe.target(of: "Program Files (x86)/Steam/steamapps/common/Portal 2/portal2/cfg/autoexec.cfg",
+                                      driveC: Self.driveC, installPath: Self.install)
+        #expect(url?.path == "/Volumes/Games/SteamLibrary/steamapps/common/Portal 2/portal2/cfg/autoexec.cfg")
+    }
+
+    @Test("The install folder name matches case-insensitively, as Steam's installdir does")
+    func targetCaseInsensitive() {
+        let url = PrefixRecipe.target(of: "Program Files (x86)/Steam/steamapps/common/portal 2/portal2/cfg/video.txt",
+                                      driveC: Self.driveC, installPath: Self.install)
+        #expect(url?.path == "/Volumes/Games/SteamLibrary/steamapps/common/Portal 2/portal2/cfg/video.txt")
+    }
+
+    @Test("Another game's folder stays under drive C")
+    func targetOtherGame() {
+        let url = PrefixRecipe.target(of: "Program Files (x86)/Steam/steamapps/common/Portal/portal/cfg/autoexec.cfg",
+                                      driveC: Self.driveC, installPath: Self.install)
+        #expect(url?.path == "/pfx/drive_c/Program Files (x86)/Steam/steamapps/common/Portal/portal/cfg/autoexec.cfg")
+    }
+
+    @Test("A path outside the Steam library stays under drive C")
+    func targetPlain() {
+        let url = PrefixRecipe.target(of: "users/steamuser/Documents/My Games/x.ini", driveC: Self.driveC, installPath: Self.install)
+        #expect(url?.path == "/pfx/drive_c/users/steamuser/Documents/My Games/x.ini")
+    }
+
+    @Test("Without an install path nothing is rewritten")
+    func targetNoInstallPath() {
+        let url = PrefixRecipe.target(of: "Program Files (x86)/Steam/steamapps/common/Portal 2/portal2/cfg/autoexec.cfg",
+                                      driveC: Self.driveC, installPath: nil)
+        #expect(url?.path == "/pfx/drive_c/Program Files (x86)/Steam/steamapps/common/Portal 2/portal2/cfg/autoexec.cfg")
+    }
+
+    @Test("A path that climbs out with .. is refused")
+    func targetDotDot() {
+        #expect(PrefixRecipe.target(of: "users/../../../etc/hosts", driveC: Self.driveC, installPath: Self.install) == nil)
+    }
+
+    @Test("An absolute path is refused")
+    func targetAbsolute() {
+        #expect(PrefixRecipe.target(of: "/etc/hosts", driveC: Self.driveC, installPath: Self.install) == nil)
+    }
 }

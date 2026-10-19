@@ -9,6 +9,23 @@ import HighballKit
 
 public enum PrefixRecipe {
 
+    static let steamCommon = "Program Files (x86)/Steam/steamapps/common/"
+
+    // Where a file or copy step's target goes. Highball's bottles hold the Steam library under
+    // drive C; a Steam game on the Mac lives in its library folder and reaches the prefix
+    // through a drive letter, so a target in the game's folder goes there.
+    public static func target(of path: String, driveC: URL, installPath: URL?) -> URL? {
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+        guard !path.hasPrefix("/"), !parts.contains(".."), !parts.contains("") else { return nil }
+        if let installPath, path.hasPrefix(steamCommon) {
+            let inside = path.dropFirst(steamCommon.count).split(separator: "/", maxSplits: 1).map(String.init)
+            if inside.count == 2, inside[0].caseInsensitiveCompare(installPath.lastPathComponent) == .orderedSame {
+                return installPath.appending(path: inside[1])
+            }
+        }
+        return driveC.appending(path: path)
+    }
+
     // One .reg file for every registry step, in the format `reg import` reads
     static func registryText(_ steps: [Recipe.Step]) -> (text: String?, notes: [String]) {
         var notes: [String] = []
