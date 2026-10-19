@@ -98,7 +98,11 @@ enum PrefixStore {
     }
 
     // Every appid under compatdata that actually has a prefix.
-    static func all(libraries: [SteamLibrary] = PrefixStore.libraries()) -> [WinePrefix] {
+    static func all(
+        libraries: [SteamLibrary] = PrefixStore.libraries(),
+        userdata: URL = SupportPaths.Steam.userData.appending(path: "userdata")
+    ) -> [WinePrefix] {
+        var shortcuts: [String: String]?
         var found: [WinePrefix] = []
         for library in libraries {
             let entries = (try? FileManager.default.contentsOfDirectory(
@@ -115,10 +119,16 @@ enum PrefixStore {
                     isDirectory.boolValue
                 else { continue }
 
+                var name = appName(appID: appID, in: library)
+                if name == nil, let id = UInt32(appID), id & 0x8000_0000 != 0 {
+                    if shortcuts == nil { shortcuts = shortcutNames(userdata: userdata) }
+                    name = shortcuts?[appID]
+                }
+
                 found.append(
                     WinePrefix(
                         appID: appID,
-                        name: appName(appID: appID, in: library),
+                        name: name,
                         library: library,
                         lastUsed: (try? pfx.resourceValues(forKeys: [.contentModificationDateKey]))?
                             .contentModificationDate
@@ -134,6 +144,74 @@ enum PrefixStore {
 
     static func appName(appID: String, in library: SteamLibrary) -> String? {
         manifestValue("name", appID: appID, in: library)
+    }
+
+    static func shortcutNames(userdata: URL) -> [String: String] {
+        let accounts = (try? FileManager.default.contentsOfDirectory(
+            at: userdata, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]
+        )) ?? []
+        var names: [String: String] = [:]
+        for account in accounts.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            let vdf = account.appending(path: "config/shortcuts.vdf")
+            guard let data = try? Data(contentsOf: vdf) else { continue }
+            names.merge(shortcutNames(vdf: data)) { first, _ in first }
+        }
+        return names
+    }
+
+    static func shortcutNames(vdf data: Data) -> [String: String] {
+        let bytes = [UInt8](data)
+        var names: [String: String] = [:]
+        var offset = 0
+
+        func cString() -> String? {
+            guard let end = bytes[offset...].firstIndex(of: 0) else { return nil }
+            defer { offset = end + 1 }
+            return String(decoding: bytes[offset..<end], as: UTF8.self)
+        }
+
+        func skip(_ count: Int) -> Bool {
+            guard bytes.count - offset >= count else { return false }
+            offset += count
+            return true
+        }
+
+        // Binary KeyValues: type byte, key, value; 0x08 closes a map.
+        func map(depth: Int) -> Bool {
+            guard depth < 16 else { return false }
+            var appID: UInt32?
+            var appName: String?
+            while offset < bytes.count {
+                let type = bytes[offset]
+                offset += 1
+                if type == 0x08 { break }
+                guard let key = cString()?.lowercased() else { return false }
+                switch type {
+                case 0x00:
+                    guard map(depth: depth + 1) else { return false }
+                case 0x01:
+                    guard let value = cString() else { return false }
+                    if key == "appname" { appName = value }
+                case 0x02:
+                    guard bytes.count - offset >= 4 else { return false }
+                    if key == "appid" {
+                        appID = bytes[offset..<offset + 4].reversed().reduce(0) { $0 << 8 | UInt32($1) }
+                    }
+                    offset += 4
+                case 0x03, 0x04, 0x06:
+                    guard skip(4) else { return false }
+                case 0x07, 0x0a:
+                    guard skip(8) else { return false }
+                default:
+                    return false
+                }
+            }
+            if let appID, let appName, !appName.isEmpty { names[String(appID)] = appName }
+            return true
+        }
+
+        _ = map(depth: 0)
+        return names
     }
 
     static func installDirectory(of prefix: WinePrefix) -> URL? {
@@ -306,17 +384,50 @@ enum PrefixStore {
         _ prefix: WinePrefix, root: URL = serverRoot, lsof: String = "/usr/sbin/lsof",
         drainTimeout: DispatchTimeInterval = .seconds(2)
     ) -> Bool {
-        let lock = open(prefix.root.appending(path: ".notproton-prefix.lock").path(percentEncoded: false), O_RDWR | O_NOFOLLOW | O_CLOEXEC)
+        let lock = open(lockPath(of: prefix), O_RDWR | O_NOFOLLOW | O_CLOEXEC)
         if lock >= 0 {
             defer { FileLock.release(lock) }
-            var info = stat()
-            guard fstat(lock, &info) == 0, info.st_mode & S_IFMT == S_IFREG,
-                flock(lock, LOCK_EX | LOCK_NB) == 0
-            else { return true }
+            guard locked(lock) else { return true }
         } else if errno != ENOENT {
             return true
         }
+        return serverIsBusy(prefix, root: root, lsof: lsof, drainTimeout: drainTimeout)
+    }
 
+    // A launch takes this lock while it sets the prefix up. Holding it stops a launch from
+    // starting partway through a rebuild/delete.
+    static func claim(
+        _ prefix: WinePrefix, root: URL = serverRoot, lsof: String = "/usr/sbin/lsof",
+        drainTimeout: DispatchTimeInterval = .seconds(2)
+    ) -> PrefixClaim? {
+        let lock = open(lockPath(of: prefix), O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        guard lock >= 0 else {
+            guard errno == ENOENT,
+                !serverIsBusy(prefix, root: root, lsof: lsof, drainTimeout: drainTimeout)
+            else { return nil }
+            return PrefixClaim(fd: -1)
+        }
+        guard locked(lock), !serverIsBusy(prefix, root: root, lsof: lsof, drainTimeout: drainTimeout)
+        else {
+            FileLock.release(lock)
+            return nil
+        }
+        return PrefixClaim(fd: lock)
+    }
+
+    private static func lockPath(of prefix: WinePrefix) -> String {
+        prefix.root.appending(path: ".notproton-prefix.lock").path(percentEncoded: false)
+    }
+
+    private static func locked(_ fd: Int32) -> Bool {
+        var info = stat()
+        return fstat(fd, &info) == 0 && info.st_mode & S_IFMT == S_IFREG
+            && flock(fd, LOCK_EX | LOCK_NB) == 0
+    }
+
+    private static func serverIsBusy(
+        _ prefix: WinePrefix, root: URL, lsof: String, drainTimeout: DispatchTimeInterval
+    ) -> Bool {
         guard let dir = serverDirectory(of: prefix, root: root),
             FileManager.default.fileExists(atPath: dir.path(percentEncoded: false))
         else { return false }
@@ -328,5 +439,13 @@ enum PrefixStore {
         if !result.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return true }
 
         return result.outputLost || !result.stderr.isEmpty
+    }
+}
+
+struct PrefixClaim {
+    fileprivate let fd: Int32
+
+    func release() {
+        if fd >= 0 { FileLock.release(fd) }
     }
 }

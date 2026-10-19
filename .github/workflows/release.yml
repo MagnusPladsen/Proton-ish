@@ -75,10 +75,12 @@ jobs:
 
       - name: Generate the appcast
         env:
+          GH_TOKEN: ${{ github.token }}
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          cp release/notes.md release/Proton-ish.txt
+          # Sparkle shows the notes as HTML, rendered from the Markdown the way GitHub renders it
+          gh api markdown -f text="$(cat release/notes.md)" -f mode=gfm -f context="$GITHUB_REPOSITORY" > release/Proton-ish.html
           printf '%s' "$SPARKLE_PRIVATE_KEY" | app/.build/artifacts/sparkle/Sparkle/bin/generate_appcast \
             --ed-key-file - \
             --download-url-prefix "https://github.com/$GITHUB_REPOSITORY/releases/download/v$VERSION/" \
