@@ -214,7 +214,11 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
     with a log line naming both engines [user decision]. The Status screen's Highball section
     gets the switch "Apply game fixes verified on other engines", default on, stored in
     `<support>/recipe-other-engines` and passed to `highball-env --other-engines apply|skip`;
-    off skips the whole recipe with a log note. Another revision of the same line always applies.
+    off skips the whole recipe with a log note. One game can override the switch with the
+    Steam launch option `PROTONISH_RECIPE_OTHER_ENGINES=0` or `=1` [user decision, option C].
+    The switch's footer text in the app and the README's Highball section name the launch
+    option, so the user learns about it where the switch is. Another revision of the same line
+    always applies.
   - Code: `HighballEnvCore/PrefixRecipe.swift` holds the pure planning (REGEDIT4 text for
     `REG_SZ` and `REG_DWORD`, key escaping, target rewrite, skip decision, engine-line policy)
     and one applier; `highball-env` prints `# recipe: …` lines the run script logs; the run
