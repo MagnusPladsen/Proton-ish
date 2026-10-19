@@ -990,6 +990,12 @@
     },
     "About Proton-ish" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About Proton-ish"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1000,6 +1006,12 @@
     },
     "Accept" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Accept"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1010,6 +1022,12 @@
     },
     "Accept Apple's licence so games can use D3DMetal." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Accept Apple's licence so games can use D3DMetal."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1020,6 +1038,12 @@
     },
     "Accept and Download" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Accept and Download"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1222,6 +1246,12 @@
     },
     "Apple's licence for D3DMetal" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple's licence for D3DMetal"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1232,6 +1262,12 @@
     },
     "Apply game fixes verified on other engines" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apply game fixes verified on other engines"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1658,6 +1694,12 @@
     },
     "Buy CrossOver" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Buy CrossOver"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1860,6 +1902,12 @@
     },
     "Clear Steam's default tool" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Steam's default tool"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1902,6 +1950,12 @@
     },
     "CodeWeavers employs most of the people who work on Wine and funds nearly all of the Wine work for macOS. Highball's engine is built from the CrossOver sources CodeWeavers publishes. Sales of CrossOver pay for all of it." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CodeWeavers employs most of the people who work on Wine and funds nearly all of the Wine work for macOS. Highball's engine is built from the CrossOver sources CodeWeavers publishes. Sales of CrossOver pay for all of it."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2024,6 +2078,12 @@
     },
     "Continue" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Continue"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2176,24 +2236,14 @@
         }
       }
     },
-    "Copying CrossOver" : {
+    "Copying the Wine runtime" : {
       "localizations" : {
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copia di CrossOver"
+            "state" : "new",
+            "value" : "Copying the Wine runtime"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在复制 CrossOver"
-          }
-        }
-      }
-    },
-    "Copying the Wine runtime" : {
-      "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2284,6 +2334,12 @@
     },
     "Create the signing identity" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create the signing identity"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2293,7 +2349,9 @@
       }
     },
     "CrossOver" : {
-      "localizations" : {},
+      "localizations" : {
+
+      },
       "shouldTranslate" : false
     },
     "CrossOver app not found." : {
@@ -2314,6 +2372,12 @@
     },
     "CrossOver at CodeWeavers" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CrossOver at CodeWeavers"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2340,6 +2404,12 @@
     },
     "CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2382,6 +2452,12 @@
     },
     "D3DMetal is already part of %@. Accepting Apple's licence below lets games use it." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "D3DMetal is already part of %@. Accepting Apple's licence below lets games use it."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2392,6 +2468,12 @@
     },
     "D3DMetal is enabled for %@." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "D3DMetal is enabled for %@."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2786,6 +2868,12 @@
     },
     "Download the Highball engine" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download the Highball engine"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2796,6 +2884,12 @@
     },
     "Download without D3DMetal" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download without D3DMetal"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2822,6 +2916,12 @@
     },
     "Downloading %@: %@" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading %@: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2832,6 +2932,12 @@
     },
     "Downloading %@: %@ of %@" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading %@: %@ of %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2874,6 +2980,12 @@
     },
     "Download…" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download…"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2884,6 +2996,12 @@
     },
     "Each game needs Highball chosen under Properties → Compatibility." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Each game needs Highball chosen under Properties → Compatibility."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2894,6 +3012,12 @@
     },
     "Enable D3DMetal" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enable D3DMetal"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2904,6 +3028,12 @@
     },
     "Enable D3DMetal…" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enable D3DMetal…"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3042,6 +3172,12 @@
     },
     "Fixes highball-db verified on another Wine engine apply too. One game can opt out with the launch option PROTONISH_RECIPE_OTHER_ENGINES=0." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fixes highball-db verified on another Wine engine apply too. One game can opt out with the launch option PROTONISH_RECIPE_OTHER_ENGINES=0."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3068,6 +3204,12 @@
     },
     "Game fixes from other engines" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Game fixes from other engines"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3078,6 +3220,12 @@
     },
     "Game fixes verified on other engines apply from the next game launch." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Game fixes verified on other engines apply from the next game launch."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3088,6 +3236,12 @@
     },
     "Highball (free)" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highball (free)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3098,6 +3252,12 @@
     },
     "Highball engine" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highball engine"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3108,6 +3268,12 @@
     },
     "Highball engine %@ isn't supported yet." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highball engine %@ isn't supported yet."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3118,6 +3284,12 @@
     },
     "Highball engine downloaded. Click Install, then Set Up next to the engine." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highball engine downloaded. Click Install, then Set Up next to the engine."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3128,6 +3300,12 @@
     },
     "Highball is Steam's default for Windows games from the next Steam start." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highball is Steam's default for Windows games from the next Steam start."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3138,6 +3316,12 @@
     },
     "Highball is now Steam's default for Windows games." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highball is now Steam's default for Windows games."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3164,6 +3348,12 @@
     },
     "If you can, buy CrossOver and use it in Proton-ish: it gives the best support and performance, and it keeps Wine on the Mac alive. If you cannot, play on, and come back to this when you can. This note is always under Help → Why Buy CrossOver." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If you can, buy CrossOver and use it in Proton-ish: it gives the best support and performance, and it keeps Wine on the Mac alive. If you cannot, play on, and come back to this when you can. This note is always under Help → Why Buy CrossOver."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3526,6 +3716,12 @@
     },
     "List the engine's renderers" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "List the engine's renderers"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3728,6 +3924,12 @@
     },
     "Newer than the engine you have set up. Proton-ish can download it; games keep their engine until you pick the new one." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Newer than the engine you have set up. Proton-ish can download it; games keep their engine until you pick the new one."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3834,6 +4036,12 @@
     },
     "No longer supported" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No longer supported"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3908,6 +4116,12 @@
     },
     "Not installed. Proton-ish can download it; the Highball app is not needed." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not installed. Proton-ish can download it; the Highball app is not needed."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3918,6 +4132,12 @@
     },
     "Not set up" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not set up"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3928,6 +4148,12 @@
     },
     "Not set up. Newest supported engine; recommended." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not set up. Newest supported engine; recommended."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3938,6 +4164,12 @@
     },
     "Not supported yet" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not supported yet"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3964,6 +4196,12 @@
     },
     "NotProtonNot/NotProton on GitHub" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "NotProtonNot/NotProton on GitHub"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3990,6 +4228,12 @@
     },
     "Only fixes verified on this Wine engine apply. One game can opt in with the launch option PROTONISH_RECIPE_OTHER_ENGINES=1." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Only fixes verified on this Wine engine apply. One game can opt in with the launch option PROTONISH_RECIPE_OTHER_ENGINES=1."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4000,6 +4244,12 @@
     },
     "Only game fixes verified on this engine apply from the next game launch." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Only game fixes verified on this engine apply from the next game launch."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4265,7 +4515,9 @@
       }
     },
     "Proton-ish" : {
-      "localizations" : {},
+      "localizations" : {
+
+      },
       "shouldTranslate" : false
     },
     "Proton-ish Components" : {
@@ -4366,6 +4618,12 @@
     },
     "Proton-ish downloads Highball's free Wine engine (%@) from Highball's releases on GitHub, with Highball's own installer, into Highball's folder. D3DMetal, Apple's DirectX 12 translator, comes with it and is used only if you accept Apple's licence below. Without it, games use DXMT or DXVK and DirectX 12-only games will not start." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proton-ish downloads Highball's free Wine engine (%@) from Highball's releases on GitHub, with Highball's own installer, into Highball's folder. D3DMetal, Apple's DirectX 12 translator, comes with it and is used only if you accept Apple's licence below. Without it, games use DXMT or DXVK and DirectX 12-only games will not start."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4424,6 +4682,12 @@
     },
     "Proton-ish is a fork of NotProton by NotProtonNot (https://github.com/NotProtonNot/NotProton), released under GPLv3. It is not affiliated with or endorsed by NotProton, Valve, CodeWeavers or Highball. It uses Highball's HighballKit (GPLv3) and highball-db game data (CC0) by Gauthier Piarrette (https://github.com/gauthierpiarrette/highball)." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proton-ish is a fork of NotProton by NotProtonNot (https://github.com/NotProtonNot/NotProton), released under GPLv3. It is not affiliated with or endorsed by NotProton, Valve, CodeWeavers or Highball. It uses Highball's HighballKit (GPLv3) and highball-db game data (CC0) by Gauthier Piarrette (https://github.com/gauthierpiarrette/highball)."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4434,6 +4698,12 @@
     },
     "Proton-ish is a fork of NotProtonNot/NotProton and runs games with Highball's engine. Thank you both." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proton-ish is a fork of NotProtonNot/NotProton and runs games with Highball's engine. Thank you both."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4444,6 +4714,12 @@
     },
     "Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4470,6 +4746,12 @@
     },
     "Proton-ish needs Highball's Wine 11 engine. Switch an environment to Wine 11 in its settings in Highball." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proton-ish needs Highball's Wine 11 engine. Switch an environment to Wine 11 in its settings in Highball."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4560,6 +4842,12 @@
     },
     "Ready" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ready"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4586,6 +4874,12 @@
     },
     "Ready. Newest engine; pick it per game under Properties → Compatibility." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ready. Newest engine; pick it per game under Properties → Compatibility."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4596,6 +4890,12 @@
     },
     "Ready. Steam's default for Windows games once Steam starts again." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ready. Steam's default for Windows games once Steam starts again."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4606,6 +4906,12 @@
     },
     "Ready. Steam's default for Windows games." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ready. Steam's default for Windows games."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5448,6 +5754,12 @@
     },
     "Set Steam's default tool" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Set Steam's default tool"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5506,6 +5818,12 @@
     },
     "Set up the Highball engine first." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Set up the Highball engine first."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5707,7 +6025,9 @@
       }
     },
     "Steam" : {
-      "localizations" : {},
+      "localizations" : {
+
+      },
       "shouldTranslate" : false
     },
     "Steam at %@ isn't connected, so Proton-ish can't be removed from it. All other Proton-ish data is removed, except for Windows Games and prefixes." : {
@@ -6000,6 +6320,12 @@
     },
     "Steam's default for Windows games is now %@." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Steam's default for Windows games is now %@."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6010,6 +6336,12 @@
     },
     "Steam's default is %@. Turn on to use Highball instead." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Steam's default is %@. Turn on to use Highball instead."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6020,6 +6352,12 @@
     },
     "Steam's default tool is cleared at the next Steam start." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Steam's default tool is cleared at the next Steam start."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6062,6 +6400,12 @@
     },
     "Support CodeWeavers" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Support CodeWeavers"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6120,6 +6464,12 @@
     },
     "Thanks" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Thanks"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6498,6 +6848,12 @@
     },
     "The engine downloaded, but Proton-ish cannot use it. Open Proton-ish's log for details." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The engine downloaded, but Proton-ish cannot use it. Open Proton-ish's log for details."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6716,6 +7072,12 @@
     },
     "This build of Proton-ish supports no Highball engine." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This build of Proton-ish supports no Highball engine."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6950,6 +7312,12 @@
     },
     "Use Highball for all Windows games" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use Highball for all Windows games"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6990,22 +7358,6 @@
         }
       }
     },
-    "Verify CrossOver" : {
-      "localizations" : {
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verifica di CrossOver"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "验证 CrossOver"
-          }
-        }
-      }
-    },
     "Verify CrossOver license" : {
       "localizations" : {
         "it" : {
@@ -7024,6 +7376,12 @@
     },
     "Verify runner" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Verify runner"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7066,6 +7424,12 @@
     },
     "Who pays for Wine on the Mac" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Who pays for Wine on the Mac"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7076,6 +7440,12 @@
     },
     "Why Buy CrossOver…" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Why Buy CrossOver…"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7086,6 +7456,12 @@
     },
     "Windows games without their own choice run through %@." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Windows games without their own choice run through %@."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7096,6 +7472,12 @@
     },
     "Windows games without their own choice run through %@. Applies when Steam starts." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Windows games without their own choice run through %@. Applies when Steam starts."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7137,7 +7519,9 @@
       }
     },
     "Winetricks" : {
-      "localizations" : {},
+      "localizations" : {
+
+      },
       "shouldTranslate" : false
     },
     "Winetricks ran %@ in %@." : {
@@ -7173,7 +7557,9 @@
       }
     },
     "Winetricks…" : {
-      "localizations" : {},
+      "localizations" : {
+
+      },
       "shouldTranslate" : false
     },
     "You will not lose saves by using this tool." : {
@@ -7338,6 +7724,12 @@
     },
     "gauthierpiarrette/highball on GitHub" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "gauthierpiarrette/highball on GitHub"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7364,6 +7756,12 @@
     },
     "highball-env failed with status %d." : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "highball-env failed with status %d."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7501,7 +7899,9 @@
       }
     },
     "vcrun2022 corefonts" : {
-      "localizations" : {},
+      "localizations" : {
+
+      },
       "shouldTranslate" : false
     }
   },
