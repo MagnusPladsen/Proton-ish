@@ -1149,6 +1149,7 @@ link_fonts() {
 # On any failure the engine defaults from runtime.env and DXMT stay in place.
 np_hb_env_file=""
 np_hb_launch_mark=""
+np_hb_recipe=""
 highball_environment() {
   hb_exe="${1:-}"
   hb_helper="$np_support/highball-env"
@@ -1159,9 +1160,16 @@ highball_environment() {
     echo "highball-env: missing, using the engine defaults" >> "$log" 2>&1 || true
     return 0
   fi
-  # The game's executable lets Highball spot a DirectX 12-only program
+  # The game's executable lets Highball spot a DirectX 12-only program; the install path, marker
+  # and registry file are for the prefix steps of the game's recipe
+  hb_other=apply
+  [ "$(tr -d ' \t\n' < "$np_support/recipe-other-engines" 2>/dev/null)" = skip ] && hb_other=skip
   set -- --prefix "$WINEPREFIX" --engine "$np_build" --appid "${app_id:-0}" --db "$np_support/highball-db.json"
   [ -z "$hb_exe" ] || [ ! -f "$hb_exe" ] || set -- "$@" --exe "$hb_exe"
+  [ -z "${STEAM_COMPAT_INSTALL_PATH:-}" ] || [ ! -d "$STEAM_COMPAT_INSTALL_PATH" ] \
+    || set -- "$@" --install-path "$STEAM_COMPAT_INSTALL_PATH"
+  set -- "$@" --applied "$STEAM_COMPAT_DATA_PATH/protonish-recipe" \
+    --reg "$WINEPREFIX/drive_c/protonish-recipe.reg" --other-engines "$hb_other"
   "$hb_helper" "$@" > "$hb_raw" 2>> "$log" &
   hb_pid=$!
   hb_wait=0
@@ -1184,6 +1192,13 @@ highball_environment() {
   hb_count=0
   while IFS= read -r hb_line || [ -n "$hb_line" ]; do
     case "$hb_line" in
+      '# recipe: '*)
+        np_hb_recipe=${hb_line#'# recipe: '}
+        # Three safe words, or nothing: a recipe id, a commit hash and an engine id
+        case "$np_hb_recipe" in
+          *[!A-Za-z0-9._\ -]*|*' '*' '*' '*) np_hb_recipe="" ;;
+        esac
+        continue ;;
       '#'*) echo "highball-env: ${hb_line#'# '}" >> "$log" 2>&1 || true; continue ;;
       *=*) ;;
       *) continue ;;
@@ -1215,6 +1230,30 @@ highball_environment() {
   np_hb_env_file="$hb_file"
   echo "highball-env: $hb_count variables from Highball" >> "$log" 2>&1 || true
 } # highball_environment
+
+# Highball: the prefix steps of the game's highball-db recipe. highball-env wrote the files and
+# engine copies itself and the registry values as C:\protonish-recipe.reg; the import runs here,
+# under the game's own environment. The marker makes the next launch skip the recipe.
+apply_prefix_recipe() {
+  hb_reg="$WINEPREFIX/drive_c/protonish-recipe.reg"
+  hb_marker="$STEAM_COMPAT_DATA_PATH/protonish-recipe"
+  if [ -z "$np_hb_recipe" ]; then
+    rm -f "$hb_reg"
+    return 0
+  fi
+  hb_status=0
+  if [ -f "$hb_reg" ]; then
+    without_lock_fds "$WINELOADER" reg import 'C:\protonish-recipe.reg' >> "$log" 2>&1 || hb_status=$?
+    rm -f "$hb_reg"
+  fi
+  if [ "$hb_status" -ne 0 ]; then
+    echo "recipe: registry import exited status=$hb_status, tried again at the next launch" >> "$log" 2>&1 || true
+    return 0
+  fi
+  # shellcheck disable=SC2086 # the three words become three lines
+  printf '%s\n' $np_hb_recipe > "$hb_marker" 2>/dev/null \
+    && echo "recipe: $np_hb_recipe recorded" >> "$log" 2>&1 || true
+} # apply_prefix_recipe
 
 # Highball: which Direct3D the game got, from the logs the renderers write into C:\highball\logs
 highball_renderer_report() {
@@ -1272,6 +1311,8 @@ if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   if [ "$np_runtime" = highball ]; then
     stage_step="highball environment"
     highball_environment "$1"
+    stage_step="prefix recipe"
+    apply_prefix_recipe
   fi
 fi
 
