@@ -55,6 +55,19 @@ public enum PrefixRecipe {
         }
     }
 
+    // What the run script records after a successful import, as one "# recipe:" line
+    public static func record(recipeID: String, commit: String, engine: String) -> String {
+        "\(recipeID) \(commit) \(engine)"
+    }
+
+    // The marker is the record as three lines. A copy target that went missing counts as not
+    // applied, HighballKit's artifactsPresent rule: the game was reinstalled under it.
+    public static func isApplied(marker: String?, recipeID: String, commit: String, engine: String, copyTargetsPresent: Bool) -> Bool {
+        guard copyTargetsPresent, let marker else { return false }
+        let lines = marker.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        return lines.count >= 3 && lines[0] == recipeID && lines[1] == commit && lines[2] == engine
+    }
+
     // One .reg file for every registry step, in the format `reg import` reads
     static func registryText(_ steps: [Recipe.Step]) -> (text: String?, notes: [String]) {
         var notes: [String] = []

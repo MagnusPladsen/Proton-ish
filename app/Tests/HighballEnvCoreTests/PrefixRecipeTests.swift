@@ -180,4 +180,38 @@ struct PrefixRecipeTests {
     func launchOptionOther() {
         #expect(!PrefixRecipe.otherEnginesAllowed(switchValue: "skip", launchOption: "yes"))
     }
+
+    @Test("The record names recipe, database commit and engine, space separated")
+    func recordText() {
+        #expect(PrefixRecipe.record(recipeID: "portal-2", commit: "483aac46", engine: "x64-crossover26.3-r25") == "portal-2 483aac46 x64-crossover26.3-r25")
+    }
+
+    @Test("A marker with the same recipe, commit and engine means applied")
+    func appliedSame() {
+        #expect(PrefixRecipe.isApplied(marker: "portal-2\n483aac46\nx64-crossover26.3-r25\n", recipeID: "portal-2",
+                                       commit: "483aac46", engine: "x64-crossover26.3-r25", copyTargetsPresent: true))
+    }
+
+    @Test("A newer database applies the recipe again")
+    func appliedNewCommit() {
+        #expect(!PrefixRecipe.isApplied(marker: "portal-2\n483aac46\nx64-crossover26.3-r25\n", recipeID: "portal-2",
+                                        commit: "ffffffff", engine: "x64-crossover26.3-r25", copyTargetsPresent: true))
+    }
+
+    @Test("A prefix rebuilt on another engine applies the recipe again")
+    func appliedNewEngine() {
+        #expect(!PrefixRecipe.isApplied(marker: "portal-2\n483aac46\nx64-crossover26.3-r19\n", recipeID: "portal-2",
+                                        commit: "483aac46", engine: "x64-crossover26.3-r25", copyTargetsPresent: true))
+    }
+
+    @Test("A missing copied file applies the recipe again, the game was reinstalled")
+    func appliedCopyGone() {
+        #expect(!PrefixRecipe.isApplied(marker: "csgo-legacy\n483aac46\nx64-crossover26.3-r25\n", recipeID: "csgo-legacy",
+                                        commit: "483aac46", engine: "x64-crossover26.3-r25", copyTargetsPresent: false))
+    }
+
+    @Test("No marker means not applied")
+    func appliedNoMarker() {
+        #expect(!PrefixRecipe.isApplied(marker: nil, recipeID: "portal-2", commit: "483aac46", engine: "x64-crossover26.3-r25", copyTargetsPresent: true))
+    }
 }
