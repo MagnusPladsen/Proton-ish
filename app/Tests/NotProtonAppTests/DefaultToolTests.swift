@@ -39,11 +39,29 @@ struct DefaultToolTests {
         #expect(DefaultTool.shouldAdopt(request: request, steamDefault: steamDefault) == adopt)
     }
 
-    @Test("The Highball tool name comes from the installed Highball build")
+    @Test("The Highball tool name is the newest installed Highball build's")
     func highballTool() {
         let builds = SupportedRunners.all.filter { $0.runtime == .highball }
-        #expect(DefaultTool.highballTool(installed: builds) == "protonish-highball-x64-crossover26.3-r19")
+        #expect(DefaultTool.highballTool(installed: builds) == "protonish-highball-x64-crossover26.3-r25")
+        #expect(DefaultTool.highballTool(installed: Array(builds.prefix(1))) == "protonish-highball-x64-crossover26.3-r19")
         #expect(DefaultTool.highballTool(installed: []) == nil)
+    }
+
+    @Test("A request for an older Highball tool follows the newest one; anything else stays",
+          arguments: [
+            ("protonish-highball-x64-crossover26.3-r19", true),
+            ("protonish-highball-x64-crossover26.3-r25", false),
+            ("protonish-preview-41073", false),
+            ("proton_9", false),
+            ("", false),
+          ])
+    func follow(request: String, follows: Bool) {
+        #expect(DefaultTool.shouldFollow(request: request, newest: "protonish-highball-x64-crossover26.3-r25") == follows)
+    }
+
+    @Test("No request never follows")
+    func noRequestNeverFollows() {
+        #expect(!DefaultTool.shouldFollow(request: nil, newest: "protonish-highball-x64-crossover26.3-r25"))
     }
 
     @Test("Only Proton-ish's own tools count as ours")

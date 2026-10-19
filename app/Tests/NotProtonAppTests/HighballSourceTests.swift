@@ -95,6 +95,23 @@ struct HighballSourceTests {
     }
 }
 
+@Suite("Highball engine order")
+struct HighballEngineOrderTests {
+    private func engine(_ id: String, _ support: HighballSupport) -> HighballEngine {
+        HighballEngine(id: id, directory: URL(filePath: "/H/engines/\(id)"), displayName: id, support: support)
+    }
+
+    @Test("Usable engines come first, then newest revision first within a line")
+    func usableAndNewestFirst() throws {
+        let r19 = engine("x64-crossover26.3-r19", .supported(try #require(SupportedRunners.build(id: "x64-crossover26.3-r19"))))
+        let r25 = engine("x64-crossover26.3-r25", .supported(try #require(SupportedRunners.build(id: "x64-crossover26.3-r25"))))
+        let r9 = engine("x64-crossover26.3-r9", .unsupported)
+        let sikarugir = engine("x64-sikarugir10.0_6-r21", .unsupported)
+        let listed = [sikarugir, r9, r19, r25].sorted(by: HighballSource.isListedBefore).map(\.id)
+        #expect(listed == ["x64-crossover26.3-r25", "x64-crossover26.3-r19", "x64-crossover26.3-r9", "x64-sikarugir10.0_6-r21"])
+    }
+}
+
 @Suite("Highball notice")
 struct HighballNoticeTests {
 

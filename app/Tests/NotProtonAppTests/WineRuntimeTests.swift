@@ -127,6 +127,16 @@ struct WineRuntimeTests {
         #expect(NtdllPatcher.byBuild["x64-crossover26.3-r19"]?.count == 2)
     }
 
+    @Test("Highball r25 is a supported Rosetta build with one tool and is the build offered for download")
+    func highballR25Supported() throws {
+        let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r25"))
+        #expect(build.runtime == .highball)
+        #expect(build.tools.map(\.name) == ["protonish-highball-x64-crossover26.3-r25"])
+        #expect(build.tools.allSatisfy { $0.flavor == .rosetta })
+        #expect(NtdllPatcher.byBuild["x64-crossover26.3-r25"]?.count == 2)
+        #expect(HighballInstaller.build?.id == "x64-crossover26.3-r25")
+    }
+
     // Runs when the r19 engine is on this Mac (Highball install or the plan's scratch fixture):
     // the app's own patcher must reproduce the pinned output byte for byte.
     @Test("The app patches Highball r19's ntdll to the pinned hashes")

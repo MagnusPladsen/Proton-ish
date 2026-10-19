@@ -36,7 +36,23 @@ enum HighballSource {
     static func discover(home: URL = HighballSource.home()) -> [HighballEngine] {
         let engines = home.appending(path: "engines")
         let entries = (try? FileManager.default.contentsOfDirectory(at: engines, includingPropertiesForKeys: nil)) ?? []
-        return entries.compactMap(inspect).sorted { $0.id < $1.id }
+        return entries.compactMap(inspect).sorted(by: isListedBefore)
+    }
+
+    // Usable engines first, then by line, newest revision first: r25 above r19
+    static func isListedBefore(_ a: HighballEngine, _ b: HighballEngine) -> Bool {
+        if a.isUsable != b.isUsable { return a.isUsable }
+        let (lineA, revisionA) = lineAndRevision(a.id)
+        let (lineB, revisionB) = lineAndRevision(b.id)
+        if lineA != lineB { return lineA < lineB }
+        return revisionA > revisionB
+    }
+
+    private static func lineAndRevision(_ id: String) -> (String, Int) {
+        guard let range = id.range(of: "-r", options: .backwards), let revision = Int(id[range.upperBound...]) else {
+            return (id, 0)
+        }
+        return (String(id[..<range.lowerBound]), revision)
     }
 
     static func inspect(_ directory: URL) -> HighballEngine? {
