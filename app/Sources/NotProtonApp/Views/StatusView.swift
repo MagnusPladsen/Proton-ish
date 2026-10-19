@@ -636,7 +636,22 @@ struct StatusView: View {
         }
         if snapshot.installedRunners.contains(where: { $0.runtime == .highball }) {
             defaultToolRow(snapshot)
+            otherEngineFixesRow(snapshot)
         }
+    }
+
+    private func otherEngineFixesRow(_ snapshot: StatusSnapshot) -> some View {
+        StatusRow(
+            title: String(localized: "Apply game fixes verified on other engines"),
+            value: snapshot.otherEngineFixes
+                ? String(localized: "Fixes highball-db verified on another Wine engine apply too. One game can opt out with the launch option PROTONISH_RECIPE_OTHER_ENGINES=0.")
+                : String(localized: "Only fixes verified on this Wine engine apply. One game can opt in with the launch option PROTONISH_RECIPE_OTHER_ENGINES=1."),
+            toggle: Binding(
+                get: { snapshot.otherEngineFixes },
+                set: { wanted in Task { await status.setOtherEngineFixes(on: wanted) } }
+            )
+        )
+        .disabled(!status.isIdle)
     }
 
     private func defaultToolRow(_ snapshot: StatusSnapshot) -> some View {

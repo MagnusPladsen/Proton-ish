@@ -30,6 +30,7 @@ struct StatusSnapshot: Sendable {
     var steamDefaultTool: String?
     // What Steam's own config names right now; the request above applies when Steam starts
     var steamLiveDefaultTool: String?
+    var otherEngineFixes: Bool = true
 
     static func capture(bundledVersion: String) -> StatusSnapshot {
         let installs = CrossOverSource.discover()
@@ -56,7 +57,8 @@ struct StatusSnapshot: Sendable {
             highball: HighballSource.discover(),
             defaultToolRequest: DefaultTool.request(),
             steamDefaultTool: DefaultTool.steamDefault(),
-            steamLiveDefaultTool: SteamCompatConfig.defaultTool(at: SupportPaths.Steam.compatConfig)
+            steamLiveDefaultTool: SteamCompatConfig.defaultTool(at: SupportPaths.Steam.compatConfig),
+            otherEngineFixes: OtherEngineFixes.isOn()
         )
     }
 }
@@ -483,6 +485,15 @@ final class SystemStatus {
             }
             try DefaultTool.clear()
             return String(localized: "Steam's default tool is cleared at the next Steam start.")
+        }
+    }
+
+    func setOtherEngineFixes(on wanted: Bool) async {
+        await perform(from: OtherEngineFixes.step) { _ in
+            try OtherEngineFixes.set(wanted)
+            return wanted
+                ? String(localized: "Game fixes verified on other engines apply from the next game launch.")
+                : String(localized: "Only game fixes verified on this engine apply from the next game launch.")
         }
     }
 

@@ -792,6 +792,16 @@
         }
       }
     },
+    "Apply game fixes verified on other engines" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用在其他引擎上验证过的游戏修复"
+          }
+        }
+      }
+    },
     "Are you sure you want to back up these prefixes?" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1975,12 +1985,42 @@
         }
       }
     },
+    "Fixes highball-db verified on another Wine engine apply too. One game can opt out with the launch option PROTONISH_RECIPE_OTHER_ENGINES=0." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "highball-db 在其他 Wine 引擎上验证过的修复也会应用。单个游戏可用启动选项 PROTONISH_RECIPE_OTHER_ENGINES=0 退出。"
+          }
+        }
+      }
+    },
     "Game" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "游戏"
+          }
+        }
+      }
+    },
+    "Game fixes from other engines" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自其他引擎的游戏修复"
+          }
+        }
+      }
+    },
+    "Game fixes verified on other engines apply from the next game launch." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从下次启动游戏起，将应用在其他引擎上验证过的游戏修复。"
           }
         }
       }
@@ -2601,6 +2641,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "好"
+          }
+        }
+      }
+    },
+    "Only fixes verified on this Wine engine apply. One game can opt in with the launch option PROTONISH_RECIPE_OTHER_ENGINES=1." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅应用在此 Wine 引擎上验证过的修复。单个游戏可用启动选项 PROTONISH_RECIPE_OTHER_ENGINES=1 启用。"
+          }
+        }
+      }
+    },
+    "Only game fixes verified on this engine apply from the next game launch." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从下次启动游戏起，仅应用在此引擎上验证过的游戏修复。"
           }
         }
       }
