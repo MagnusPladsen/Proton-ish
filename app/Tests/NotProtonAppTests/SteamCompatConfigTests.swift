@@ -41,6 +41,16 @@ struct SteamCompatConfigTests {
         #expect(SteamCompatConfig.defaultTool(in: config(defaultTool: nil)) == nil)
     }
 
+    @Test("The default tool is read from a config file; a missing file is no default")
+    func readsDefaultFromFile() throws {
+        let work = try scratchDirectory("compat-config")
+        defer { try? FileManager.default.removeItem(at: work) }
+        let file = work.appending(path: "config.vdf")
+        #expect(SteamCompatConfig.defaultTool(at: file) == nil)
+        try Data(config(defaultTool: "protonish-26.3").utf8).write(to: file)
+        #expect(SteamCompatConfig.defaultTool(at: file) == "protonish-26.3")
+    }
+
     @Test("Our tool is removed as the default; the game's own mapping and everything else stay")
     func removesOurs() throws {
         let text = config(defaultTool: "protonish-highball-x64-crossover26.3-r19")

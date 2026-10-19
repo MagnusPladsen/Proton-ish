@@ -30,6 +30,17 @@ struct DefaultToolTests {
         #expect(DefaultTool.steamDefault(at: file) == "proton_9")
     }
 
+    @Test("A supported tool is shown by its display name")
+    func displayOfOurs() {
+        let tool = SupportedRunners.all.first { $0.runtime == .highball }!.tools.first!
+        #expect(DefaultTool.display(of: tool.name) == tool.display)
+    }
+
+    @Test("Another tool is shown by its name")
+    func displayOfOthers() {
+        #expect(DefaultTool.display(of: "proton_9") == "proton_9")
+    }
+
     @Test("Highball is adopted as the default only when Steam has none and nothing was asked yet",
           arguments: [
             (nil, "", true), (nil, "proton_9", false), (nil, nil, false),

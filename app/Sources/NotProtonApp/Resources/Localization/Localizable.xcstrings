@@ -1985,12 +1985,12 @@
         }
       }
     },
-    "Highball" : {
+    "Highball (free)" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Highball"
+            "value" : "Highball（免费）"
           }
         }
       }
@@ -2555,6 +2555,16 @@
         }
       }
     },
+    "Not set up. Newest supported engine; recommended." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未设置。最新支持的引擎；推荐使用。"
+          }
+        }
+      }
+    },
     "Not supported yet" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2978,6 +2988,36 @@
         }
       }
     },
+    "Ready. Newest engine; pick it per game under Properties → Compatibility." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就绪。最新引擎；可在每个游戏的“属性 → 兼容性”中选择。"
+          }
+        }
+      }
+    },
+    "Ready. Steam's default for Windows games once Steam starts again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就绪。Steam 再次启动后将成为 Windows 游戏的默认工具。"
+          }
+        }
+      }
+    },
+    "Ready. Steam's default for Windows games." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就绪。Steam 运行 Windows 游戏的默认工具。"
+          }
+        }
+      }
+    },
     "Rebuild %lld Prefixes" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3284,16 +3324,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "修复 Steam"
-          }
-        }
-      }
-    },
-    "Repair and Remove" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "修复与移除"
           }
         }
       }
@@ -4561,12 +4591,22 @@
         }
       }
     },
-    "Windows games without their own choice run through Highball. Applies when Steam starts." : {
+    "Windows games without their own choice run through %@." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未单独选择工具的 Windows 游戏将通过 Highball 运行。在 Steam 启动时生效。"
+            "value" : "未单独选择工具的 Windows 游戏将通过 %@ 运行。"
+          }
+        }
+      }
+    },
+    "Windows games without their own choice run through %@. Applies when Steam starts." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未单独选择工具的 Windows 游戏将通过 %@ 运行。在 Steam 启动时生效。"
           }
         }
       }
