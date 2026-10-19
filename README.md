@@ -138,6 +138,7 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
   and pick a tool. Unticking it switches back to the macOS version.
 - **No Valve Anti-Cheat.** VAC is not supported (Proton does not support it either). VAC games start in insecure
   mode and cannot join secure matchmaking.
+- **No NTFS.** Games on an NTFS volume (third-party NTFS drivers included) are not supported, as in NotProton.
 
 ## Reporting problems
 
@@ -190,6 +191,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-19: Each Highball engine row says where it stands with Steam: the engine Steam's config names is "Steam's default for Windows games", a requested one is the default "once Steam starts again", and the newest engine says so with a hint to pick it per game under Properties → Compatibility (recommended when not set up yet). The "Use Highball for all Windows games" row names the engine it uses. Repair Steam and Remove Everything moved into the Steam section.
 - 2026-10-19: Steam keeps its Accessibility permission when Install follows Repair Steam (the restored Steam carries Valve's signature, so the grant was reset). Proton-ish records the signature it last applied in `signed-requirement`.
 - 2026-10-19: highball-db fixes that change the Windows prefix (registry values, config files, engine DLLs) apply once per prefix per database version, written by `highball-env` and imported by the run script before the launch. Fixes verified on another engine line apply by default; the Status screen switch and the launch option `PROTONISH_RECIPE_OTHER_ENGINES` decide.
+- 2026-10-19: NotProton 1.2.0 merged: Italian localization, a Windows library filter and button in Steam's library, non-Steam Windows shortcuts run with the default tool and get named prefixes, a per-game Disable hidraw option, High Resolution DPI fix, Steam verification for installs off the boot drive, CrossOver Preview 20261015, Wine's VC++ runtime left native when the game installed Microsoft's, release notes shown as HTML in the updater, and a note that NTFS volumes are unsupported. Proton-ish keeps its own version number, release pipeline and README.
 
 ## What Install changes
 
