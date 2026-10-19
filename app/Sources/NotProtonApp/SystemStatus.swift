@@ -28,6 +28,8 @@ struct StatusSnapshot: Sendable {
     var highball: [HighballEngine] = []
     var defaultToolRequest: String?
     var steamDefaultTool: String?
+    // What Steam's own config names right now; the request above applies when Steam starts
+    var steamLiveDefaultTool: String?
 
     static func capture(bundledVersion: String) -> StatusSnapshot {
         let installs = CrossOverSource.discover()
@@ -53,7 +55,8 @@ struct StatusSnapshot: Sendable {
             installContent: DeploymentContent.current(version: bundledVersion),
             highball: HighballSource.discover(),
             defaultToolRequest: DefaultTool.request(),
-            steamDefaultTool: DefaultTool.steamDefault()
+            steamDefaultTool: DefaultTool.steamDefault(),
+            steamLiveDefaultTool: SteamCompatConfig.defaultTool(at: SupportPaths.Steam.compatConfig)
         )
     }
 }

@@ -29,6 +29,7 @@ enum DefaultTool {
         return request != newest
     }
 
+    // The name the Status screen shows for a tool; the raw name when it is not one of ours
     static func display(of tool: String) -> String {
         SupportedRunners.all.flatMap(\.tools).first { $0.name == tool }?.display ?? tool
     }

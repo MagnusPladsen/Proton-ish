@@ -180,6 +180,8 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: 0.1.0-beta.5: Highball saves kept under steamuser with migration of existing prefixes, NotProton 1.1.8 (CrossOver Preview 20261015, no display sleep during games), CrossOver recommended on the Status screen, first-launch note on who funds Wine.
 - 2026-10-16: The CrossOver row's "Supported:" list names only CrossOver versions (Highball's r19 was listed too).
 - 2026-10-16: Highball engine r25 (engine build 0024: spatial audio for surround mixes, retina display sizes, the VCLibs packages Forza Horizon 4 waits for) supported next to r19. The Download row offers it when a newer supported engine is missing, and a Highball default tool follows the newest engine set up; the engine list shows usable engines first, newest on top. HighballKit 0.10.16.
+- 2026-10-16: The Status screen's Highball section is headed "Highball (free)".
+- 2026-10-19: Each Highball engine row says where it stands with Steam: the engine Steam's config names is "Steam's default for Windows games", a requested one is the default "once Steam starts again", and the newest engine says so with a hint to pick it per game under Properties → Compatibility (recommended when not set up yet). The "Use Highball for all Windows games" row names the engine it uses. Repair Steam and Remove Everything moved into the Steam section.
 
 ## What Install changes
 

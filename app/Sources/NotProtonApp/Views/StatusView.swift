@@ -350,6 +350,24 @@ struct StatusView: View {
                         isEnabled: status.isIdle
                     ) { Task { await status.resetControllerPermission() } }
                 )
+                StatusRow(
+                    title: String(localized: "Repair Steam"),
+                    value: String(localized: "Restore Steam to its original state."),
+                    action: StatusAction(
+                        label: String(localized: "Repair"),
+                        role: .destructive,
+                        isEnabled: status.isIdle
+                    ) { status.pendingConfirmation = .replaceSteam }
+                )
+                StatusRow(
+                    title: String(localized: "Remove Everything"),
+                    value: String(localized: "Remove Proton-ish and restore Steam to its original state."),
+                    action: StatusAction(
+                        label: String(localized: "Remove"),
+                        role: .destructive,
+                        isEnabled: status.isIdle
+                    ) { status.pendingConfirmation = .removeEverything }
+                )
             }
 
             Section {
@@ -373,12 +391,10 @@ struct StatusView: View {
             Section {
                 highballSection(snapshot)
             } header: {
-                Text("Highball")
+                Text("Highball (free)")
             }
 
             componentsSection(snapshot.payload)
-
-            dangerSection
 
             Section("Thanks") {
                 Text("Proton-ish is a fork of NotProtonNot/NotProton and runs games with Highball's engine. Thank you both.")
@@ -389,29 +405,6 @@ struct StatusView: View {
             }
         }
         .formStyle(.grouped)
-    }
-
-    private var dangerSection: some View {
-        Section("Repair and Remove") {
-            StatusRow(
-                title: String(localized: "Repair Steam"),
-                value: String(localized: "Restore Steam to its original state."),
-                action: StatusAction(
-                    label: String(localized: "Repair"),
-                    role: .destructive,
-                    isEnabled: status.isIdle
-                ) { status.pendingConfirmation = .replaceSteam }
-            )
-            StatusRow(
-                title: String(localized: "Remove Everything"),
-                value: String(localized: "Remove Proton-ish and restore Steam to its original state."),
-                action: StatusAction(
-                    label: String(localized: "Remove"),
-                    role: .destructive,
-                    isEnabled: status.isIdle
-                ) { status.pendingConfirmation = .removeEverything }
-            )
-        }
     }
 
     private var refreshButton: some View {
@@ -647,9 +640,12 @@ struct StatusView: View {
     }
 
     private func defaultToolRow(_ snapshot: StatusSnapshot) -> some View {
-        let requested = snapshot.defaultToolRequest.map { !$0.isEmpty } ?? false
-        let value: String = if requested {
-            String(localized: "Windows games without their own choice run through Highball. Applies when Steam starts.")
+        let request = snapshot.defaultToolRequest ?? ""
+        let requested = !request.isEmpty
+        let value: String = if requested, snapshot.steamLiveDefaultTool == request {
+            String(localized: "Windows games without their own choice run through \(DefaultTool.display(of: request)).")
+        } else if requested {
+            String(localized: "Windows games without their own choice run through \(DefaultTool.display(of: request)). Applies when Steam starts.")
         } else if let current = snapshot.steamDefaultTool, !current.isEmpty, !DefaultTool.isOurs(current) {
             String(localized: "Steam's default is \(current). Turn on to use Highball instead.")
         } else {
@@ -672,9 +668,11 @@ struct StatusView: View {
                              tone: .neutral, detail: engine.id)
         }
         let copy = SystemStatus.highballCopy(build.id, installed: snapshot.installedRunners, runner: snapshot.runner)
+        let role = EngineGuidance.role(build: build, newest: HighballInstaller.build,
+                                       request: snapshot.defaultToolRequest, steamDefault: snapshot.steamLiveDefaultTool)
         let value: String = switch copy {
-        case .notSetUp: String(localized: "Not set up")
-        case .ready: String(localized: "Ready")
+        case .notSetUp: Self.notSetUpValue(role)
+        case .ready: Self.readyValue(role)
         case .needsRepair: String(localized: "Patched components are missing.")
         }
         let tone: StatusTone = switch copy {
@@ -705,6 +703,21 @@ struct StatusView: View {
             ) { licenceSheet = .enable(engine) }])
                 + (copy == .notSetUp ? [] : [removeCopyAction(build.id, label: String(localized: "Remove Copy\u{2026}"))])
         )
+    }
+
+    private static func readyValue(_ role: EngineGuidance.Role) -> String {
+        switch role {
+        case .steamDefault: String(localized: "Ready. Steam's default for Windows games.")
+        case .pendingDefault: String(localized: "Ready. Steam's default for Windows games once Steam starts again.")
+        case .newest: String(localized: "Ready. Newest engine; pick it per game under Properties → Compatibility.")
+        case .plain: String(localized: "Ready")
+        }
+    }
+
+    private static func notSetUpValue(_ role: EngineGuidance.Role) -> String {
+        role == .newest
+            ? String(localized: "Not set up. Newest supported engine; recommended.")
+            : String(localized: "Not set up")
     }
 
     private func crossOverValue(_ row: CrossOverRow) -> String {

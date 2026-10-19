@@ -12,6 +12,12 @@ enum SteamCompatConfig {
         return block.name
     }
 
+    // nil when the file is missing or names no default
+    static func defaultTool(at file: URL) -> String? {
+        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return nil }
+        return defaultTool(in: text)
+    }
+
     /// The text without the default-tool block when that tool is ours; nil when there is nothing to do.
     static func removingDefaultTool(from text: String, isOurs: (String) -> Bool = DefaultTool.isOurs) -> String? {
         var lines = text.components(separatedBy: "\n")
