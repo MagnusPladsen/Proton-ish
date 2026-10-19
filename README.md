@@ -99,8 +99,14 @@ or later through the engine row's **Enable D3DMetal…**.
   can run: D3DMetal appears once Apple's licence is accepted. WineD3D is a last resort and renders many games wrongly.
 - **DirectX 12-only games** (no DirectX 11 fallback) go to D3DMetal on Automatic, as in Highball. Without the licence
   the game stays on DXMT and `protonish-run.log` points to **Enable D3DMetal…**.
-- Per-game fixes from highball-db that only set variables, DLL overrides or DXVK options apply automatically.
-  Fixes that change the Windows prefix (registry, winetricks) are not applied yet.
+- Per-game fixes from highball-db apply automatically: variables, DLL overrides and DXVK options at every launch;
+  registry values, config files and engine DLLs once per prefix per database version, before the first launch
+  (Portal 2's `autoexec.cfg`, Warframe's launcher override). A fix is never undone when a later database drops it;
+  rebuild the prefix for a clean slate. Installers and winetricks steps (`.NET` for Assetto Corsa) are not applied yet.
+- **Fixes verified on another engine.** highball-db says which Wine engine a fix was checked on. By default a fix
+  checked on another engine line still applies, and `protonish-run.log` says so. The switch **Apply game fixes verified
+  on other engines** in the Status screen turns that off; one game can override the switch with the Steam launch option
+  `PROTONISH_RECIPE_OTHER_ENGINES=0` or `=1`.
 - `protonish-run.log` ends with a "renderer report": the Direct3D logs the game wrote, e.g. DXVK's version.
 
 **Saves.** Highball's Wine names the Windows user after your Mac user, so Proton-ish links that name to
@@ -183,6 +189,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-16: The Status screen's Highball section is headed "Highball (free)".
 - 2026-10-19: Each Highball engine row says where it stands with Steam: the engine Steam's config names is "Steam's default for Windows games", a requested one is the default "once Steam starts again", and the newest engine says so with a hint to pick it per game under Properties → Compatibility (recommended when not set up yet). The "Use Highball for all Windows games" row names the engine it uses. Repair Steam and Remove Everything moved into the Steam section.
 - 2026-10-19: Steam keeps its Accessibility permission when Install follows Repair Steam (the restored Steam carries Valve's signature, so the grant was reset). Proton-ish records the signature it last applied in `signed-requirement`.
+- 2026-10-19: highball-db fixes that change the Windows prefix (registry values, config files, engine DLLs) apply once per prefix per database version, written by `highball-env` and imported by the run script before the launch. Fixes verified on another engine line apply by default; the Status screen switch and the launch option `PROTONISH_RECIPE_OTHER_ENGINES` decide.
 
 ## What Install changes
 

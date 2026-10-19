@@ -6,9 +6,9 @@
 - [x] CrossOver row lists Highball's "r19" in "Supported:" (SupportedRunners.versionList includes Highball builds) (completed: 2026-10-16)
 - [ ] Highball parity for Steam games: every game that works in Highball should work here (added: 2026-10-14)
   - [x] M2b: Highball's own launch environment via HighballKit (highball-env): Graphics choice, Automatic from highball-db, environment-only recipe steps, renderer report (completed: 2026-10-15)
-  - M2c: apply highball-db recipe steps that change the prefix (registry, winetricks, winver, copy, file, installer)
+  - [x] M2c: apply highball-db recipe steps that change the prefix: registry, file, copy (completed: 2026-10-19); winetricks, winver, installer stay unapplied
   - [x] M2d also: hide renderers in the Graphics dropdown that the engine can't run (completed: 2026-10-15)
-  - [x] Import per-game fixes from highball-db (CC0): bundled snapshot, renderer and environment-only steps (M2b); prefix steps in M2c
+  - [x] Import per-game fixes from highball-db (CC0): bundled snapshot, renderer and environment-only steps (M2b); prefix steps in M2c (completed: 2026-10-19)
   - Track a compatibility list (game, engine revision, result) in the README or a docs page
 - [x] M2d: Proton-ish installs the Highball engine itself with HighballKit's EngineStore.install (Highball's release URLs, sha256-checked; D3DMetal only after the user accepts Apple's licence in Proton-ish), so users no longer need the Highball app. After M2b's run-script task, before the Reddit post (added: 2026-10-15)
   - [x] Also: a "Use Highball for all Windows games" switch that sets Steam's default compatibility tool (CompatToolMapping app 0 in config.vdf, Steam stopped), so no per-game tool choice (user decision 2026-10-15)

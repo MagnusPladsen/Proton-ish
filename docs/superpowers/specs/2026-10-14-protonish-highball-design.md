@@ -189,6 +189,46 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
   are Highball's. Proton-ish keeps `WINELOADER`, `WINESERVER`, `WINEPREFIX`, `WINEDLLPATH`,
   `PATH`, `WINEDEBUG` and `WINEMSYNC`. Any helper failure keeps `runtime.env` + DXMT. The
   prefix-changing recipe steps are M2c.
+- Prefix recipes, M2c (2026-10-19, user decisions in brackets): the `registry`, `file` and
+  `copy` steps of the game's highball-db recipe are applied to the Steam prefix before the
+  launch. `installer`, `winetricks` and `winver` keep the "not applied yet" log note; the
+  bundled database has none.
+  - `highball-env --install-path <game folder> --applied <marker>` plans the prefix steps next
+    to the environment. Registry steps become one REGEDIT4 file,
+    `$WINEPREFIX/drive_c/protonish-recipe.reg`, imported as `C:\protonish-recipe.reg` (amended
+    2026-10-19 during implementation: inside `drive_c`, so the import does not depend on the
+    `Z:` drive); the run script imports it with `wine reg import` under the game's own
+    environment, right after `highball_environment`, the way `import_prefix_settings` already
+    does, so Highball's msync mismatch (highball#32) cannot occur. `file` and `copy` steps are written by `highball-env` itself, no Wine run. A
+    target under `Program Files (x86)/Steam/steamapps/common/<installdir>/` is rewritten to the
+    real game folder from `--install-path`, because the game lives on the Mac disk and reaches
+    the prefix through a drive letter, not under drive C. Other targets stay under `drive_c`.
+  - Once per prefix per database version [user decision]: the marker
+    `$WINEPREFIX/protonish-recipe` (inside the prefix, so Rebuild Prefix and a restored backup
+    take it along; amended 2026-10-19 after review) records recipe id, highball-db commit and
+    engine build; the run script writes it only after the import succeeds and every step was
+    applied. After a failed `file` or `copy` step the helper marks the line `partial`: the
+    registry import still runs, nothing is recorded, the step is tried again at the next launch.
+    Same recipe and commit: skip with one log line. A missing `copy` target (game reinstalled) counts as not applied, as in
+    HighballKit's `artifactsPresent`. No rollback [user decision]: a changed recipe overwrites,
+    keys it no longer names stay, as in Highball.
+  - `optIn` is ignored [user decision]: every recipe applies, the environment steps of M2b
+    included, so Half-Life 2 and RaceRoom behave like every other row.
+  - A recipe pinned to another engine line (`engine: x64-sikarugir10.0_6-r5`) applies by default
+    with a log line naming both engines [user decision]. The Status screen's Highball section
+    gets the switch "Apply game fixes verified on other engines", default on, stored in
+    `<support>/recipe-other-engines` and passed to `highball-env --other-engines apply|skip`;
+    off skips the whole recipe with a log note. One game can override the switch with the
+    Steam launch option `PROTONISH_RECIPE_OTHER_ENGINES=0` or `=1` [user decision, option C].
+    The switch's footer text in the app and the README's Highball section name the launch
+    option, so the user learns about it where the switch is. Another revision of the same line
+    always applies.
+  - Code: `HighballEnvCore/PrefixRecipe.swift` holds the pure planning (REGEDIT4 text for
+    `REG_SZ` and `REG_DWORD`, key escaping, target rewrite, skip decision, engine-line policy)
+    and one applier; `highball-env` prints `# recipe: …` lines the run script logs; the run
+    script gains `apply_prefix_recipe`. Manual check: Portal 2 (`autoexec.cfg` in `portal2/cfg`,
+    `VideoMemorySize` in `user.reg`, one HDR map load without device loss) and Warframe (the
+    launcher draws and updates); both recipes were verified by Highball on the Wine 10 line.
 - Graphics, M2d (2026-10-15): the app writes `<support>/renderers` (per Highball tool, the
   renderers `highball-env renderers` reports available) and the dylib passes the tools lacking
   D3DMetal or DXVK to the panel, which hides those entries. `highball-env --exe` applies
@@ -215,6 +255,8 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
 | Loader signing fails | Abort runner install, show the `codesign` output |
 | D3DMetal requested without GPTK licence | Option hidden; launch falls back to DXMT with a log line |
 | Highball deletes or updates an engine after cloning | No effect; Proton-ish uses its own clone |
+| Recipe `.reg` import fails | Launch continues, marker not written, log line; retried next launch |
+| Recipe step type without support (`installer`, `winetricks`, `winver`, `dotnet48` requirement) | Log line "not applied yet"; rest of the recipe applies |
 
 ## 6. Migration from NotProton
 

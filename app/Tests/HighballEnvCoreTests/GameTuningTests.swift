@@ -88,15 +88,22 @@ struct GameTuningTests {
         #expect(result.environment.isEmpty)
     }
 
-    @Test("Steps that change the prefix are reported, not run")
-    func prefixStepsSkipped() throws {
+    @Test("Steps that need an installer or winetricks are reported, not run")
+    func heavyStepsSkipped() throws {
         let recipe: [String: Any] = ["id": "game", "kind": "game", "title": "Game", "steps": [
-            ["type": "registry", "key": "HKCU\\Software\\Wine", "name": "x", "valueType": "REG_SZ", "data": "y"],
             ["type": "winetricks", "verbs": ["vcrun2019"]],
         ]]
         let (_, result) = try tune(data(games: [row("game", appID: 42)], recipes: [recipe]), appID: 42)
-        #expect(result.notes.contains("highball-db step not applied yet: registry"))
         #expect(result.notes.contains("highball-db step not applied yet: winetricks"))
+    }
+
+    @Test("Registry, file and copy steps are the prefix recipe's, not noted here")
+    func prefixStepsLeftToPrefixRecipe() throws {
+        let recipe: [String: Any] = ["id": "game", "kind": "game", "title": "Game", "steps": [
+            ["type": "registry", "key": "HKCU\\Software\\Wine", "name": "x", "valueType": "REG_SZ", "data": "y"],
+        ]]
+        let (_, result) = try tune(data(games: [row("game", appID: 42)], recipes: [recipe]), appID: 42)
+        #expect(!result.notes.contains { $0.contains("not applied yet") })
     }
 
     @Test("A game the database does not know gets nothing")

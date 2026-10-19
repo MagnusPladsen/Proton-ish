@@ -156,19 +156,104 @@ is "nothing the helper prints is executed" "no" "$([ -e "$hb/pwned" ] || [ -e "$
 is "a value is exported as text" '$(touch '"$hb"'/pwned2)' "$HB_VALUE"
 is "the keys are remembered for the game" " GST_PLUGIN_PATH WINEDLLPATH_PREPEND CX_D3DMETALPATH HB_VALUE" "$np_hb_keys"
 is "notes are logged" "1" "$(grep -c 'highball-env: note: renderer d3dmetal' "$log")"
-is "the helper gets the prefix, engine, app id and database" \
-  "args: --prefix $WINEPREFIX --engine x64-crossover26.3-r19 --appid 1086940 --db $np_support/highball-db.json" \
+is "the helper gets the prefix, engine, app id, database and recipe paths" \
+  "args: --prefix $WINEPREFIX --engine x64-crossover26.3-r19 --appid 1086940 --db $np_support/highball-db.json --applied $WINEPREFIX/protonish-recipe --reg $WINEPREFIX/drive_c/protonish-recipe.reg --other-engines apply" \
   "$(grep '^args:' "$log")"
 reset_hb
 hb_game="$hb/Game.exe"; : > "$hb_game"
 highball_environment "$hb_game"
-is "the game's executable is passed when it exists" "1" "$(grep -c -- "--exe $hb_game\$" "$log")"
+is "the game's executable is passed when it exists" "1" "$(grep -c -- "--exe $hb_game --applied " "$log")"
 reset_hb
 highball_environment "$hb/missing.exe"
 is "a missing executable is not passed" "0" "$(grep -c -- '--exe' "$log")"
 # shellcheck disable=SC2016 # Match the literal script line.
 hb_call_site=$(grep -c 'highball_environment "\$1"' "$SRC")
 is "the run script hands the game's executable to the helper" "1" "$hb_call_site"
+echo "== Prefix recipe (apply_prefix_recipe) =="
+hb_apply_fn=$(sed -n '/^apply_prefix_recipe() {$/,/^} # apply_prefix_recipe$/p' "$SRC")
+[ -n "$hb_apply_fn" ] || { echo "FAIL: apply_prefix_recipe not found"; exit 1; }
+eval "$hb_apply_fn"
+without_lock_fds() { "$@"; }
+mkdir -p "$WINEPREFIX/drive_c"
+# The marker lives inside the prefix, so Rebuild Prefix (which replaces pfx) takes it along
+hb_marker="$WINEPREFIX/protonish-recipe"
+hb_reg="$WINEPREFIX/drive_c/protonish-recipe.reg"
+fake_wine() { printf '#!/bin/sh\necho "wine: $*" >> "%s"\nexit %s\n' "$log" "$1" > "$hb/wine"; chmod +x "$hb/wine"; }
+WINELOADER="$hb/wine"
+reset_recipe() { reset_hb; np_hb_recipe=""; np_hb_partial=0; rm -f "$hb_marker" "$hb_reg"; }
+
+reset_recipe
+STEAM_COMPAT_INSTALL_PATH="$hb/Portal 2"; mkdir -p "$STEAM_COMPAT_INSTALL_PATH"
+# shellcheck disable=SC2016 # Single quotes keep the helper's text literal.
+helper 'echo "args: $*" >&2; echo "# recipe: portal-2 483aac46 x64-crossover26.3-r19"; echo "# note: recipe portal-2: 1 registry value, 1 file, 0 copies"; echo "GST_PLUGIN_PATH=/HB/gst"'
+highball_environment
+is "the game folder is passed as the install path" "1" "$(grep -c -- "--install-path $hb/Portal 2 " "$log")"
+is "the recipe line is kept for the import" "portal-2 483aac46 x64-crossover26.3-r19" "$np_hb_recipe"
+is "the recipe line is not exported" "" "${recipe:-}"
+unset -v STEAM_COMPAT_INSTALL_PATH
+
+printf 'Windows Registry Editor Version 5.00\r\n' > "$hb_reg"
+fake_wine 0
+apply_prefix_recipe
+is "the registry file is imported through C:" "1" "$(grep -c 'wine: reg import C:\\protonish-recipe.reg' "$log")"
+is "the marker holds recipe, commit and engine" "portal-2 483aac46 x64-crossover26.3-r19" "$(tr '\n' ' ' < "$hb_marker" | sed 's/ $//')"
+is "the marker is inside the prefix" "$WINEPREFIX/protonish-recipe" "$hb_marker"
+is "the registry file is removed after the import" "no" "$([ -e "$hb_reg" ] && echo yes || echo no)"
+
+reset_recipe
+# shellcheck disable=SC2016 # Single quotes keep the helper's text literal.
+helper 'echo "# recipe: portal-2 483aac46 x64-crossover26.3-r19 partial"'
+highball_environment
+is "a partial recipe keeps its three words" "portal-2 483aac46 x64-crossover26.3-r19" "$np_hb_recipe"
+is "a partial recipe is flagged" "1" "$np_hb_partial"
+printf 'Windows Registry Editor Version 5.00\r\n' > "$hb_reg"
+fake_wine 0
+apply_prefix_recipe
+is "a partial recipe still imports its registry file" "1" "$(grep -c 'wine: reg import' "$log")"
+is "a partial recipe writes no marker" "no" "$([ -e "$hb_marker" ] && echo yes || echo no)"
+is "a partial recipe is logged as tried again" "1" "$(grep -c 'recipe: portal-2 483aac46 x64-crossover26.3-r19 not recorded, a step failed' "$log")"
+
+reset_recipe
+# shellcheck disable=SC2016 # Single quotes keep the helper's text literal.
+helper 'echo "# recipe: portal-2  x64-crossover26.3-r19"'
+highball_environment
+is "a recipe line with an empty word is refused" "" "$np_hb_recipe"
+
+reset_recipe
+# shellcheck disable=SC2016 # Single quotes keep the helper's text literal.
+helper 'echo "# recipe: portal-2 483aac46 x64-crossover26.3-r19 extra"'
+highball_environment
+is "a recipe line with an unknown fourth word is refused" "" "$np_hb_recipe"
+
+reset_recipe
+np_hb_recipe="portal-2 483aac46 x64-crossover26.3-r19"
+printf 'Windows Registry Editor Version 5.00\r\n' > "$hb_reg"
+fake_wine 1
+apply_prefix_recipe
+is "a failed import writes no marker" "no" "$([ -e "$hb_marker" ] && echo yes || echo no)"
+is "a failed import is logged" "1" "$(grep -c 'recipe: registry import exited status=1' "$log")"
+
+reset_recipe
+np_hb_recipe="warframe 483aac46 x64-crossover26.3-r19"
+fake_wine 0
+apply_prefix_recipe
+is "a recipe without registry values still gets its marker" "warframe" "$(head -1 "$hb_marker")"
+is "nothing is imported without a registry file" "0" "$(grep -c 'wine: reg import' "$log")"
+
+reset_recipe
+printf 'stale\r\n' > "$hb_reg"
+fake_wine 0
+apply_prefix_recipe
+is "a stale registry file is removed when no recipe applies" "no" "$([ -e "$hb_reg" ] && echo yes || echo no)"
+is "a stale registry file is never imported" "0" "$(grep -c 'wine: reg import' "$log")"
+
+reset_recipe
+printf 'skip\n' > "$np_support/recipe-other-engines"
+# shellcheck disable=SC2016 # Single quotes keep the helper's text literal.
+helper 'echo "args: $*" >&2'
+highball_environment
+is "the switch file reaches the helper" "1" "$(grep -c -- '--other-engines skip' "$log")"
+rm -f "$np_support/recipe-other-engines"
 unset -v GST_PLUGIN_PATH CX_D3DMETALPATH HB_VALUE
 
 reset_hb

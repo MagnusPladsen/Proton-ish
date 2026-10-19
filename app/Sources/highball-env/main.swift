@@ -1,6 +1,7 @@
 // Prints the launch environment Highball would use for a Steam game, one KEY=VALUE per line.
 // Usage: highball-env install|accept … (see below), or
 //        highball-env --prefix <wine prefix> --engine <engine id> [--appid <Steam app id>] [--db <highball-db.json>] [--exe <game executable>]
+//                     [--install-path <game folder>] [--applied <marker>] [--reg <file>] [--other-engines apply|skip]
 
 import Foundation
 import HighballEnvCore
@@ -82,8 +83,13 @@ if let db = options["db"] {
         print("# note: highball-db unreadable, no per-game fixes")
     }
 }
+let launchOption = ProcessInfo.processInfo.environment["PROTONISH_RECIPE_OTHER_ENGINES"]
 let request = LaunchEnvironment.Request(
     prefix: URL(fileURLWithPath: prefix), engineID: engine, appID: options["appid"].flatMap(Int.init),
     environment: ProcessInfo.processInfo.environment, gameData: gameData,
-    exe: options["exe"].map { URL(fileURLWithPath: $0) })
+    exe: options["exe"].map { URL(fileURLWithPath: $0) },
+    installPath: options["install-path"].map { URL(fileURLWithPath: $0) },
+    recipeMarker: options["applied"].map { URL(fileURLWithPath: $0) },
+    registryFile: options["reg"].map { URL(fileURLWithPath: $0) },
+    otherEngines: PrefixRecipe.otherEnginesAllowed(switchValue: options["other-engines"], launchOption: launchOption))
 for line in LaunchEnvironment.lines(for: request) { print(line) }
