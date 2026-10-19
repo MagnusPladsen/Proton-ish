@@ -1,5 +1,5 @@
 // Applies a game's highball-db row and the launch-environment steps of its recipe, the parts of
-// Highball's per-game fixes that need no Wine run. Steps that change the prefix come later (M2c).
+// Highball's per-game fixes that need no Wine run. Steps that change the prefix are PrefixRecipe's.
 
 import HighballKit
 
@@ -47,7 +47,9 @@ public enum GameTuning {
                 settings.dxvkAppConfig[exe, default: [:]].merge(options) { $1 }
             case .renderer, .note, .pin:
                 break
-            case .installer, .registry, .winetricks, .winver, .file, .copy:
+            case .registry, .file, .copy:
+                break  // PrefixRecipe applies these to the prefix
+            case .installer, .winetricks, .winver:
                 result.notes.append("highball-db step not applied yet: \(name(of: step))")
             }
         }
