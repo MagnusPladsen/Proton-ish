@@ -214,4 +214,136 @@ struct PrefixRecipeTests {
     func appliedNoMarker() {
         #expect(!PrefixRecipe.isApplied(marker: nil, recipeID: "portal-2", commit: "483aac46", engine: "x64-crossover26.3-r25", copyTargetsPresent: true))
     }
+
+    struct Fixture {
+        let work: URL
+        var driveC: URL { work.appending(path: "pfx/drive_c") }
+        var engine: URL { work.appending(path: "engine") }
+        var install: URL { work.appending(path: "library/steamapps/common/Portal 2") }
+        var marker: URL { work.appending(path: "compat/protonish-recipe") }
+        var reg: URL { driveC.appending(path: "protonish-recipe.reg") }
+        func context(otherEngines: Bool = true, installPath: Bool = true) -> PrefixRecipe.Context {
+            .init(driveC: driveC, engineRoot: engine, engineID: "x64-crossover26.3-r25", dbCommit: "483aac46",
+                  installPath: installPath ? install : nil, marker: marker, registryFile: reg, otherEngines: otherEngines)
+        }
+    }
+
+    func fixture() throws -> Fixture {
+        let work = FileManager.default.temporaryDirectory.appending(path: "prefix-recipe-\(UUID().uuidString)")
+        let f = Fixture(work: work)
+        for dir in [f.driveC, f.install, f.marker.deletingLastPathComponent(), f.engine.appending(path: "engine/lib/wine/i386-windows")] {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        var dll = Data(count: 0x60)
+        dll.replaceSubrange(0x40..<0x51, with: Data("Wine builtin DLL\0".utf8))
+        try dll.write(to: f.engine.appending(path: "engine/lib/wine/i386-windows/d3d9.dll"))
+        return f
+    }
+
+    let portal2Steps: [[String: Any]] = [
+        ["type": "registry", "key": "HKCU\\Software\\Wine\\AppDefaults\\portal2.exe\\Direct3D", "name": "VideoMemorySize", "valueType": "REG_SZ", "data": "2047"],
+        ["type": "file", "path": "Program Files (x86)/Steam/steamapps/common/Portal 2/portal2/cfg/autoexec.cfg", "contents": "mat_tonemapping_occlusion_use_stencil 1\n"],
+        ["type": "note", "text": "ignored"],
+    ]
+
+    @Test("A file step lands in the game's folder")
+    func runWritesFile() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        _ = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(try String(contentsOf: f.install.appending(path: "portal2/cfg/autoexec.cfg"), encoding: .utf8) == "mat_tonemapping_occlusion_use_stencil 1\n")
+    }
+
+    @Test("Registry steps become the .reg file in drive C")
+    func runWritesRegistry() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        _ = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(try String(contentsOf: f.reg, encoding: .utf8).contains("\"VideoMemorySize\"=\"2047\""))
+    }
+
+    @Test("The outcome carries the record for the run script")
+    func runRecord() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(outcome.record == "portal-2 483aac46 x64-crossover26.3-r25")
+    }
+
+    @Test("The outcome says what was done")
+    func runNotes() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(outcome.notes == ["recipe portal-2: 1 registry value, 1 file, 0 copies"])
+    }
+
+    @Test("A copy step takes the file from the engine and blanks Wine's builtin marker")
+    func runCopyNative() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let steps: [[String: Any]] = [["type": "copy", "from": "engine/lib/wine/i386-windows/d3d9.dll",
+                                       "to": "Program Files (x86)/Steam/steamapps/common/Portal 2/bin/d3d9.dll", "asNative": true]]
+        _ = PrefixRecipe.run(recipe: try recipe(steps), context: f.context())
+        let copied = try Data(contentsOf: f.install.appending(path: "bin/d3d9.dll"))
+        #expect(copied[0x40..<0x51] == Data(count: 0x11))
+    }
+
+    @Test("A copy source outside the engine is refused and nothing is recorded")
+    func runCopyOutside() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let steps: [[String: Any]] = [["type": "copy", "from": "../secret", "to": "x.dll", "asNative": false]]
+        let outcome = PrefixRecipe.run(recipe: try recipe(steps), context: f.context())
+        #expect(outcome.record == nil)
+    }
+
+    @Test("A refused step is noted")
+    func runCopyOutsideNote() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let steps: [[String: Any]] = [["type": "copy", "from": "../secret", "to": "x.dll", "asNative": false]]
+        let outcome = PrefixRecipe.run(recipe: try recipe(steps), context: f.context())
+        #expect(outcome.notes.contains("recipe game: copy ../secret not applied: not a file inside the engine"))
+    }
+
+    @Test("A recipe already applied writes nothing")
+    func runAlreadyApplied() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        try "portal-2\n483aac46\nx64-crossover26.3-r25\n".write(to: f.marker, atomically: true, encoding: .utf8)
+        _ = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(!FileManager.default.fileExists(atPath: f.reg.path))
+    }
+
+    @Test("A recipe already applied says so and asks for no record")
+    func runAlreadyAppliedOutcome() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        try "portal-2\n483aac46\nx64-crossover26.3-r25\n".write(to: f.marker, atomically: true, encoding: .utf8)
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(outcome == .init(notes: ["recipe portal-2 already applied (highball-db 483aac46)"], record: nil))
+    }
+
+    @Test("A stale .reg from an earlier launch is removed when nothing is to import")
+    func runRemovesStaleReg() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        try "stale".write(to: f.reg, atomically: true, encoding: .utf8)
+        try "portal-2\n483aac46\nx64-crossover26.3-r25\n".write(to: f.marker, atomically: true, encoding: .utf8)
+        _ = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(!FileManager.default.fileExists(atPath: f.reg.path))
+    }
+
+    @Test("A recipe from another engine line is skipped when the switch is off")
+    func runSkippedByEngine() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2", engine: "x64-sikarugir10.0_6-r5"),
+                                       context: f.context(otherEngines: false))
+        #expect(outcome == .init(notes: ["recipe portal-2 skipped: verified on x64-sikarugir10.0_6-r5, this engine is x64-crossover26.3-r25; turn on Apply game fixes verified on other engines in Proton-ish, or set the launch option PROTONISH_RECIPE_OTHER_ENGINES=1"], record: nil))
+    }
+
+    @Test("A recipe from another engine line applies with a note when the switch is on")
+    func runOtherEngineNoted() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2", engine: "x64-sikarugir10.0_6-r5"), context: f.context())
+        #expect(outcome.notes.first == "recipe portal-2 was verified on x64-sikarugir10.0_6-r5, this engine is x64-crossover26.3-r25; applying anyway")
+    }
+
+    @Test("A recipe with only environment steps has nothing to apply and no record")
+    func runNoPrefixSteps() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe([["type": "environment", "name": "A", "value": "1"]]), context: f.context())
+        #expect(outcome == .init(notes: [], record: nil))
+    }
 }
