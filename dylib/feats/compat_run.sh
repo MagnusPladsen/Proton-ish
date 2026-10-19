@@ -1150,6 +1150,7 @@ link_fonts() {
 np_hb_env_file=""
 np_hb_launch_mark=""
 np_hb_recipe=""
+np_hb_partial=0
 highball_environment() {
   hb_exe="${1:-}"
   hb_helper="$np_support/highball-env"
@@ -1168,7 +1169,9 @@ highball_environment() {
   [ -z "$hb_exe" ] || [ ! -f "$hb_exe" ] || set -- "$@" --exe "$hb_exe"
   [ -z "${STEAM_COMPAT_INSTALL_PATH:-}" ] || [ ! -d "$STEAM_COMPAT_INSTALL_PATH" ] \
     || set -- "$@" --install-path "$STEAM_COMPAT_INSTALL_PATH"
-  set -- "$@" --applied "$STEAM_COMPAT_DATA_PATH/protonish-recipe" \
+  # Both live inside the prefix, so Rebuild Prefix takes them along and the fresh prefix gets
+  # its recipe again
+  set -- "$@" --applied "$WINEPREFIX/protonish-recipe" \
     --reg "$WINEPREFIX/drive_c/protonish-recipe.reg" --other-engines "$hb_other"
   "$hb_helper" "$@" > "$hb_raw" 2>> "$log" &
   hb_pid=$!
@@ -1194,9 +1197,16 @@ highball_environment() {
     case "$hb_line" in
       '# recipe: '*)
         np_hb_recipe=${hb_line#'# recipe: '}
+        # A fourth word "partial" means a step failed: import, but record nothing
+        np_hb_partial=0
+        case "$np_hb_recipe" in
+          *' partial') np_hb_partial=1; np_hb_recipe=${np_hb_recipe% partial} ;;
+        esac
         # Three safe words, or nothing: a recipe id, a commit hash and an engine id
         case "$np_hb_recipe" in
-          *[!A-Za-z0-9._\ -]*|*' '*' '*' '*) np_hb_recipe="" ;;
+          *[!A-Za-z0-9._\ -]*|*' '*' '*' '*|*'  '*|' '*|*' ') np_hb_recipe="" ;;
+          *' '*' '*) ;;
+          *) np_hb_recipe="" ;;
         esac
         continue ;;
       '#'*) echo "highball-env: ${hb_line#'# '}" >> "$log" 2>&1 || true; continue ;;
@@ -1233,10 +1243,11 @@ highball_environment() {
 
 # Highball: the prefix steps of the game's highball-db recipe. highball-env wrote the files and
 # engine copies itself and the registry values as C:\protonish-recipe.reg; the import runs here,
-# under the game's own environment. The marker makes the next launch skip the recipe.
+# under the game's own environment. The marker makes the next launch skip the recipe; after a
+# failed step the import still runs but nothing is recorded, so that step is tried again.
 apply_prefix_recipe() {
   hb_reg="$WINEPREFIX/drive_c/protonish-recipe.reg"
-  hb_marker="$STEAM_COMPAT_DATA_PATH/protonish-recipe"
+  hb_marker="$WINEPREFIX/protonish-recipe"
   if [ -z "$np_hb_recipe" ]; then
     rm -f "$hb_reg"
     return 0
@@ -1248,6 +1259,10 @@ apply_prefix_recipe() {
   fi
   if [ "$hb_status" -ne 0 ]; then
     echo "recipe: registry import exited status=$hb_status, tried again at the next launch" >> "$log" 2>&1 || true
+    return 0
+  fi
+  if [ "$np_hb_partial" -eq 1 ]; then
+    echo "recipe: $np_hb_recipe not recorded, a step failed; tried again at the next launch" >> "$log" 2>&1 || true
     return 0
   fi
   # shellcheck disable=SC2086 # the three words become three lines

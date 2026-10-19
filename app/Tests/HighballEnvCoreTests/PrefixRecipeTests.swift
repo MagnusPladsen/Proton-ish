@@ -70,6 +70,24 @@ struct PrefixRecipeTests {
         #expect(PrefixRecipe.registryText(steps).notes == ["registry value N not applied: data has a line break"])
     }
 
+    @Test("A line break in the key is refused, it would inject a key header")
+    func regKeyLineBreak() throws {
+        let steps = try recipe([registry("HKCU\\Software\\Test\n[-HKEY_LOCAL_MACHINE\\Software]", "N", "REG_SZ", "a")]).steps
+        #expect(PrefixRecipe.registryText(steps).notes == ["registry value N not applied: key has a line break"])
+    }
+
+    @Test("A line break in the value name is refused")
+    func regNameLineBreak() throws {
+        let steps = try recipe([registry("HKCU\\Software\\Test", "N\n\"M\"=\"x\"", "REG_SZ", "a")]).steps
+        #expect(PrefixRecipe.registryText(steps).notes.first?.hasSuffix("not applied: name has a line break") == true)
+    }
+
+    @Test("Backslashes and quotes in the value name are escaped")
+    func regNameEscaping() throws {
+        let steps = try recipe([registry("HKCU\\Software\\Test", "a\\b\"c", "REG_SZ", "v")]).steps
+        #expect(PrefixRecipe.registryText(steps).text?.contains("\"a\\\\b\\\"c\"=\"v\"\r\n") == true)
+    }
+
     @Test("A key outside HKCU and HKLM is refused")
     func regUnknownRoot() throws {
         let steps = try recipe([registry("HKCR\\steam", "x", "REG_SZ", "1")]).steps
@@ -220,10 +238,10 @@ struct PrefixRecipeTests {
         var driveC: URL { work.appending(path: "pfx/drive_c") }
         var engine: URL { work.appending(path: "engine") }
         var install: URL { work.appending(path: "library/steamapps/common/Portal 2") }
-        var marker: URL { work.appending(path: "compat/protonish-recipe") }
+        var marker: URL { work.appending(path: "pfx/protonish-recipe") }
         var reg: URL { driveC.appending(path: "protonish-recipe.reg") }
-        func context(otherEngines: Bool = true, installPath: Bool = true) -> PrefixRecipe.Context {
-            .init(driveC: driveC, engineRoot: engine, engineID: "x64-crossover26.3-r25", dbCommit: "483aac46",
+        func context(otherEngines: Bool = true, installPath: Bool = true, commit: String = "483aac46") -> PrefixRecipe.Context {
+            .init(driveC: driveC, engineRoot: engine, engineID: "x64-crossover26.3-r25", dbCommit: commit,
                   installPath: installPath ? install : nil, marker: marker, registryFile: reg, otherEngines: otherEngines)
         }
     }
@@ -284,12 +302,34 @@ struct PrefixRecipeTests {
         #expect(copied[0x40..<0x51] == Data(count: 0x11))
     }
 
-    @Test("A copy source outside the engine is refused and nothing is recorded")
+    @Test("A copy source outside the engine is refused and the recipe is not complete")
     func runCopyOutside() throws {
         let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
         let steps: [[String: Any]] = [["type": "copy", "from": "../secret", "to": "x.dll", "asNative": false]]
         let outcome = PrefixRecipe.run(recipe: try recipe(steps), context: f.context())
-        #expect(outcome.record == nil)
+        #expect(!outcome.complete)
+    }
+
+    @Test("A failed step still leaves the registry file for the import, with the record")
+    func runFailedStepKeepsRegistry() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let steps = portal2Steps + [["type": "copy", "from": "../secret", "to": "x.dll", "asNative": false]]
+        let outcome = PrefixRecipe.run(recipe: try recipe(steps, id: "portal-2"), context: f.context())
+        #expect(outcome.record == "portal-2 483aac46 x64-crossover26.3-r25" && FileManager.default.fileExists(atPath: f.reg.path))
+    }
+
+    @Test("A complete recipe says so")
+    func runComplete() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
+        #expect(outcome.complete)
+    }
+
+    @Test("A database without a commit applies nothing, the marker could never match")
+    func runNoCommit() throws {
+        let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
+        let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context(commit: ""))
+        #expect(outcome == .init(notes: ["recipe portal-2 not applied: highball-db names no commit"], record: nil, complete: false))
     }
 
     @Test("A refused step is noted")
@@ -313,7 +353,7 @@ struct PrefixRecipeTests {
         let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
         try "portal-2\n483aac46\nx64-crossover26.3-r25\n".write(to: f.marker, atomically: true, encoding: .utf8)
         let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2"), context: f.context())
-        #expect(outcome == .init(notes: ["recipe portal-2 already applied (highball-db 483aac46)"], record: nil))
+        #expect(outcome == .init(notes: ["recipe portal-2 already applied (highball-db 483aac46)"], record: nil, complete: true))
     }
 
     @Test("A stale .reg from an earlier launch is removed when nothing is to import")
@@ -330,7 +370,7 @@ struct PrefixRecipeTests {
         let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
         let outcome = PrefixRecipe.run(recipe: try recipe(portal2Steps, id: "portal-2", engine: "x64-sikarugir10.0_6-r5"),
                                        context: f.context(otherEngines: false))
-        #expect(outcome == .init(notes: ["recipe portal-2 skipped: verified on x64-sikarugir10.0_6-r5, this engine is x64-crossover26.3-r25; turn on Apply game fixes verified on other engines in Proton-ish, or set the launch option PROTONISH_RECIPE_OTHER_ENGINES=1"], record: nil))
+        #expect(outcome == .init(notes: ["recipe portal-2 skipped: verified on x64-sikarugir10.0_6-r5, this engine is x64-crossover26.3-r25; turn on Apply game fixes verified on other engines in Proton-ish, or set the launch option PROTONISH_RECIPE_OTHER_ENGINES=1"], record: nil, complete: true))
     }
 
     @Test("A recipe from another engine line applies with a note when the switch is on")
@@ -344,6 +384,6 @@ struct PrefixRecipeTests {
     func runNoPrefixSteps() throws {
         let f = try fixture(); defer { try? FileManager.default.removeItem(at: f.work) }
         let outcome = PrefixRecipe.run(recipe: try recipe([["type": "environment", "name": "A", "value": "1"]]), context: f.context())
-        #expect(outcome == .init(notes: [], record: nil))
+        #expect(outcome == .init(notes: [], record: nil, complete: true))
     }
 }

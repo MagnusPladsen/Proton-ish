@@ -134,4 +134,20 @@ struct LaunchEnvironmentTests {
         #expect(FileManager.default.fileExists(atPath: gameFolder.appending(path: "portal2/cfg/autoexec.cfg").path))
         #expect(FileManager.default.fileExists(atPath: reg.path))
     }
+
+    @Test("A recipe with a failed step is announced as partial, so the import runs but nothing is recorded")
+    func prefixRecipePartial() throws {
+        let install = try install(renderers: ["dxmt"])
+        let work = install.home.deletingLastPathComponent()
+        defer { try? FileManager.default.removeItem(at: work) }
+        let data = try gameData(recipeSteps: [
+            ["type": "registry", "key": "HKCU\\Software\\Wine\\AppDefaults\\portal2.exe\\Direct3D", "name": "VideoMemorySize", "valueType": "REG_SZ", "data": "2047"],
+            ["type": "copy", "from": "../outside", "to": "x.dll", "asNative": false],
+        ])
+        let lines = LaunchEnvironment.lines(for: .init(
+            prefix: install.prefix, engineID: Self.engineID, appID: 620, environment: [:], gameData: data,
+            paths: HighballPaths(home: install.home), recipeMarker: install.prefix.appending(path: "protonish-recipe"),
+            registryFile: install.prefix.appending(path: "drive_c/protonish-recipe.reg"), otherEngines: true))
+        #expect(lines.first == "# recipe: portal-2 483aac46 \(Self.engineID) partial")
+    }
 }

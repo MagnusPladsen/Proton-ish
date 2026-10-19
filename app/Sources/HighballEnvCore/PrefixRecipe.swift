@@ -34,18 +34,26 @@ public enum PrefixRecipe {
 
     public struct Outcome: Equatable, Sendable {
         public var notes: [String]
-        // The "# recipe:" payload; nil when nothing should be recorded
+        // The "# recipe:" payload; nil when there is nothing to import or record
         public var record: String?
+        // False when a step failed: the run script imports the registry file but writes no
+        // marker, so the next launch tries the failed step again
+        public var complete: Bool
 
-        public init(notes: [String] = [], record: String? = nil) {
+        public init(notes: [String] = [], record: String? = nil, complete: Bool = true) {
             self.notes = notes
             self.record = record
+            self.complete = complete
         }
     }
 
     public static func run(recipe: Recipe, context: Context) -> Outcome {
         let steps = recipe.steps.filter(isPrefixStep)
         guard !steps.isEmpty else { return Outcome() }
+        guard !context.dbCommit.isEmpty else {
+            removeRegistryFile(context)
+            return Outcome(notes: ["recipe \(recipe.id) not applied: highball-db names no commit"], complete: false)
+        }
         var outcome = Outcome()
         switch engineDecision(recipeEngine: recipe.engine, running: context.engineID, otherEngines: context.otherEngines) {
         case .skip(let verifiedOn):
@@ -67,7 +75,8 @@ public enum PrefixRecipe {
         var applier = Applier(recipe: recipe, context: context)
         applier.apply(steps)
         outcome.notes += applier.notes
-        if !applier.failed { outcome.record = record(recipeID: recipe.id, commit: context.dbCommit, engine: context.engineID) }
+        outcome.record = record(recipeID: recipe.id, commit: context.dbCommit, engine: context.engineID)
+        outcome.complete = !applier.failed
         return outcome
     }
 
@@ -240,13 +249,16 @@ public enum PrefixRecipe {
         var notes: [String] = []
         var lines: [String] = []
         var lastKey: String?
-        for case let .registry(key, name, type, data) in steps {
+        for case let .registry(key, rawName, type, data) in steps {
+            // The name goes into the note, so it must not break the note's line either
+            let name = rawName.split(whereSeparator: \.isNewline).joined(separator: " ")
             guard let expanded = expandRoot(key) else {
                 notes.append("registry value \(name) not applied: key root \(key.split(separator: "\\").first.map(String.init) ?? key) is not supported")
                 continue
             }
-            guard !data.contains(where: \.isNewline) else {
-                notes.append("registry value \(name) not applied: data has a line break")
+            // Recipes are third-party data; a line break in any part would write its own lines
+            if let part = [("key", key), ("name", rawName), ("data", data)].first(where: { $0.1.contains(where: \.isNewline) }) {
+                notes.append("registry value \(name) not applied: \(part.0) has a line break")
                 continue
             }
             guard let value = registryValue(type: type, data: data, name: name, notes: &notes) else { continue }
@@ -255,7 +267,7 @@ public enum PrefixRecipe {
                 lines.append("[\(expanded)]")
                 lastKey = expanded
             }
-            lines.append((name.isEmpty ? "@" : "\"\(name)\"") + "=" + value)
+            lines.append((name.isEmpty ? "@" : "\"\(escaped(name))\"") + "=" + value)
         }
         guard !lines.isEmpty else { return (nil, notes) }
         return ((["Windows Registry Editor Version 5.00", ""] + lines).joined(separator: "\r\n") + "\r\n", notes)
@@ -272,10 +284,15 @@ public enum PrefixRecipe {
         return parts.count == 2 ? root + "\\" + parts[1] : root
     }
 
+    // regedit reads \\ and \" inside a quoted name or value
+    private static func escaped(_ text: String) -> String {
+        text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
     private static func registryValue(type: String, data: String, name: String, notes: inout [String]) -> String? {
         switch type {
         case "REG_SZ":
-            return "\"" + data.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
+            return "\"" + escaped(data) + "\""
         case "REG_DWORD":
             guard let number = UInt32(data) else {
                 notes.append("registry value \(name) not applied: '\(data)' is not a number")

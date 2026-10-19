@@ -204,9 +204,12 @@ checks these entitlements on status refresh. The CrossOver signing path is uncha
     real game folder from `--install-path`, because the game lives on the Mac disk and reaches
     the prefix through a drive letter, not under drive C. Other targets stay under `drive_c`.
   - Once per prefix per database version [user decision]: the marker
-    `$STEAM_COMPAT_DATA_PATH/protonish-recipe` records recipe id, highball-db commit and engine
-    build; the run script writes it only after the import succeeds. Same recipe and commit: skip
-    with one log line. A missing `copy` target (game reinstalled) counts as not applied, as in
+    `$WINEPREFIX/protonish-recipe` (inside the prefix, so Rebuild Prefix and a restored backup
+    take it along; amended 2026-10-19 after review) records recipe id, highball-db commit and
+    engine build; the run script writes it only after the import succeeds and every step was
+    applied. After a failed `file` or `copy` step the helper marks the line `partial`: the
+    registry import still runs, nothing is recorded, the step is tried again at the next launch.
+    Same recipe and commit: skip with one log line. A missing `copy` target (game reinstalled) counts as not applied, as in
     HighballKit's `artifactsPresent`. No rollback [user decision]: a changed recipe overwrites,
     keys it no longer names stay, as in Highball.
   - `optIn` is ignored [user decision]: every recipe applies, the environment steps of M2b

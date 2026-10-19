@@ -60,7 +60,8 @@ public enum LaunchEnvironment {
                         dbCommit: request.gameData?.commit ?? "", installPath: request.installPath, marker: request.recipeMarker,
                         registryFile: request.registryFile, otherEngines: request.otherEngines))
                     notes += outcome.notes
-                    record = outcome.record
+                    // "partial": the run script imports the registry file but records nothing
+                    record = outcome.record.map { outcome.complete ? $0 : $0 + " partial" }
                 }
             }
             let bottle = Bottle(url: request.prefix, settings: settings)
