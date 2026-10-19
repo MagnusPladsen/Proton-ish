@@ -31,7 +31,7 @@ enum RunnerInstaller {
             try? fm.removeItem(at: staging)
             defer { try? fm.removeItem(at: staging) }
             try copyPayload(from: install.crossOverRoot, to: staging)
-            try verifyClone(build: build, root: staging.appending(path: "CrossOver"))
+            try verifyClone(build: build, root: staging.appending(path: SupportPaths.clonedFolder))
             if occupied {
                 try fm.removeItem(at: target)
             }
