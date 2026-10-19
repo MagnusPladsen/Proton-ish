@@ -26,6 +26,35 @@ public enum PrefixRecipe {
         return driveC.appending(path: path)
     }
 
+    public enum EngineDecision: Equatable, Sendable {
+        case apply
+        case applyWithNote(verifiedOn: String)
+        case skip(verifiedOn: String)
+    }
+
+    // "x64-crossover26.3-r25" -> "x64-crossover26.3": revisions of one line are cumulative
+    public static func engineLine(of id: String) -> String {
+        guard let range = id.range(of: "-r[0-9]+$", options: .regularExpression) else { return id }
+        return String(id[..<range.lowerBound])
+    }
+
+    // A recipe verified on another Wine line still usually works; the user decides whether to
+    // trust it, by the switch or per game
+    public static func engineDecision(recipeEngine: String?, running: String, otherEngines: Bool) -> EngineDecision {
+        guard let recipeEngine, engineLine(of: recipeEngine) != engineLine(of: running) else { return .apply }
+        return otherEngines ? .applyWithNote(verifiedOn: recipeEngine) : .skip(verifiedOn: recipeEngine)
+    }
+
+    // The switch file holds "apply" or "skip" (missing is apply); the game's launch option
+    // PROTONISH_RECIPE_OTHER_ENGINES=0|1 wins
+    public static func otherEnginesAllowed(switchValue: String?, launchOption: String?) -> Bool {
+        switch launchOption {
+        case "0": false
+        case "1": true
+        default: switchValue?.trimmingCharacters(in: .whitespacesAndNewlines) != "skip"
+        }
+    }
+
     // One .reg file for every registry step, in the format `reg import` reads
     static func registryText(_ steps: [Recipe.Step]) -> (text: String?, notes: [String]) {
         var notes: [String] = []

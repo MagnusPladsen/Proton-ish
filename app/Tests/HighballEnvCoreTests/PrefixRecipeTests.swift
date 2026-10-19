@@ -128,4 +128,56 @@ struct PrefixRecipeTests {
     func targetAbsolute() {
         #expect(PrefixRecipe.target(of: "/etc/hosts", driveC: Self.driveC, installPath: Self.install) == nil)
     }
+
+    @Test("The engine line is the id without its revision")
+    func engineLine() {
+        #expect(PrefixRecipe.engineLine(of: "x64-sikarugir10.0_6-r5") == "x64-sikarugir10.0_6")
+    }
+
+    @Test("A recipe without an engine applies")
+    func engineNone() {
+        #expect(PrefixRecipe.engineDecision(recipeEngine: nil, running: "x64-crossover26.3-r25", otherEngines: false) == .apply)
+    }
+
+    @Test("Another revision of the same line applies without a note")
+    func engineSameLine() {
+        #expect(PrefixRecipe.engineDecision(recipeEngine: "x64-crossover26.3-r15", running: "x64-crossover26.3-r25", otherEngines: false) == .apply)
+    }
+
+    @Test("Another line applies with a note when allowed")
+    func engineOtherLineAllowed() {
+        #expect(PrefixRecipe.engineDecision(recipeEngine: "x64-sikarugir10.0_6-r5", running: "x64-crossover26.3-r25", otherEngines: true)
+            == .applyWithNote(verifiedOn: "x64-sikarugir10.0_6-r5"))
+    }
+
+    @Test("Another line is skipped when not allowed")
+    func engineOtherLineSkipped() {
+        #expect(PrefixRecipe.engineDecision(recipeEngine: "x64-sikarugir10.0_6-r5", running: "x64-crossover26.3-r25", otherEngines: false)
+            == .skip(verifiedOn: "x64-sikarugir10.0_6-r5"))
+    }
+
+    @Test("No switch file means other engines are allowed")
+    func switchMissing() {
+        #expect(PrefixRecipe.otherEnginesAllowed(switchValue: nil, launchOption: nil))
+    }
+
+    @Test("The switch set to skip turns other engines off")
+    func switchSkip() {
+        #expect(!PrefixRecipe.otherEnginesAllowed(switchValue: "skip", launchOption: nil))
+    }
+
+    @Test("The launch option 0 beats a switch set to apply")
+    func launchOptionOff() {
+        #expect(!PrefixRecipe.otherEnginesAllowed(switchValue: "apply", launchOption: "0"))
+    }
+
+    @Test("The launch option 1 beats a switch set to skip")
+    func launchOptionOn() {
+        #expect(PrefixRecipe.otherEnginesAllowed(switchValue: "skip", launchOption: "1"))
+    }
+
+    @Test("A launch option that is neither 0 nor 1 is ignored")
+    func launchOptionOther() {
+        #expect(!PrefixRecipe.otherEnginesAllowed(switchValue: "skip", launchOption: "yes"))
+    }
 }
