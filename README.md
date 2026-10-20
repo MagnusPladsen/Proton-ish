@@ -72,12 +72,21 @@ results; see [Use CrossOver if you can](#use-crossover-if-you-can) for why that 
 
 ## Status
 
-Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Games run through
-Highball's free Wine 11 engine (`x64-crossover26.3-r27`; r26 with D3DMetal 4 beta 3 on macOS 27, r25 and r19 still
-supported) with Highball's own launch setup, so what works in
-Highball should work here. Verified so far on an Apple Silicon Mac: Emberward, Among Us (Steam sign-in and the
-overlay included). For what Highball's community has tested, see
-[highball-db](https://github.com/gauthierpiarrette/highball-db), the compatibility database Proton-ish bundles.
+Proton-ish 1.0 is out (see [Quick start](#quick-start)). Games run through Highball's free Wine 11 engine
+(`x64-crossover26.3-r27`; r26 with D3DMetal 4 beta 3 on macOS 27, r25 and r19 still supported) with Highball's
+own launch setup, so what works in Highball should work here. Nobody can test every game: what Highball's community
+has tested is in [highball-db](https://github.com/gauthierpiarrette/highball-db), the database Proton-ish bundles,
+and what has been run through Proton-ish itself is the list below. A game that misbehaves is an
+[issue](#reporting-problems), and a game that works is one too; both go into this list.
+
+| Game | Engine | Result |
+|---|---|---|
+| Nubby's Number Factory | Highball Wine 11 r25 | Runs, 2026-10-19; the prefix recipe path (M2c) not yet exercised on it |
+| Emberward | Highball Wine 11 r19 | Runs, 2026-10-14 |
+| Among Us | Highball Wine 11 r19 | Runs, Steam sign-in and the overlay included, 2026-10-15 |
+
+Untested so far: a DirectX 12-only game on D3DMetal, a game with a highball-db prefix recipe (Portal 2, Warframe),
+anything through CrossOver (no licence at hand). Reports welcome.
 
 ![Emberward running from macOS Steam through Proton-ish and Highball's Wine 11 engine](docs/screenshots/emberward-running-highball.png)
 
@@ -140,6 +149,11 @@ Set a default tool under **Steam → Settings → Compatibility**, and override 
 - **No Valve Anti-Cheat.** VAC is not supported (Proton does not support it either). VAC games start in insecure
   mode and cannot join secure matchmaking.
 - **No NTFS.** Games on an NTFS volume (third-party NTFS drivers included) are not supported, as in NotProton.
+- **Controllers** go through Steam Input the way NotProton routes them; Proton-ish has not characterised them beyond
+  a game launching. If a controller is seen twice or not at all, try the game's **Disable hidraw** option in its
+  Proton-ish settings, and report what you see.
+- **Italian.** NotProton's strings are translated; the strings Proton-ish adds (Highball, engines, licences, game
+  fixes) show in English until someone translates them.
 
 ## Reporting problems
 
@@ -199,6 +213,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-20: HighballKit 0.10.21, highball-db b7e4a1d: Highball's fixes and per-game data as of this release.
 - 2026-10-20: highball-db ed5e18a: Highball's fixes and per-game data as of this release.
 - 2026-10-20: NotProton 3bbc6a7 merged: FEX gets a Reduced x87 precision toggle (on by default) and AVX2 on by default.
+- 2026-10-20: 1.0.0. Proton-ish leaves beta: Highball's free Wine 11 engines r19 to r27 with Highball's launch setup and per-game fixes, CrossOver as NotProton has it, self-releasing upstream syncs, Sparkle updates and a Homebrew cask. Nobody can test every game, so the README keeps a compatibility list and every game that misbehaves is an issue.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
