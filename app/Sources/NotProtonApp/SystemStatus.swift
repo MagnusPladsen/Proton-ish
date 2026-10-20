@@ -326,26 +326,24 @@ final class SystemStatus {
             alert.addButton(withTitle: String(localized: "Cancel"))
             guard alert.runModal() == .alertFirstButtonReturn else { return }
         }
-        let lock: DeploymentContent.InstallationLock
         do {
-            lock = try DeploymentContent.acquireInstallationLock()
+            let lock = try DeploymentContent.acquireInstallationLock()
+            defer { lock.release() }
+            if let refusal = Self.steamChoiceRefusal(picked, current: current) {
+                setFailure(refusal)
+                AppLog.note("steam choice refused: \(picked.path(percentEncoded: false))")
+                return
+            }
+
+            if same(picked, SupportPaths.Steam.defaultApp) {
+                UserDefaults.standard.removeObject(forKey: SupportPaths.Steam.appPathKey)
+            } else {
+                UserDefaults.standard.set(picked.path(percentEncoded: false), forKey: SupportPaths.Steam.appPathKey)
+            }
         } catch {
             setFailure(error)
             return
         }
-        if let refusal = Self.steamChoiceRefusal(picked, current: current) {
-            lock.release()
-            setFailure(refusal)
-            AppLog.note("steam choice refused: \(picked.path(percentEncoded: false))")
-            return
-        }
-
-        if same(picked, SupportPaths.Steam.defaultApp) {
-            UserDefaults.standard.removeObject(forKey: SupportPaths.Steam.appPathKey)
-        } else {
-            UserDefaults.standard.set(picked.path(percentEncoded: false), forKey: SupportPaths.Steam.appPathKey)
-        }
-        lock.release()
         AppLog.note("steam chosen: \(picked.path(percentEncoded: false))")
         await refresh()
     }
@@ -718,16 +716,22 @@ final class SystemStatus {
 
     func refreshRunnerStorage(
         runners: URL = SupportPaths.runners, libraries: [SteamLibrary] = PrefixStore.libraries(),
-        cleanTemplates: Bool = true
+        cleanTemplates: Bool = true,
+        acquireInstallationLock: @escaping @Sendable () throws -> DeploymentContent.InstallationLock = {
+            try DeploymentContent.acquireInstallationLock()
+        }
     ) async {
         let known = runnerSizes
         let measured = await Task.detached(priority: .utility) {
-            if cleanTemplates, let lock = try? DeploymentContent.acquireInstallationLock() {
+            let failures: [StepFailure]
+            if cleanTemplates, let lock = try? acquireInstallationLock() {
+                defer { lock.release() }
                 RunnerInstaller.removeLeftoverRemovals(runners: runners)
-                lock.release()
+                failures = RunnerInstaller.removeStalePrefixTemplates(
+                    runners: runners, libraries: libraries, reportBusy: false)
+            } else {
+                failures = []
             }
-            let failures = cleanTemplates
-                ? RunnerInstaller.removeStalePrefixTemplates(runners: runners, libraries: libraries, reportBusy: false) : []
             var sizes: [String: Int64] = [:]
             var templates: [String: [CompatTool.Flavor: Int64]] = [:]
             let bridgeCopies = libraries.reduce(Int64(0)) { total, library in

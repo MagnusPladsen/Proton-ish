@@ -2,8 +2,11 @@
 #include "compat.h"
 #include "../util/log.h"
 #include "../util/file.h"
+#include "../util/a64.h"
+#include "../util/ptr.h"
 
 #include <dirent.h>
+#include <dlfcn.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -20,6 +23,7 @@
 #define TOOL_RUN      "/run"
 
 #define COMPAT_MANAGER_ENABLED_OFF  0x7B0
+#define COMPAT_MANAGER_USER_OFF     0x300  // CUser *
 #define COMPAT_TOOL_STRIDE          0x130
 #define COMPAT_TOOL_FLAGS_OFF       0x28  // bit 0: tool needs no downloaded app
 #define COMPAT_TOOL_FLAG_NO_APP     0x1
@@ -264,6 +268,45 @@ int np_compat_probe_enabled_off(uintptr_t bis_enabled) {
 
 uint32_t np_compat_enabled_off(void) {
     return g_enabled_off;
+}
+
+static uint32_t g_windows_only_off;
+
+int np_compat_probe_windows_only_off(uintptr_t get_wildcard_mapping, uintptr_t lookup) {
+    if (!get_wildcard_mapping || !lookup) return 0;
+
+    // The offset only exists in the code. Right before calling the lookup,
+    // GetWildcardMapping puts manager + offset in x0. An x0 built from SP is a
+    // local variable.
+    for (uintptr_t pc = get_wildcard_mapping; pc < get_wildcard_mapping + 0x100; pc += 4) {
+        uintptr_t target;
+        if (!a64_bl(pc, *(const uint32_t *)pc, &target) || target != lookup) continue;
+
+        for (int back = 1; back <= 4 && pc - 4u * back >= get_wildcard_mapping; back++) {
+            uint32_t rd, rn, imm;
+            if (a64_add_imm(*(const uint32_t *)(pc - 4u * back), &rd, &rn, &imm) &&
+                rd == 0 && rn != A64_SP) {
+                g_windows_only_off = imm;
+                NP_LOG("np_compat_probe_windows_only_off: windows-only table at 0x%x", imm);
+                return 1;
+            }
+        }
+        break;
+    }
+    NP_WARN("np_compat_probe_windows_only_off: no table argument for 0x%lx in 0x%lx",
+            (unsigned long)lookup, (unsigned long)get_wildcard_mapping);
+    return 0;
+}
+
+bool np_compat_is_windows_only_table(const void *compat_mgr, const void *map) {
+    return compat_mgr && g_windows_only_off &&
+           map == (const uint8_t *)compat_mgr + g_windows_only_off;
+}
+
+void *np_compat_user(const void *compat_mgr) {
+    if (!compat_mgr) return NULL;
+    uint64_t user = *(const uint64_t *)((const uint8_t *)compat_mgr + COMPAT_MANAGER_USER_OFF);
+    return np_plausible_ptr(user) ? (void *)(uintptr_t)user : NULL;
 }
 
 uint32_t np_compat_tool_off(uint32_t reference_off) {
@@ -737,9 +780,26 @@ void np_compat_map_tool(void *compat_mgr, uint32_t appid, const char *tool_name)
 
 typedef void (*fn_YldRegisterTool)(void *compat_mgr, void *tool);
 static fn_YldRegisterTool g_yld_register_tool;
+typedef void (*fn_PlatFree)(void *ptr);
+static fn_PlatFree g_free_tool_path;
 
 void np_compat_set_register_fn(uintptr_t yld_register_tool) {
     g_yld_register_tool = (fn_YldRegisterTool)yld_register_tool;
+    g_free_tool_path = (fn_PlatFree)dlsym(RTLD_DEFAULT, "Plat_Free");
+    if (!g_free_tool_path)
+        NP_WARN("np_compat_set_register_fn: Plat_Free unresolved, temporary tool paths will leak");
+}
+
+static void free_tool_paths(uint8_t *tool) {
+    // YldRegisterTool fills these CUtlStrings in the caller's entry.
+    // These need Plat_Free, not free.
+    static const uint32_t offsets[] = {0x98, 0xA0, 0xA8, 0xD0, 0xD8, 0xE0, 0xE8, 0x118};
+    if (!g_free_tool_path) return;
+    for (size_t i = 0; i < sizeof(offsets) / sizeof(*offsets); i++) {
+        void **path = (void **)(tool + np_compat_tool_off(offsets[i]));
+        if (*path) g_free_tool_path(*path);
+        *path = NULL;
+    }
 }
 
 static void *g_manager;
@@ -790,9 +850,8 @@ void np_compat_register_crossover(void *compat_mgr) {
     registered = 1;
     load_tool_list_once();
 
-    // YldRegisterTool copies a whole entry out of this buffer and keeps the string
-    // pointers as-is, which is why the strings live in g_tools and why each buffer
-    // carries headroom for a client that inserted a field. to_oslist=macos passes
+    // YldRegisterTool copies the entry and its strings. Each buffer carries headroom
+    // for a client that inserted a field. to_oslist=macos passes
     // the registration gate, from_oslist=windows intersects the app mask so the
     // dropdown keeps it, and appid 0 marks a manager-local tool the resolver routes
     // to the local run script.
@@ -824,9 +883,12 @@ void np_compat_register_crossover(void *compat_mgr) {
         *(const char **)(tool + np_compat_tool_off(COMPAT_TOOL_TO_OSLIST_OFF))   = to_oslist;
 
         g_yld_register_tool(compat_mgr, tool);
+        free_tool_paths(tool);
         NP_LOG("np_compat_register_crossover: registered %s (build %s) into manager 0x%llx",
                t->name, t->build, (unsigned long long)(uintptr_t)compat_mgr);
     }
+
+    free(buffers);
 }
 
 // The global default (app 0), what Steam's Compatibility settings call the default tool
