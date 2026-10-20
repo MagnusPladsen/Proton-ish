@@ -195,6 +195,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-19: NotProton 1.2.0 merged: Italian localization, a Windows library filter and button in Steam's library, non-Steam Windows shortcuts run with the default tool and get named prefixes, a per-game Disable hidraw option, High Resolution DPI fix, Steam verification for installs off the boot drive, CrossOver Preview 20261015, Wine's VC++ runtime left native when the game installed Microsoft's, release notes shown as HTML in the updater, and a note that NTFS volumes are unsupported. Proton-ish keeps its own version number, release pipeline and README.
 
 - 2026-10-20: HighballKit 0.10.21, highball-db b7e4a1d: Highball's fixes and per-game data as of this release.
+- 2026-10-20: highball-db ed5e18a: Highball's fixes and per-game data as of this release.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
