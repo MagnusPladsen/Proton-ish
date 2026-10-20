@@ -38,11 +38,11 @@ and Rosetta 2 (macOS offers to install it the first time something needs it, or 
    (DirectX 12): choose **Accept and Download**, or **Download without D3DMetal** if you would rather not. It then
    downloads Highball's Wine 11 engine (about 440 MB, from Highball's releases, checked against Highball's checksums)
    and sets it up. Already using the [Highball](https://github.com/gauthierpiarrette/highball) app? Proton-ish finds
-   its engine instead when it is a supported one (`x64-crossover26.3-r25` or r19); click **Set Up**.
+   its engine instead when it is a supported one (`x64-crossover26.3-r27`, r26, r25 or r19); click **Set Up**.
 5. **Play:** quit and reopen Steam. If Steam had no default compatibility tool, Highball is now the default for
    Windows games (the **Use Highball for all Windows games** switch on the Status screen), so a Windows-only game
    just shows Play. A game that also has a macOS version runs that version unless you tick **Force the use of a
-   specific Steam Play compatibility tool** under its **Properties → Compatibility** and pick **Highball Wine 11 (r25)**.
+   specific Steam Play compatibility tool** under its **Properties → Compatibility** and pick **Highball Wine 11 (r27)**.
 
 Updates arrive through **Proton-ish → Check for Updates…** (or `brew upgrade`). Something broken? See
 [Reporting problems](#reporting-problems).
@@ -73,7 +73,8 @@ results; see [Use CrossOver if you can](#use-crossover-if-you-can) for why that 
 ## Status
 
 Proton-ish is in early development; pre-releases are out (see [Quick start](#quick-start)). Games run through
-Highball's free Wine 11 engine (`x64-crossover26.3-r25`, r19 still supported) with Highball's own launch setup, so what works in
+Highball's free Wine 11 engine (`x64-crossover26.3-r27`; r26 with D3DMetal 4 beta 3 on macOS 27, r25 and r19 still
+supported) with Highball's own launch setup, so what works in
 Highball should work here. Verified so far on an Apple Silicon Mac: Emberward, Among Us (Steam sign-in and the
 overlay included). For what Highball's community has tested, see
 [highball-db](https://github.com/gauthierpiarrette/highball-db), the compatibility database Proton-ish bundles.
@@ -191,10 +192,12 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-19: Each Highball engine row says where it stands with Steam: the engine Steam's config names is "Steam's default for Windows games", a requested one is the default "once Steam starts again", and the newest engine says so with a hint to pick it per game under Properties → Compatibility (recommended when not set up yet). The "Use Highball for all Windows games" row names the engine it uses. Repair Steam and Remove Everything moved into the Steam section.
 - 2026-10-19: Steam keeps its Accessibility permission when Install follows Repair Steam (the restored Steam carries Valve's signature, so the grant was reset). Proton-ish records the signature it last applied in `signed-requirement`.
 - 2026-10-19: highball-db fixes that change the Windows prefix (registry values, config files, engine DLLs) apply once per prefix per database version, written by `highball-env` and imported by the run script before the launch. Fixes verified on another engine line apply by default; the Status screen switch and the launch option `PROTONISH_RECIPE_OTHER_ENGINES` decide.
+- 2026-10-20: Highball engines r26 and r27 supported. Both carry r25's Wine build (0024), so the same patches apply; r27 is the engine Proton-ish downloads now, r26 adds Apple's D3DMetal 4.0 beta 3 and needs macOS 27. An engine Highball installed is recognised by its manifest id, since these revisions share launcher bytes.
 - 2026-10-20: Upstream changes ship themselves: a sync PR from the daily workflow bumps the version, merges once CI passes and publishes a release, so NotProton and Highball updates reach the app through Sparkle without a manual merge. Conflicts still go to a person.
 - 2026-10-19: NotProton 1.2.0 merged: Italian localization, a Windows library filter and button in Steam's library, non-Steam Windows shortcuts run with the default tool and get named prefixes, a per-game Disable hidraw option, High Resolution DPI fix, Steam verification for installs off the boot drive, CrossOver Preview 20261015, Wine's VC++ runtime left native when the game installed Microsoft's, release notes shown as HTML in the updater, and a note that NTFS volumes are unsupported. Proton-ish keeps its own version number, release pipeline and README.
 
 - 2026-10-20: HighballKit 0.10.21, highball-db b7e4a1d: Highball's fixes and per-game data as of this release.
+- 2026-10-20: highball-db ed5e18a: Highball's fixes and per-game data as of this release.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.

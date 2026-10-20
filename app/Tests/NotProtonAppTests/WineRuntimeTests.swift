@@ -127,14 +127,31 @@ struct WineRuntimeTests {
         #expect(NtdllPatcher.byBuild["x64-crossover26.3-r19"]?.count == 2)
     }
 
-    @Test("Highball r25 is a supported Rosetta build with one tool and is the build offered for download")
+    @Test("Highball r25 is a supported Rosetta build with one tool")
     func highballR25Supported() throws {
         let build = try #require(SupportedRunners.build(id: "x64-crossover26.3-r25"))
         #expect(build.runtime == .highball)
         #expect(build.tools.map(\.name) == ["protonish-highball-x64-crossover26.3-r25"])
         #expect(build.tools.allSatisfy { $0.flavor == .rosetta })
         #expect(NtdllPatcher.byBuild["x64-crossover26.3-r25"]?.count == 2)
-        #expect(HighballInstaller.build?.id == "x64-crossover26.3-r25")
+    }
+
+    @Test("Highball r26 and r27 carry r25's Wine build: same loader and ntdll hashes, their own ids and tools")
+    func highballR26R27Supported() throws {
+        let r25 = try #require(SupportedRunners.build(id: "x64-crossover26.3-r25"))
+        for id in ["x64-crossover26.3-r26", "x64-crossover26.3-r27"] {
+            let build = try #require(SupportedRunners.build(id: id))
+            #expect(build.runtime == .highball)
+            #expect(build.loaderSHA256 == r25.loaderSHA256)
+            #expect(build.cleanNtdll == r25.cleanNtdll && build.patchedNtdll == r25.patchedNtdll)
+            #expect(build.tools.map(\.name) == ["protonish-highball-\(id)"])
+            #expect(NtdllPatcher.byBuild[id]?.map(\.payloadSHA256) == NtdllPatcher.byBuild["x64-crossover26.3-r25"]?.map(\.payloadSHA256))
+        }
+    }
+
+    @Test("Highball r27 is the build offered for download, r26 needs macOS 27")
+    func highballR27Offered() throws {
+        #expect(HighballInstaller.build?.id == "x64-crossover26.3-r27")
     }
 
     // Runs when the r19 engine is on this Mac (Highball install or the plan's scratch fixture):

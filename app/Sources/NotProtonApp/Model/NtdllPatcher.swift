@@ -369,8 +369,13 @@ enum NtdllPatcher {
                 placement: .section
             ),
         ],
-        // Highball engine x64-crossover26.3-r25 (engine build 0024): r19's hooks and payloads, new image hashes
-        "x64-crossover26.3-r25": [
+        "x64-crossover26.3-r25": highballBuild0024,
+        "x64-crossover26.3-r26": highballBuild0024,
+        "x64-crossover26.3-r27": highballBuild0024,
+    ]
+
+    // Highball engine build 0024, the Wine in r25, r26 and r27: r19's hooks and payloads, new image hashes
+    static let highballBuild0024: [NtdllPatch] = [
             NtdllPatch(
                 arch: .x86_64Windows,
                 payloadResource: "detour2-hb-r19",
@@ -403,7 +408,6 @@ enum NtdllPatcher {
                 imageBase: 0x7bc0_0000,
                 placement: .section
             ),
-        ],
     ]
 
     static func patches(for build: RunnerBuild) -> [NtdllPatch] {
