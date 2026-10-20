@@ -209,6 +209,13 @@ if [ "${wine_unix##*/}" = aarch64-unix ]; then
     unset -v "$name"
     np_dropped="$np_dropped${np_dropped:+ }$name"
   done
+  fex_from=environment
+  [ -n "${FEX_X87REDUCEDPRECISION+x}" ] || fex_from=default
+  export FEX_X87REDUCEDPRECISION="${FEX_X87REDUCEDPRECISION-1}"
+else
+  avx_from=environment
+  [ -n "$ROSETTA_ADVERTISE_AVX" ] || avx_from=default
+  export ROSETTA_ADVERTISE_AVX="${ROSETTA_ADVERTISE_AVX:-1}"
 fi
 
 # Keeps Wine from inheriting the prefix and template locks (fd 8 and 9).
@@ -1424,6 +1431,11 @@ if [ -n "$STEAM_COMPAT_DATA_PATH" ]; then
   refuse_foreign_prefix
   claim_prefix
   echo "sync: WINEMSYNC=$WINEMSYNC from $msync_from" >> "$log" 2>&1 || true
+  if [ "${wine_unix##*/}" = aarch64-unix ]; then
+    echo "fex: FEX_X87REDUCEDPRECISION=$FEX_X87REDUCEDPRECISION from $fex_from" >> "$log" 2>&1 || true
+  else
+    echo "avx: ROSETTA_ADVERTISE_AVX=$ROSETTA_ADVERTISE_AVX from $avx_from" >> "$log" 2>&1 || true
+  fi
   without_lock_fds "$WINESERVER" -k >> "$log" 2>&1 || true
   stage_step="prefix seed"
   seed_prefix_from_template
@@ -1878,7 +1890,7 @@ else
   echo "=== client staged no overlay renderer, overlay disabled ===" >> "$log" 2>&1 || true
 fi
 set -- --args "$shim_exe" "$@"
-for name in $(env | LC_ALL=C sed -nE 's/^(CX_APPLEGPTK_LIBD3DSHARED_PATH|Steam[A-Za-z0-9]*|(CX_GRAPHICS|D3DM_|DXMT_|DXVK_|MTL_|ROSETTA_)[A-Z0-9_]*)=.*/\1/p'); do
+for name in $(env | LC_ALL=C sed -nE 's/^(CX_APPLEGPTK_LIBD3DSHARED_PATH|Steam[A-Za-z0-9]*|(CX_GRAPHICS|D3DM_|DXMT_|DXVK_|FEX_|MTL_|ROSETTA_)[A-Z0-9_]*)=.*/\1/p'); do
   eval "value=\$$name"
   # shellcheck disable=SC2154 # eval assigns value on the line above
   set -- --env "$name=$value" "$@"
