@@ -198,6 +198,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 
 - 2026-10-20: HighballKit 0.10.21, highball-db b7e4a1d: Highball's fixes and per-game data as of this release.
 - 2026-10-20: highball-db ed5e18a: Highball's fixes and per-game data as of this release.
+- 2026-10-20: NotProton 3bbc6a7 merged: FEX gets a Reduced x87 precision toggle (on by default) and AVX2 on by default.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
