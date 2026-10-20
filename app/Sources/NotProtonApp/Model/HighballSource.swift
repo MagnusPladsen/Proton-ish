@@ -67,10 +67,12 @@ enum HighballSource {
         let name = (object["displayName"] as? String) ?? id
         let loader = directory.appending(path: "engine/bin/wine")
         let support: HighballSupport
+        // Revisions share launcher bytes (r25, r26 and r27 carry one Wine build), so the manifest
+        // id names the build and the launcher hash confirms it
         if let hash = Digest.sha256IfPresent(loader),
-           let build = SupportedRunners.build(loaderSHA256: hash), build.runtime == .highball,
-           // Revisions can share launcher bytes, so the manifest id has to name the build too
-           build.bundleVersion == id {
+           let build = SupportedRunners.all.first(where: {
+               $0.runtime == .highball && $0.bundleVersion == id && $0.loaderSHA256 == hash
+           }) {
             support = .supported(build)
         } else {
             support = .unsupported

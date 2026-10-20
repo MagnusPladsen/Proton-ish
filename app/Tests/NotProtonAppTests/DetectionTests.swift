@@ -39,8 +39,17 @@ struct SupportedRunnerTests {
         let ids = SupportedRunners.all.map(\.id)
         #expect(Set(ids).count == ids.count)
 
-        let loaders = SupportedRunners.all.flatMap { [$0.loaderSHA256] + $0.rebuilds.map(\.loaderSHA256) }
+        // The loader hash identifies a CrossOver install; Highball revisions can share one Wine
+        // build and are told apart by their manifest id instead
+        let crossOver = SupportedRunners.all.filter { $0.runtime == .crossover }
+        let loaders = crossOver.flatMap { [$0.loaderSHA256] + $0.rebuilds.map(\.loaderSHA256) }
         #expect(Set(loaders).count == loaders.count)
+    }
+
+    @Test("A Highball loader hash is not a CrossOver build, however many revisions share it")
+    func highballLoaderIsNoCrossOverBuild() throws {
+        let r25 = try #require(SupportedRunners.build(id: "x64-crossover26.3-r25"))
+        #expect(SupportedRunners.build(loaderSHA256: r25.loaderSHA256) == nil)
     }
 
     @Test("A rebuild is found as its build, carrying its own hashes")
