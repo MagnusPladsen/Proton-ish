@@ -27,6 +27,51 @@ git_identity() {
   git config user.email "93226629+MagnusPladsen@users.noreply.github.com"
 }
 
-footer() {
-  printf '\n---\nOpened by the upstream-sync workflow. It never bumps `dylib/version.h`, so merging this does not publish a release.\n'
+# The version the next release gets: the current one while it has no tag yet (a bump still
+# waiting to ship is reused), otherwise the next beta, or the next patch after 1.0
+next_version() {   # current
+  if ! git ls-remote --exit-code --tags origin "refs/tags/v$1" >/dev/null 2>&1; then
+    printf '%s\n' "$1"
+    return
+  fi
+  case "$1" in
+    *-beta.*) printf '%s-beta.%s\n' "${1%%-beta.*}" "$(( ${1##*-beta.} + 1 ))" ;;
+    *) printf '%s.%s\n' "${1%.*}" "$(( ${1##*.} + 1 ))" ;;
+  esac
+}
+
+# Adds a dated line at the end of README's "Changes from upstream" list
+changelog_line() {   # text
+  awk -v line="- $(date +%Y-%m-%d): $1" '
+    /^## Changes from upstream/ { section = 1 }
+    section && /^## / && !/^## Changes from upstream/ { for (i = 1; i <= held; i++) print held_line[i]; print line; held = 0; section = 0 }
+    section && /^$/ { held_line[++held] = $0; next }
+    section { for (i = 1; i <= held; i++) print held_line[i]; held = 0 }
+    { print }
+    END { for (i = 1; i <= held; i++) print held_line[i]; if (section) print line }
+  ' README.md > README.md.new && mv README.md.new README.md
+}
+
+# Commits the release bump on the current branch and prints the version: merging the PR then
+# publishes it through the release workflow
+bump_release() {   # changelog text
+  current=$(sed -n 's/^#define NOTPROTON_VERSION "\(.*\)"/\1/p' dylib/version.h)
+  version=$(next_version "$current")
+  [ "$version" = "$current" ] || sed -i.bak "s/^#define NOTPROTON_VERSION \"$current\"/#define NOTPROTON_VERSION \"$version\"/" dylib/version.h
+  rm -f dylib/version.h.bak
+  changelog_line "$1"
+  git add dylib/version.h README.md
+  git commit -q -m "Release $version: $1
+
+Co-Authored-By: Proton-ish sync <93226629+MagnusPladsen@users.noreply.github.com>"
+  printf '%s\n' "$version"
+}
+
+# The PR merges itself once the required checks pass
+enable_auto_merge() {   # branch
+  "$GH" pr merge --auto --merge -R "$REPO" "$1" >/dev/null
+}
+
+footer() {   # version
+  printf '\n---\nOpened by the upstream-sync workflow. It bumps `dylib/version.h`, so merging this publishes %s; the PR merges itself once CI passes.\n' "$1"
 }

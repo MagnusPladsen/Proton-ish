@@ -61,8 +61,11 @@ git commit -q -m "Sync Highball: ${newer_kit:+HighballKit $newer_kit}${newer_kit
 
 $notes
 Co-Authored-By: Proton-ish sync <93226629+MagnusPladsen@users.noreply.github.com>"
+summary="${newer_kit:+HighballKit $newer_kit}${newer_kit:+${newer_db:+, }}${newer_db:+highball-db $(printf %.7s "$newer_db")}"
+version=$(bump_release "$summary: Highball's fixes and per-game data as of this release.")
 git push -q -u origin "$branch"
 "$GH" pr create -R "$REPO" --base main --head "$branch" \
   --title "sync: Highball ${newer_kit:+$newer_kit }${newer_db:+db $(printf %.7s "$newer_db")}" --label upstream-sync --label highball \
-  --body "$(printf '## What\n%s\n## Before merging\n- CI green: a HighballKit bump can change the API `highball-env` builds against.\n- Read the Highball release notes for engine changes that need a new `SupportedRunner` entry.\n- Add a dated line under "Changes from upstream" in README.md.\n%s' "$notes" "$(footer)")"
-sync_log "highball: opened a PR on $branch"
+  --body "$(printf '## What\n%sReleased as %s.\n\nA HighballKit bump can change the API `highball-env` builds against; CI builds it. A new engine build still needs its own `SupportedRunner` entry, which the engines job reports as an issue.\n%s' "$notes" "$version" "$(footer "$version")")"
+enable_auto_merge "$branch"
+sync_log "highball: opened a PR on $branch, releases $version when CI passes"
