@@ -7,6 +7,7 @@ const emit = process.argv[2];
 if (!emit) { console.error('usage: fex.js <emit>'); process.exit(2); }
 
 const AVX = 'Advertise AVX2 to Rosetta';
+const X87 = 'Reduced x87 Precision (Reducing precision improves game performance, is enabled by default in CrossOver Preview)';
 
 // The hook passes only FEX tools; protonish-rosetta stands for a Rosetta tool next to it.
 const FEX_TOOLS = ['protonish-fex'];
@@ -26,6 +27,38 @@ for (const form of Object.keys(FORMS)) {
     t.ok(backends(r).includes('d3dmetal') === !fex,
          `D3DMetal is ${fex ? 'not ' : ''}offered (${backends(r)})`);
     t.ok(toggles(r).includes(AVX) === !fex, `the AVX2 row is ${fex ? 'hidden' : 'shown'}`);
+    t.ok(toggles(r).includes(X87) === fex, `the x87 row is ${fex ? 'shown' : 'hidden'}`);
+    t.ok(r.some(x => x.type === 'Section' && x.props.label === 'FEX') === fex,
+         `the FEX section is ${fex ? 'shown' : 'hidden'}`);
+    if (!fex) {
+      const avx = ns => ns.find(x => x.type === 'Toggle' && x.props.label === AVX);
+      t.ok(avx(r).props.checked === true, 'the AVX2 row is on by default');
+      written.length = 0;
+      avx(r).props.onChange(false);
+      t.ok(written[written.length - 1].opts.includes('ROSETTA_ADVERTISE_AVX=0'),
+           `turning the AVX2 row off writes 0 (${written[written.length - 1].opts})`);
+      const off = nodes('ROSETTA_ADVERTISE_AVX=0');
+      t.ok(avx(off).props.checked === false, 'a game set to 0 shows the AVX2 row off');
+      written.length = 0;
+      avx(off).props.onChange(true);
+      t.ok(!written[written.length - 1].opts.includes('ROSETTA_ADVERTISE_AVX'),
+           `turning the AVX2 row on removes the entry (${written[written.length - 1].opts})`);
+      t.ok(avx(nodes('ROSETTA_ADVERTISE_AVX=1')).props.checked === true, 'a game set to 1 shows the AVX2 row on');
+    }
+    if (fex) {
+      const x87 = ns => ns.find(x => x.type === 'Toggle' && x.props.label === X87);
+      t.ok(x87(r).props.checked === true, 'the x87 row is on by default');
+      written.length = 0;
+      x87(r).props.onChange(false);
+      t.ok(written[written.length - 1].opts.includes('FEX_X87REDUCEDPRECISION=0'),
+           `turning the x87 row off writes 0 (${written[written.length - 1].opts})`);
+      const off = nodes('FEX_X87REDUCEDPRECISION=0');
+      t.ok(x87(off).props.checked === false, 'a game set to 0 shows the x87 row off');
+      written.length = 0;
+      x87(off).props.onChange(true);
+      t.ok(!written[written.length - 1].opts.includes('FEX_X87REDUCEDPRECISION'),
+           `turning the x87 row on removes the entry (${written[written.length - 1].opts})`);
+    }
     t.ok(toggles(r).includes('DLSS') === !fex,
          `automatic ${fex ? 'hides' : 'shows'} the D3DMetal DLSS row`);
 
@@ -88,9 +121,9 @@ for (const form of Object.keys(FORMS)) {
     return written.length ? written[written.length - 1].opts : null;
   };
   const all = 'WINEDEBUG=-all CX_GRAPHICS_BACKEND=d3dmetal D3DM_ENABLE_METALFX=1 MTL_HUD_ENABLED=1 ' +
-              "ROSETTA_ADVERTISE_AVX=0 DXMT_CONFIG='a;b' %command% -novid";
+              "ROSETTA_ADVERTISE_AVX=0 FEX_X87REDUCEDPRECISION=0 DXMT_CONFIG='a;b' %command% -novid";
   const r = choose(all, 'protonish-fex');
-  t.ok(r === "WINEDEBUG=-all MTL_HUD_ENABLED=1 DXMT_CONFIG='a;b' %command% -novid",
+  t.ok(r === "WINEDEBUG=-all MTL_HUD_ENABLED=1 FEX_X87REDUCEDPRECISION=0 DXMT_CONFIG='a;b' %command% -novid",
        `picking FEX drops only the D3DMetal and Rosetta entries (${r})`);
   t.ok(choose(all, 'protonish-rosetta') === null, 'picking a Rosetta tool writes nothing');
   t.ok(choose('D3DM_lower=1 %command%', 'protonish-fex') === null,
