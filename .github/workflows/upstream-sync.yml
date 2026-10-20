@@ -1,5 +1,6 @@
 # Keeps Proton-ish current with its upstreams: NotProton merges, Highball pin and database bumps
-# as pull requests, new Highball engine builds as issues. Nothing merges or releases by itself.
+# as pull requests that bump the version and merge themselves once CI passes, which publishes a
+# release; conflicting merges and new Highball engine builds become issues for a person.
 name: upstream sync
 
 on:
