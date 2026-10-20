@@ -8,6 +8,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# One release at a time: two merges minutes apart both read the same untagged version, and the
+# second must see the first one's tag, not race it for the same release
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: read
