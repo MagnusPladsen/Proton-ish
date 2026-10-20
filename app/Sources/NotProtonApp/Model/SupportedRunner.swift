@@ -316,10 +316,53 @@ enum SupportedRunners {
             ],
             runtime: .highball
         ),
+        // r26 and r27 ship r25's Wine (engine build 0024) with other components: r26 adds Apple's
+        // D3DMetal 4.0 beta 3 and needs macOS 27, r27 is r25 renewed. The last entry is the one
+        // Proton-ish downloads, so r27 stays after r26.
+        RunnerBuild(
+            bundleVersion: "x64-crossover26.3-r26",
+            releaseVersion: "r26",
+            flavor: nil,
+            loaderSHA256: "8cce786bce298f601a415f2e2952a82512c02243689df5b40e0af8e6e63991ca",
+            cleanNtdll: [
+                .x86_64Windows: "e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3",
+                .i386Windows: "54137f366a4f15403d9eecbbf3ce575b3129251e2eebdad125b55bd4b532e5ce",
+            ],
+            patchedNtdll: [
+                .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
+                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+            ],
+            tools: [
+                CompatTool(name: "protonish-highball-x64-crossover26.3-r26", flavor: .rosetta,
+                           display: "Highball Wine 11 (r26, D3DMetal 4 beta 3)"),
+            ],
+            runtime: .highball
+        ),
+        RunnerBuild(
+            bundleVersion: "x64-crossover26.3-r27",
+            releaseVersion: "r27",
+            flavor: nil,
+            loaderSHA256: "8cce786bce298f601a415f2e2952a82512c02243689df5b40e0af8e6e63991ca",
+            cleanNtdll: [
+                .x86_64Windows: "e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3",
+                .i386Windows: "54137f366a4f15403d9eecbbf3ce575b3129251e2eebdad125b55bd4b532e5ce",
+            ],
+            patchedNtdll: [
+                .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
+                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+            ],
+            tools: [
+                CompatTool(name: "protonish-highball-x64-crossover26.3-r27", flavor: .rosetta,
+                           display: "Highball Wine 11 (r27)"),
+            ],
+            runtime: .highball
+        ),
     ]
 
+    // A CrossOver install is known by its loader; Highball engines are matched by manifest id
+    // in HighballSource, since revisions of one Wine build share launcher bytes
     static func build(loaderSHA256 hash: String) -> RunnerBuild? {
-        all.lazy.compactMap { $0.matching(loaderSHA256: hash) }.first
+        all.lazy.filter { $0.runtime == .crossover }.compactMap { $0.matching(loaderSHA256: hash) }.first
     }
 
     static func build(id: String) -> RunnerBuild? {

@@ -79,6 +79,26 @@ struct HighballSourceTests {
         #expect(try engine("x64-crossover26.3-r18")?.support == .unsupported)
     }
 
+    @Test("Revisions that share r25's launcher are the build their manifest names")
+    func sharedLauncherNamesTheBuild() throws {
+        let home = try scratchDirectory("hb-shared-launcher")
+        defer { try? FileManager.default.removeItem(at: home) }
+        guard let launcher = Self.r25Launcher else { return }
+        for id in ["x64-crossover26.3-r25", "x64-crossover26.3-r26", "x64-crossover26.3-r27"] {
+            let directory = home.appending(path: "engines/\(id)")
+            try FileManager.default.createDirectory(at: directory.appending(path: "engine/bin"), withIntermediateDirectories: true)
+            try Data(#"{"id": "\#(id)"}"#.utf8).write(to: directory.appending(path: "manifest.json"))
+            try FileManager.default.copyItem(at: launcher, to: directory.appending(path: "engine/bin/wine"))
+            #expect(HighballSource.inspect(directory)?.support == .supported(try #require(SupportedRunners.build(id: id))))
+        }
+    }
+
+    // The real r25 launcher, when a Highball install has it
+    static var r25Launcher: URL? {
+        let url = HighballSource.home().appending(path: "engines/x64-crossover26.3-r25/engine/bin/wine")
+        return FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) ? url : nil
+    }
+
     // The real r19 launcher, when the scratch fixture or a Highball install has it
     static var r19Launcher: URL? {
         let repo = URL(filePath: #filePath)

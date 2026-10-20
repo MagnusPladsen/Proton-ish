@@ -53,7 +53,7 @@ struct DefaultToolTests {
     @Test("The Highball tool name is the newest installed Highball build's")
     func highballTool() {
         let builds = SupportedRunners.all.filter { $0.runtime == .highball }
-        #expect(DefaultTool.highballTool(installed: builds) == "protonish-highball-x64-crossover26.3-r25")
+        #expect(DefaultTool.highballTool(installed: builds) == "protonish-highball-x64-crossover26.3-r27")
         #expect(DefaultTool.highballTool(installed: Array(builds.prefix(1))) == "protonish-highball-x64-crossover26.3-r19")
         #expect(DefaultTool.highballTool(installed: []) == nil)
     }
