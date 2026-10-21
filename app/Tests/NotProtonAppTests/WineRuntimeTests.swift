@@ -149,9 +149,13 @@ struct WineRuntimeTests {
         }
     }
 
-    @Test("Highball r27 is the build offered for download, r26 needs macOS 27")
-    func highballR27Offered() throws {
-        #expect(HighballInstaller.build?.id == "x64-crossover26.3-r27")
+    // scripts/sync/pin-engines.sh appends newer revisions, so this names no newest one
+    @Test("Highball's download is r27 or newer, never r26, which needs macOS 27")
+    func highballDownloadRunsOnEveryMac() throws {
+        let offered = try #require(HighballInstaller.build)
+        let revision = try #require(Int(offered.releaseVersion.dropFirst()))
+        #expect(offered.id != "x64-crossover26.3-r26")
+        #expect(revision >= 27)
     }
 
     // Runs when the r19 engine is on this Mac (Highball install or the plan's scratch fixture):

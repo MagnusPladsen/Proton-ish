@@ -10,6 +10,8 @@ cd "$(dirname "$0")/../.."
 
 SWIFT="${SWIFT:-swift}"
 REFRESH_DB="${REFRESH_DB:-scripts/refresh-highball-db.sh}"
+HIGHBALL_MANIFESTS="${HIGHBALL_MANIFESTS:-app/.build/checkouts/highball/spike/engines}"
+engines_text=""
 
 latest=$("$GH" release list -R gauthierpiarrette/highball --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')
 latest=${latest#v}
@@ -50,6 +52,24 @@ if [ -n "$newer_kit" ]; then
   git add app/Package.swift app/Package.resolved app/Sources/HighballEnvCore/HighballEnvCore.swift
   notes="$notes- HighballKit $pinned → $newer_kit: https://github.com/gauthierpiarrette/highball/releases/tag/v$newer_kit
 "
+  # The new Highball release can bring engine revisions; those on a Wine build Proton-ish
+  # already supports are pinned in the same PR
+  if [ -d "$HIGHBALL_MANIFESTS" ]; then
+    pins=$(sh scripts/sync/pin-engines.sh "$HIGHBALL_MANIFESTS")
+    supported=$(printf '%s\n' "$pins" | sed -n 's/^pinned \([^ ]*\) .*/\1/p')
+    for engine in $supported; do
+      notes="$notes- Highball engine $engine is supported: the same Wine build as $(printf '%s\n' "$pins" | sed -n "s/^pinned $engine like \([^ ,]*\).*/\1/p")
+"
+      engines_text="${engines_text:+$engines_text, }${engine##*-}"
+    done
+    for engine in $(printf '%s\n' "$pins" | sed -n 's/^unknown \([^ ]*\) .*/\1/p'); do
+      notes="$notes- Highball engine $engine brings a new Wine build and stays unsupported; the engines job opens an issue for it
+"
+    done
+    [ -z "$supported" ] || git add Makefile app/Sources/NotProtonApp/Model/SupportedRunner.swift app/Sources/NotProtonApp/Model/NtdllPatcher.swift
+  else
+    sync_log "highball: no engine manifests at $HIGHBALL_MANIFESTS, engine revisions not checked"
+  fi
 fi
 if [ -n "$newer_db" ]; then
   "$REFRESH_DB" "$newer_db" >/dev/null
@@ -62,10 +82,10 @@ git commit -q -m "Sync Highball: ${newer_kit:+HighballKit $newer_kit}${newer_kit
 $notes
 Co-Authored-By: Proton-ish sync <93226629+MagnusPladsen@users.noreply.github.com>"
 summary="${newer_kit:+HighballKit $newer_kit}${newer_kit:+${newer_db:+, }}${newer_db:+highball-db $(printf %.7s "$newer_db")}"
-version=$(bump_release "$summary: Highball's fixes and per-game data as of this release.")
+version=$(bump_release "$summary: Highball's fixes and per-game data as of this release.${engines_text:+ Supports Highball engine $engines_text.}")
 git push -q -u origin "$branch"
 "$GH" pr create -R "$REPO" --base main --head "$branch" \
   --title "sync: Highball ${newer_kit:+$newer_kit }${newer_db:+db $(printf %.7s "$newer_db")}" --label upstream-sync --label highball \
-  --body "$(printf '## What\n%sReleased as %s.\n\nA HighballKit bump can change the API `highball-env` builds against; CI builds it. A new engine build still needs its own `SupportedRunner` entry, which the engines job reports as an issue.\n%s' "$notes" "$version" "$(footer "$version")")"
+  --body "$(printf '## What\n%sReleased as %s.\n\nA HighballKit bump can change the API `highball-env` builds against; CI builds it. Engine revisions on a Wine build Proton-ish supports are pinned here; a new Wine build needs its own `SupportedRunner` entry, which the engines job reports as an issue.\n%s' "$notes" "$version" "$(footer "$version")")"
 enable_auto_merge "$branch"
 sync_log "highball: opened a PR on $branch, releases $version when CI passes"
