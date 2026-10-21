@@ -67,9 +67,15 @@ Co-Authored-By: Proton-ish sync <93226629+MagnusPladsen@users.noreply.github.com
   printf '%s\n' "$version"
 }
 
-# The PR merges itself once the required checks pass
+# The PR merges itself once the required checks pass. Right after a push GitHub has not
+# registered the new head's checks yet and refuses auto-merge, so it is asked again
 enable_auto_merge() {   # branch
-  "$GH" pr merge --auto --merge -R "$REPO" "$1" >/dev/null
+  tries=1
+  until "$GH" pr merge --auto --merge -R "$REPO" "$1" >/dev/null; do
+    [ "$tries" -lt 5 ] || { echo "sync: auto-merge for $1 refused $tries times" >&2; return 1; }
+    tries=$((tries + 1))
+    sleep "${AUTO_MERGE_WAIT:-15}"
+  done
 }
 
 footer() {   # version
