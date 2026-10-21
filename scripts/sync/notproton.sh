@@ -26,6 +26,8 @@ fi
 
 commits=$(git log --oneline origin/main..upstream/main)
 git_identity
+# .gitattributes marks the fork's own files (README.md) merge=ours; the driver keeps our side
+git config merge.ours.driver true
 git checkout -q -B "$branch" origin/main
 if git merge --no-ff --no-edit -m "Merge NotProton $sha" upstream/main >/dev/null 2>&1; then
   version=$(bump_release "NotProton $sha merged (see the release notes for the upstream changes).")
