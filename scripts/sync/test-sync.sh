@@ -244,7 +244,7 @@ manifest() {   # dir id wine-sha minMacOS displayName
 # The fork's real Makefile and Swift pins, with manifests for the revisions they pin
 pins() {
   rm -rf "$work/pin"; mkdir -p "$work/pin/scripts/sync" "$work/pin/app/Sources/NotProtonApp/Model" "$work/pin/engines"
-  cp "$here"/pin-engines.sh "$work/pin/scripts/sync/"
+  cp "$here"/pin-engines.sh "$here"/engine_pins.py "$work/pin/scripts/sync/"
   cp "$here/../../Makefile" "$work/pin/Makefile"
   cp "$here/../../app/Package.swift" "$work/pin/app/Package.swift"
   cp "$here/../../app/Sources/NotProtonApp/Model/SupportedRunner.swift" "$here/../../app/Sources/NotProtonApp/Model/NtdllPatcher.swift" \
@@ -280,6 +280,12 @@ has "it patches like the build it shares" '^        "x64-crossover26.3-r28": hig
 has "it joins the engines the app bundles" '^HIGHBALL_ENGINES := .* x64-crossover26.3-r27 x64-crossover26.3-r28$' "$work/pin/Makefile"
 runpin
 is "a second run pins nothing" "" "$(cat "$work/out")"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+(cd "$work/pin" && sh scripts/sync/pin-engines.sh --dry-run engines) > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"
+is "a dry run says what it would pin" "pinned x64-crossover26.3-r28 like x64-crossover26.3-r27" "$(cat "$work/out")"
+hasnt "and writes nothing" 'x64-crossover26.3-r28' "$runner"
 
 pins
 manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 27.0 "Wine 11.0 (CrossOver 26.3) r28, D3DMetal 5"
@@ -320,7 +326,7 @@ hasnt "older revisions and other engine lines are left alone" 'x64-crossover26.3
 
 echo "== Highball: a HighballKit bump pins its engines =="
 hb 0.10.15 aaaaaaa1111
-cp "$here"/pin-engines.sh "$work/hb/scripts/sync/"
+cp "$here"/pin-engines.sh "$here"/engine_pins.py "$work/hb/scripts/sync/"
 pins
 manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
 mkdir -p "$work/hb/app/Sources/NotProtonApp/Model"
