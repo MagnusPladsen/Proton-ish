@@ -4,7 +4,7 @@
 # Edits the Makefile, SupportedRunner.swift and NtdllPatcher.swift in place and prints one line
 # per revision newer than the pinned ones on their engine line:
 #   pinned <id> like <pinned id>[, needs macOS <version>]
-#   unknown <id> <Wine download URL>   (a new Wine build: hashes and patches are manual work)
+#   unknown <id> <Wine download URL>   (a new Wine build: highball-engine.sh takes it from there)
 # A revision that runs on Proton-ish's minimum macOS becomes the engine it downloads; one that
 # needs a newer macOS goes in before that one. --dry-run prints the same lines and edits nothing.
 # Usage: scripts/sync/pin-engines.sh [--dry-run] <directory of Highball engine manifests>

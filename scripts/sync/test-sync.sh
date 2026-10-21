@@ -17,9 +17,11 @@ mkdir -p "$work/bin"
 cat > "$work/bin/gh" <<'STUB'
 #!/bin/sh
 printf '%s\n' "$*" >> "$STUB_LOG"
+# A GitHub that cannot answer a listing
+case "$1 $2" in "pr list"|"issue list") [ ! -e "$STUB_DIR/list-fails" ] || exit 1 ;; esac
 case "$1 $2" in
-  "issue list") cat "$STUB_DIR/issues" 2>/dev/null ;;
-  "pr list") cat "$STUB_DIR/prs" 2>/dev/null ;;
+  "issue list") cat "$STUB_DIR/issues" 2>/dev/null || : ;;
+  "pr list") cat "$STUB_DIR/prs" 2>/dev/null || : ;;
   "release list") cat "$STUB_DIR/releases" 2>/dev/null ;;
   "api repos/gauthierpiarrette/highball-db/commits/main") cat "$STUB_DIR/dbhead" 2>/dev/null ;;
   "pr create"|"issue create") echo "https://example.invalid/1" ;;
@@ -48,7 +50,7 @@ checkout() {
   rm -rf "$work/repo" "$work/origin.git" "$work/upstream.git" "$work/seed"
   git_quiet init -q "$work/seed"
   mkdir -p "$work/seed/scripts/sync"
-  cp "$here"/common.sh "$here"/notproton.sh "$here"/highball.sh "$here"/highball-engine.sh "$here"/bump-release.sh "$here"/known-highball-engine "$work/seed/scripts/sync/"
+  cp "$here"/common.sh "$here"/notproton.sh "$here"/highball.sh "$here"/bump-release.sh "$work/seed/scripts/sync/"
   printf 'line one\nline two\n' > "$work/seed/steam.cpp"
   release_files "$work/seed"
   git_quiet -C "$work/seed" add -A && git_quiet -C "$work/seed" commit -q -m "base"
@@ -218,23 +220,6 @@ printf 'v0.10.16\n' > "$STUB_DIR/releases"; printf 'bbbbbbb2222\n' > "$STUB_DIR/
 runhb
 has "both newer go in one PR" "--head sync/highball-0.10.16-db-bbbbbbb " "$STUB_LOG"
 is "the snapshot is refreshed" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16-db-bbbbbbb:third_party/highball-db/highball-db.json | grep -c bbbbbbb2222)"
-
-echo "== Highball engines =="
-eng() {
-  rm -rf "$work/eng"; mkdir -p "$work/eng/scripts/sync"
-  cp "$here"/common.sh "$here"/highball-engine.sh "$work/eng/scripts/sync/"
-  printf 'engine-wine-11.0-20261005T184024Z-0019-forza-trial\n' > "$work/eng/scripts/sync/known-highball-engine"
-}
-runeng() { : > "$STUB_LOG"; sh "$work/eng/scripts/sync/highball-engine.sh" > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"; }
-eng
-printf 'engine-wine-11.0-20261014T003801Z-0024-app-packages\nd3dmetal-tsshim-20261014\nengine-wine-11.0-20261005T184024Z-0019-forza-trial\nengine-wine-11.0-20261001T000000Z-0015-old\n' > "$STUB_DIR/releases"
-runeng
-is "only the newer engine gets an issue" "1" "$(grep -c "issue create" "$STUB_LOG")"
-has "named after its tag" "New Highball engine engine-wine-11.0-20261014T003801Z-0024-app-packages" "$STUB_LOG"
-printf '3\n' > "$STUB_DIR/issues"
-runeng
-hasnt "with its issue open, nothing new" "issue create" "$STUB_LOG"
-rm -f "$STUB_DIR/issues"
 
 echo "== Highball engine pins =="
 manifest() {   # dir id wine-sha minMacOS displayName
@@ -520,6 +505,125 @@ pinfix null engine-wine-11.0-20261101T000000Z-0025-test
 runwbpin
 has "a result with no match is refused" "exit 2" "$work/out"
 is "and nothing is written" "$(cat "$work/before")" "$(cd "$work/wb" && find . -type f -exec shasum {} + | sort)"
+
+echo "== New Highball Wine builds =="
+# The Wine download, served from the file a case builds
+cat > "$work/bin/download" <<'STUB'
+#!/bin/sh
+printf 'download %s\n' "$2" >> "$STUB_LOG"
+cp "$STUB_DIR/wine.tar.gz" "$1"
+STUB
+chmod +x "$work/bin/download"
+# A fork checkout with the real pins and an origin, manifests for the pinned revisions and r90 on
+# a new Wine build of three made-up files, resolving like build 0024 with any field overridden
+nwb() {   # [field=python-literal ...] for the 64-bit ntdll
+  rm -rf "$work/nw" "$work/nw-origin.git" "$work/nw-tar" "$work/nw-engines" "$STUB_DIR/resolve"
+  mkdir -p "$work/nw/scripts/sync" "$work/nw/app/Sources/NotProtonApp" "$work/nw/ntdll-patch" "$work/nw-engines" "$STUB_DIR/resolve" \
+    "$work/nw-tar/engine/bin" "$work/nw-tar/engine/lib/wine/x86_64-windows" "$work/nw-tar/engine/lib/wine/i386-windows"
+  cp "$here"/common.sh "$here"/highball-engine.sh "$here"/pin-engines.sh "$here"/engine_pins.py "$here"/wine_build.py "$work/nw/scripts/sync/"
+  cp "$here/../../Makefile" "$work/nw/"; cp "$here/../../app/Package.swift" "$work/nw/app/"
+  cp -R "$here/../../app/Sources/NotProtonApp/Model" "$here/../../app/Sources/NotProtonApp/Resources" "$work/nw/app/Sources/NotProtonApp/"
+  cp "$here/../../ntdll-patch/resolve.py" "$here/../../ntdll-patch/apply.py" "$here/../../ntdll-patch/build-ntdll.sh" "$work/nw/ntdll-patch/"
+  release_files "$work/nw"
+  git_quiet -C "$work/nw" init -q && git_quiet -C "$work/nw" add -A && git_quiet -C "$work/nw" commit -q -m base
+  git_quiet clone -q --bare "$work/nw" "$work/nw-origin.git"
+  git_quiet -C "$work/nw" remote add origin "$work/nw-origin.git"
+  git_quiet -C "$work/nw" fetch -q origin
+  printf 'a new launcher' > "$work/nw-tar/engine/bin/wine"
+  printf 'a new 64-bit ntdll' > "$work/nw-tar/engine/lib/wine/x86_64-windows/ntdll.dll"
+  printf 'a new 32-bit ntdll' > "$work/nw-tar/engine/lib/wine/i386-windows/ntdll.dll"
+  resolved x86_64-windows "$work/nw-tar/engine/lib/wine/x86_64-windows/ntdll.dll" "$@"
+  resolved i386-windows "$work/nw-tar/engine/lib/wine/i386-windows/ntdll.dll"
+  COPYFILE_DISABLE=1 tar -czf "$STUB_DIR/wine.tar.gz" -C "$work/nw-tar" engine
+  manifest "$work/nw-engines" x64-crossover26.3-r19 wine0019 14.0 "Wine 11.0 (CrossOver 26.3) r19"
+  for r in 24 25 27; do manifest "$work/nw-engines" "x64-crossover26.3-r$r" wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r$r"; done
+  manifest "$work/nw-engines" x64-crossover26.3-r26 wine0024 27.0 "Wine 11.0 (CrossOver 26.3) r26, D3DMetal 4.0 beta 3"
+  newbuild x64-crossover26.3-r90
+  short=$(sha_of "$STUB_DIR/wine.tar.gz" | cut -c1-12)
+}
+newbuild() {   # id [sha256 [size]]
+  printf '{"id":"%s","minMacOS":"14.0","displayName":"Wine 11.0 (CrossOver 26.3) r%s","components":{"wine":{"sha256":"%s","size":%s,"url":"https://example.invalid/engine-wine-11.0-20261101T000000Z-0025-test/engine-wine-11.0-20261101T000000Z-0025-test.tar.gz","extract":{"into":"engine","subpath":"engine"}}}}\n' \
+    "$1" "${1##*-r}" "${2:-$(sha_of "$STUB_DIR/wine.tar.gz")}" "${3:-$(wc -c < "$STUB_DIR/wine.tar.gz" | tr -d ' ')}" > "$work/nw-engines/$1.json"
+}
+runnw() {
+  : > "$STUB_LOG"
+  HIGHBALL_MANIFESTS="$work/nw-engines" DOWNLOAD="$work/bin/download" RESOLVE="$work/bin/resolve" APPLY="$work/bin/apply" \
+    sh "$work/nw/scripts/sync/highball-engine.sh" > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"
+}
+branch_file() { git -C "$work/nw-origin.git" show "sync/engine-$short:$1" 2>/dev/null; }
+
+nwb
+runnw
+has "a new Wine build resolving like a pinned one becomes a PR" "^pr create .* --head sync/engine-$short " "$STUB_LOG"
+has "titled after the engine and its Wine build" "--title sync: Highball engine x64-crossover26.3-r90, Wine build 0025 " "$STUB_LOG"
+hasnt "which never merges itself" "pr merge" "$STUB_LOG"
+is "nor bumps the version" "0.1.0-beta.5" "$(version_on "$work/nw-origin.git" "sync/engine-$short")"
+is "its branch bundles the engine" "1" "$(branch_file Makefile | grep -c '^HIGHBALL_ENGINES := .* x64-crossover26.3-r90$')"
+is "and pins its ntdll" "1" "$(branch_file ntdll-patch/build-ntdll.sh | grep -c '^HB_0025_CLEAN_X86_64=')"
+is "committed as the bot" "93226629+MagnusPladsen@users.noreply.github.com" "$(git -C "$work/nw-origin.git" log -1 --format=%ae "sync/engine-$short")"
+has "the PR tells the reviewer to launch a game first" "launch a game through x64-crossover26.3-r90" "$STUB_LOG"
+has "and how to ship it" "scripts/sync/bump-release.sh" "$STUB_LOG"
+has "with the patched hashes on their own line" "^- Patched ntdll: x86_64 " "$STUB_LOG"
+has "and which pinned build it is patched like" "x64-crossover26.3-r27" "$STUB_LOG"
+hasnt "and opens no issue" "issue create" "$STUB_LOG"
+
+nwb hookRVA=0x484f4
+runnw
+has "a build whose constants differ becomes an issue" "^issue create .* --title Highball engine x64-crossover26.3-r90: Wine build 0025 needs new detour work" "$STUB_LOG"
+has "that says what differs" "x86_64-windows hookRVA 0x484f3 != 0x484f4" "$STUB_LOG"
+has "and names the Wine build so the next run finds it" "Wine build: $short" "$STUB_LOG"
+has "with a heading of their own" "^## Differences from the newest pinned build" "$STUB_LOG"
+is "after a blank line" "" "$(grep -B1 '^## Differences' "$STUB_LOG" | head -1)"
+has "and carries resolve.py's report" "report for" "$STUB_LOG"
+is "and pushes no branch" "" "$(git -C "$work/nw-origin.git" branch --list 'sync/*')"
+hasnt "nor a PR" "pr create" "$STUB_LOG"
+
+nwb
+newbuild x64-crossover26.3-r90 "$(printf 'f%.0s' $(seq 64))"
+runnw
+has "a download that is not the manifest's fails the job" "exit 1" "$work/out"
+hasnt "and makes nothing" "create" "$STUB_LOG"
+
+nwb
+newbuild x64-crossover26.3-r90 "" 12
+runnw
+has "so does one of another size" "exit 1" "$work/out"
+hasnt "making nothing" "create" "$STUB_LOG"
+
+nwb
+newbuild x64-crossover26.3-r91
+runnw
+is "two revisions on the new build make one PR" "1" "$(grep -c '^pr create' "$STUB_LOG")"
+has "for the newer one" "--title sync: Highball engine x64-crossover26.3-r91, " "$STUB_LOG"
+
+nwb
+printf '7\n' > "$STUB_DIR/prs"
+runnw
+has "PRs are looked for in every state" "^pr list .*--head sync/engine-$short .*--state all" "$STUB_LOG"
+hasnt "a build that had a PR is not downloaded again" "^download" "$STUB_LOG"
+hasnt "nor gets another" "create" "$STUB_LOG"
+rm -f "$STUB_DIR/prs"
+
+nwb
+printf '8\n' > "$STUB_DIR/issues"
+runnw
+has "issues too" "^issue list .*--state all .*$short" "$STUB_LOG"
+hasnt "a build that had an issue is not downloaded again" "^download" "$STUB_LOG"
+rm -f "$STUB_DIR/issues"
+
+nwb
+: > "$STUB_DIR/list-fails"
+runnw
+has "a GitHub that cannot list PRs fails the job" "exit 1" "$work/out"
+hasnt "before anything is downloaded" "^download" "$STUB_LOG"
+rm -f "$STUB_DIR/list-fails"
+
+nwb
+rm "$work/nw-engines/x64-crossover26.3-r90.json"
+runnw
+hasnt "with no new Wine build nothing is downloaded" "^download" "$STUB_LOG"
+hasnt "or made" "create" "$STUB_LOG"
+hasnt "and the job passes" "^exit" "$work/out"
 
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
 echo "==> sync: NotProton merges and conflicts, Highball bumps, engines and engine pins all answer"
