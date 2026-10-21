@@ -23,10 +23,14 @@ case "$1 $2" in
   "release list") cat "$STUB_DIR/releases" 2>/dev/null ;;
   "api repos/gauthierpiarrette/highball-db/commits/main") cat "$STUB_DIR/dbhead" 2>/dev/null ;;
   "pr create"|"issue create") echo "https://example.invalid/1" ;;
+  # GitHub refuses auto-merge until it has registered the new head's checks
+  "pr merge")
+    left=$(cat "$STUB_DIR/merge-refusals" 2>/dev/null || echo 0)
+    if [ "$left" -gt 0 ]; then echo $((left - 1)) > "$STUB_DIR/merge-refusals"; echo "Pull request is in clean status" >&2; exit 1; fi ;;
 esac
 STUB
 chmod +x "$work/bin/gh"
-export GH="$work/bin/gh" REPO="example/fork" STUB_DIR="$work/stub" STUB_LOG="$work/gh.log"
+export GH="$work/bin/gh" REPO="example/fork" STUB_DIR="$work/stub" STUB_LOG="$work/gh.log" AUTO_MERGE_WAIT=0
 mkdir -p "$STUB_DIR"
 git_quiet() { git -c user.name=t -c user.email=t@example.invalid -c init.defaultBranch=main "$@"; }
 
@@ -87,6 +91,21 @@ has "the PR says what merging publishes" "publishes 0.1.0-beta.6" "$STUB_LOG"
 run notproton.sh
 hasnt "a second run opens no second PR" "pr create" "$STUB_LOG"
 has "and says why" "already in a PR or issue" "$work/out"
+
+echo "== Auto-merge before GitHub has the checks =="
+checkout
+upstream_commit fix.c 'int fixed;' "Fix output logging" > /dev/null
+printf '2\n' > "$STUB_DIR/merge-refusals"
+run notproton.sh
+is "a refused auto-merge is asked for again until it is on" "3" "$(grep -c '^pr merge --auto' "$STUB_LOG")"
+hasnt "and the sync succeeds" "^exit" "$work/out"
+checkout
+upstream_commit fix.c 'int fixed;' "Fix output logging" > /dev/null
+printf '9\n' > "$STUB_DIR/merge-refusals"
+run notproton.sh
+is "it gives up after five tries" "5" "$(grep -c '^pr merge --auto' "$STUB_LOG")"
+has "and fails, so the run shows red" "^exit 1" "$work/out"
+rm -f "$STUB_DIR/merge-refusals"
 
 echo "== Bump by hand =="
 checkout
