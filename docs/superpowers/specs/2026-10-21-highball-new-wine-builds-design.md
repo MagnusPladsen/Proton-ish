@@ -56,8 +56,9 @@ build 0021 (r19) and takes r19's payloads unchanged, only the image hashes diffe
   (pip, pin the version). The Wine download is about 335 MB.
 - The Makefile's `app-payload` step fails when a `HIGHBALL_ENGINES` id has no manifest in the
   pinned HighballKit package, so a pin can only name a manifest that package already has.
-- Highball publishes Wine builds no manifest ever uses (`0015-coreaudio-trial`,
-  `0019-forza-trial`, …), and release serials are not in time order.
+- Highball publishes Wine builds that no manifest may ever use (trials such as
+  `0015-coreaudio-trial`; others, like r19's `0019-forza-trial`, do get one), and release serials
+  are not in time order.
 - Files a pin touches today, all of which the PR must edit consistently:
   `ntdll-patch/resolve.py` (`PINNED`, keyed by clean ntdll sha),
   `ntdll-patch/apply.py` (`PAYLOAD_BY_CLEAN_SHA`),
