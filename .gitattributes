@@ -1,0 +1,4 @@
+# The fork's README is its own text: in a merge from NotProton it wins without a conflict.
+# Needs the "ours" merge driver, which scripts/sync/notproton.sh configures before merging; set it by hand for a
+# manual merge with: git config merge.ours.driver true
+README.md merge=ours

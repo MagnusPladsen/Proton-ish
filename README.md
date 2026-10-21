@@ -216,6 +216,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-20: 1.0.0. Proton-ish leaves beta: Highball's free Wine 11 engines r19 to r27 with Highball's launch setup and per-game fixes, CrossOver as NotProton has it, self-releasing upstream syncs, Sparkle updates and a Homebrew cask. Nobody can test every game, so the README keeps a compatibility list and every game that misbehaves is an issue.
 - 2026-10-20: highball-db f2c34a9: Highball's fixes and per-game data as of this release.
 - 2026-10-21: HighballKit 0.10.22, highball-db 18f3c87: Highball's fixes and per-game data as of this release.
+- 2026-10-21: The upstream sync runs every three hours instead of daily, and an upstream README edit no longer blocks a NotProton merge: the fork's README wins (`merge=ours`), so those merges ship on their own like the rest.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
@@ -249,10 +250,12 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 
 ## Maintenance
 
-A daily workflow (`.github/workflows/upstream-sync.yml`, also on demand under Actions) keeps the fork current:
+A workflow every three hours (`.github/workflows/upstream-sync.yml`, also on demand under Actions) keeps the fork
+current:
 
 - **NotProton:** a new upstream commit becomes a PR that merges it into main, or an issue listing the conflicting
-  files when the merge is not clean.
+  files when the merge is not clean. The fork's own README always wins (`.gitattributes`, `merge=ours`), so an
+  upstream README edit never blocks a merge.
 - **Highball:** a new Highball release bumps the HighballKit pin, and a new highball-db commit refreshes the bundled
   snapshot, in one PR.
 - **Highball engines:** a new engine build becomes an issue with the steps to support it.

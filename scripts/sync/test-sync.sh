@@ -104,6 +104,23 @@ is "a released beta moves to the next beta" "0.1.0-beta.6" "$(nv 0.1.0-beta.5)"
 is "a version with no tag yet is kept" "0.1.0-beta.7" "$(nv 0.1.0-beta.7)"
 is "a released final version moves to the next patch" "1.0.1" "$(nv 1.0.0)"
 
+echo "== NotProton: the fork's README wins a README conflict =="
+checkout
+rm -rf "$work/or"; git_quiet clone -q "$work/origin.git" "$work/or"
+cp "$here/../../.gitattributes" "$work/or/.gitattributes"
+sed -i.bak '1s/.*/# Fork, our own words/' "$work/or/README.md" && rm -f "$work/or/README.md.bak"
+git_quiet -C "$work/or" add -A && git_quiet -C "$work/or" commit -q -m "our README" && git_quiet -C "$work/or" push -q origin main
+rm -rf "$work/up"; git_quiet clone -q "$work/upstream.git" "$work/up"
+sed -i.bak '1s/.*/# NotProton, upstream words/' "$work/up/README.md" && rm -f "$work/up/README.md.bak"
+printf 'int fixed;\n' > "$work/up/fix.c"
+git_quiet -C "$work/up" add -A && git_quiet -C "$work/up" commit -q -m "their README and a fix" && git_quiet -C "$work/up" push -q origin main
+sha=$(git_quiet -C "$work/up" rev-parse --short=7 HEAD)
+run notproton.sh
+has "a README-only conflict still becomes a PR" "pr create .* --head sync/notproton-$sha" "$STUB_LOG"
+hasnt "and no issue" "issue create" "$STUB_LOG"
+is "the README keeps the fork's text" "# Fork, our own words" "$(git -C "$work/origin.git" show "sync/notproton-$sha:README.md" | head -1)"
+is "upstream's code change is merged" "int fixed;" "$(git -C "$work/origin.git" show "sync/notproton-$sha:fix.c")"
+
 echo "== NotProton: a conflict becomes an issue =="
 checkout
 origin_commit steam.cpp 'line one\nours\n' "our change"
