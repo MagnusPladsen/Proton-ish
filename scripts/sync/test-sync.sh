@@ -365,5 +365,113 @@ else
   fi
 fi
 
+echo "== Wine build check =="
+# resolve.py without capstone: pins come from its PINNED literal, constants from files a case writes
+cat > "$work/bin/resolve" <<'STUB'
+#!/usr/bin/env python3
+import ast, hashlib, json, os, pathlib, sys
+def pinned():
+    tree = ast.parse(pathlib.Path(os.environ["REAL_RESOLVE"]).read_text())
+    node = next(n for n in tree.body if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "PINNED")
+    return ast.literal_eval(node.value)
+if sys.argv[1] == "--pinned":
+    pins = pinned()
+    if sys.argv[2] not in pins: sys.exit(1)
+    print(json.dumps(pins[sys.argv[2]])); sys.exit(0)
+path = sys.argv[-1]
+base = pathlib.Path(os.environ["STUB_DIR"], "resolve", hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest())
+if base.with_suffix(".err").exists():
+    sys.stderr.write(base.with_suffix(".err").read_text()); sys.exit(1)
+print(base.with_suffix(".json").read_text() if sys.argv[1] == "--json" else f"report for {path}")
+STUB
+# apply.py's output stands in as the input, a marker and the payload
+cat > "$work/bin/apply" <<'STUB'
+#!/bin/sh
+cat "$1" > "$2"; printf patched >> "$2"; cat "$3" >> "$2"
+STUB
+chmod +x "$work/bin/resolve" "$work/bin/apply"
+export REAL_RESOLVE="$here/../../ntdll-patch/resolve.py"
+# A repository with the real pins and payloads, and an engine of three made-up files
+wb() {
+  rm -rf "$work/wb" "$STUB_DIR/resolve"; mkdir -p "$work/wb/scripts/sync" "$work/wb/app/Sources/NotProtonApp" "$STUB_DIR/resolve"
+  cp "$here"/wine_build.py "$here"/engine_pins.py "$work/wb/scripts/sync/" 2>/dev/null || :
+  cp "$here/../../Makefile" "$work/wb/"; cp "$here/../../app/Package.swift" "$work/wb/app/"
+  cp -R "$here/../../app/Sources/NotProtonApp/Model" "$here/../../app/Sources/NotProtonApp/Resources" "$work/wb/app/Sources/NotProtonApp/"
+  engine="$work/wb-engine"; rm -rf "$engine"; mkdir -p "$engine/bin" "$engine/lib/wine/x86_64-windows" "$engine/lib/wine/i386-windows"
+  printf 'a new launcher' > "$engine/bin/wine"
+  printf 'a new 64-bit ntdll' > "$engine/lib/wine/x86_64-windows/ntdll.dll"
+  printf 'a new 32-bit ntdll' > "$engine/lib/wine/i386-windows/ntdll.dll"
+}
+sha_of() { shasum -a 256 "$1" | cut -d' ' -f1; }
+# What resolve.py finds in a made-up ntdll: build 0024's constants, with any field overridden
+resolved() {   # arch dll [field=python-literal ...]
+  python3 -I - "$REAL_RESOLVE" "$STUB_DIR/resolve/$(sha_of "$2").json" "$@" <<'EOF'
+import ast, json, pathlib, sys
+real, out, arch, _dll, *overrides = sys.argv[1:]
+tree = ast.parse(pathlib.Path(real).read_text())
+pins = ast.literal_eval(next(n for n in tree.body if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "PINNED").value)
+key = {"x86_64-windows": "e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3",
+       "i386-windows": "54137f366a4f15403d9eecbbf3ce575b3129251e2eebdad125b55bd4b532e5ce"}[arch]
+r = {k: v for k, v in pins[key].items() if k != "payload"}
+r.update({"x86_64-windows": dict(placement="padding", fill=0, machine=0x8664, magic=0x20b, imageBase=0x170000000),
+          "i386-windows": dict(placement="section", fill=0, machine=0x14c, magic=0x10b, imageBase=0x7bc00000)}[arch])
+for item in overrides:
+    name, value = item.split("=", 1); r[name] = ast.literal_eval(value)
+pathlib.Path(out).write_text(json.dumps(r))
+EOF
+}
+runcheck() { (cd "$work/wb" && RESOLVE="$work/bin/resolve" APPLY="$work/bin/apply" python3 -I scripts/sync/wine_build.py check "$engine") > "$work/check.json" 2> "$work/out" || echo "exit $?" >> "$work/out"; }
+check_field() { python3 -I -c 'import json, sys; v = json.load(open(sys.argv[1])); [v := v[int(k)] if isinstance(v, list) else v[k] for k in sys.argv[2:]]; print(json.dumps(v) if isinstance(v, (list, dict)) or v is None else v)' "$work/check.json" "$@" 2>/dev/null || :; }
+
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll"
+resolved i386-windows "$engine/lib/wine/i386-windows/ntdll.dll"
+runcheck
+is "a build resolving like a pinned one matches the newest of them" "x64-crossover26.3-r27" "$(check_field match)"
+is "with no differences" "[]" "$(check_field differences)"
+is "its loader hash is the launcher's" "$(sha_of "$engine/bin/wine")" "$(check_field loader)"
+is "its clean hashes are the ntdlls'" "$(sha_of "$engine/lib/wine/i386-windows/ntdll.dll")" "$(check_field clean i386-windows)"
+"$work/bin/apply" "$engine/lib/wine/x86_64-windows/ntdll.dll" "$work/patched64" "$work/wb/app/Sources/NotProtonApp/Resources/detour2-hb-r19.bin"
+is "its patched hash comes from apply.py with the pinned build's payload" "$(sha_of "$work/patched64")" "$(check_field patched x86_64-windows)"
+has "the report is resolve.py's" "report for" "$work/check.json"
+is "and it exits 0" "" "$(cat "$work/out")"
+
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll" hookRVA=0x484f4
+resolved i386-windows "$engine/lib/wine/i386-windows/ntdll.dll"
+runcheck
+is "a different hook is no match" "null" "$(check_field match)"
+is "and says what differs" '["x86_64-windows hookRVA 0x484f3 != 0x484f4"]' "$(check_field differences)"
+is "with nothing patched" "null" "$(check_field patched)"
+is "still exiting 0" "" "$(cat "$work/out")"
+
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll" \
+  "exports={'LdrGetDllHandle': 0x170014fe0, 'LdrLoadDll': 0x170015b50, 'NtProtectVirtualMemory': 0x17000f380, 'NtClose': 0x17000eb60}"
+resolved i386-windows "$engine/lib/wine/i386-windows/ntdll.dll"
+runcheck
+is "exports the payload does not use are not compared" "x64-crossover26.3-r27" "$(check_field match)"
+
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll" "exports={'LdrGetDllHandle': 0x170014fe0, 'LdrLoadDll': 0x170015b50}"
+resolved i386-windows "$engine/lib/wine/i386-windows/ntdll.dll"
+runcheck
+is "a missing export the payload uses is a difference" '["x86_64-windows exports.NtProtectVirtualMemory 0x17000f380 != None"]' "$(check_field differences)"
+
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll" fill=0xcc
+resolved i386-windows "$engine/lib/wine/i386-windows/ntdll.dll"
+runcheck
+is "a cave filled differently than the app expects is no match" '["x86_64-windows fill 0x0 != 0xcc"]' "$(check_field differences)"
+
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll"
+printf 'cannot find build_module\n' > "$STUB_DIR/resolve/$(sha_of "$engine/lib/wine/i386-windows/ntdll.dll").err"
+runcheck
+is "an ntdll resolve.py refuses is no match" "null" "$(check_field match)"
+is "and the refusal is the difference" "i386-windows: cannot find build_module" "$(check_field differences 0)"
+has "and the report" "cannot find build_module" "$work/check.json"
+is "it is an answer, not a failure" "" "$(cat "$work/out")"
+
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
 echo "==> sync: NotProton merges and conflicts, Highball bumps, engines and engine pins all answer"
