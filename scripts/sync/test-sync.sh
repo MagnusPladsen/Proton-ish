@@ -343,5 +343,27 @@ is "its Swift pins are committed with it" "1" "$(git -C "$work/hb-origin.git" sh
 is "the changelog says the engine is supported" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:CHANGELOG.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16: .*Supports Highball engine r28\.")"
 has "the PR names the pinned engine" "x64-crossover26.3-r28 is supported" "$STUB_LOG"
 
+echo "== resolve.py modes =="
+resolve="$here/../../ntdll-patch/resolve.py"
+json_field() { python3 -I -c 'import json, sys; print(json.load(sys.stdin)[sys.argv[1]])' "$1" 2>/dev/null || :; }
+if ! python3 -I -c 'import capstone' 2>/dev/null; then
+  echo "  skip  resolve.py needs capstone"
+else
+  out=$(python3 -I "$resolve" --pinned e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3 2>/dev/null) || :
+  is "a pinned ntdll's hook is printed as a number" "296179" "$(printf '%s' "$out" | json_field hookRVA)"
+  is "and its work register" "r15" "$(printf '%s' "$out" | json_field wm)"
+  python3 -I "$resolve" --pinned 0000000000000000000000000000000000000000000000000000000000000000 > "$work/out" 2>&1 && st=0 || st=$?
+  is "an unpinned sha exits 1" "1" "$st"
+  is "and prints nothing" "" "$(cat "$work/out")"
+  r25="$HOME/Library/Application Support/Highball/engines/x64-crossover26.3-r25/engine/lib/wine/x86_64-windows/ntdll.dll"
+  if [ -f "$r25" ]; then
+    out=$(python3 -I "$resolve" --json "$r25" 2>/dev/null) || :
+    is "a real ntdll resolves to its hook" "296179" "$(printf '%s' "$out" | json_field hookRVA)"
+    is "and its cave" "499872" "$(printf '%s' "$out" | json_field caveRVA)"
+  else
+    echo "  skip  no Highball r25 engine on this Mac"
+  fi
+fi
+
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
 echo "==> sync: NotProton merges and conflicts, Highball bumps, engines and engine pins all answer"
