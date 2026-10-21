@@ -209,5 +209,106 @@ runeng
 hasnt "with its issue open, nothing new" "issue create" "$STUB_LOG"
 rm -f "$STUB_DIR/issues"
 
+echo "== Highball engine pins =="
+manifest() {   # dir id wine-sha minMacOS displayName
+  printf '{"id":"%s","minMacOS":"%s","displayName":"%s","components":{"wine":{"sha256":"%s","url":"https://example.invalid/%s.tar.xz"}}}\n' \
+    "$2" "$4" "$5" "$3" "$3" > "$1/$2.json"
+}
+# The fork's real Makefile and Swift pins, with manifests for the revisions they pin
+pins() {
+  rm -rf "$work/pin"; mkdir -p "$work/pin/scripts/sync" "$work/pin/app/Sources/NotProtonApp/Model" "$work/pin/engines"
+  cp "$here"/pin-engines.sh "$work/pin/scripts/sync/"
+  cp "$here/../../Makefile" "$work/pin/Makefile"
+  cp "$here/../../app/Package.swift" "$work/pin/app/Package.swift"
+  cp "$here/../../app/Sources/NotProtonApp/Model/SupportedRunner.swift" "$here/../../app/Sources/NotProtonApp/Model/NtdllPatcher.swift" \
+    "$work/pin/app/Sources/NotProtonApp/Model/"
+  manifest "$work/pin/engines" x64-crossover26.3-r19 wine0019 14.0 "Wine 11.0 (CrossOver 26.3) r19"
+  for r in 24 25 27; do manifest "$work/pin/engines" "x64-crossover26.3-r$r" wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r$r"; done
+  manifest "$work/pin/engines" x64-crossover26.3-r26 wine0024 27.0 "Wine 11.0 (CrossOver 26.3) r26, D3DMetal 4.0 beta 3"
+  manifest "$work/pin/engines" x64-sikarugir10.0_6-r40 sika 14.0 "Wine 10.0 (Sikarugir) r40"
+}
+runpin() { (cd "$work/pin" && sh scripts/sync/pin-engines.sh engines) > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"; }
+runner="$work/pin/app/Sources/NotProtonApp/Model/SupportedRunner.swift"
+patcher="$work/pin/app/Sources/NotProtonApp/Model/NtdllPatcher.swift"
+# The bundle versions of SupportedRunners.all's Highball entries, in order
+highball_order() { sed -n 's/^ *bundleVersion: "\(x64-crossover[^"]*\)",$/\1/p' "$runner" | tr '\n' ' ' | sed 's/ $//'; }
+# One field of the RunnerBuild with that bundle version
+field() { awk -v id="$1" '$0 ~ "bundleVersion: \"" id "\"" { p = 1 } p && /^        \),$/ { exit } p' "$runner" | sed -n "s/.*$2: \"\([^\"]*\)\".*/\1/p" | head -1; }
+
+pins
+runpin
+is "nothing new pins nothing" "" "$(cat "$work/out")"
+is "and changes nothing" "x64-crossover26.3-r19 x64-crossover26.3-r25 x64-crossover26.3-r26 x64-crossover26.3-r27" "$(highball_order)"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+runpin
+is "a revision on a pinned Wine build is pinned" "pinned x64-crossover26.3-r28 like x64-crossover26.3-r27" "$(cat "$work/out")"
+is "it comes last, so it is the download" "x64-crossover26.3-r19 x64-crossover26.3-r25 x64-crossover26.3-r26 x64-crossover26.3-r27 x64-crossover26.3-r28" "$(highball_order)"
+is "it carries the loader hash of the build it shares" "$(field x64-crossover26.3-r27 loaderSHA256)" "$(field x64-crossover26.3-r28 loaderSHA256)"
+is "its release version is the revision" "r28" "$(field x64-crossover26.3-r28 releaseVersion)"
+is "its tool is its own" "protonish-highball-x64-crossover26.3-r28" "$(field x64-crossover26.3-r28 name)"
+is "its tool says which revision it is" "Highball Wine 11 (r28)" "$(field x64-crossover26.3-r28 display)"
+has "it patches like the build it shares" '^        "x64-crossover26.3-r28": highballBuild0024,$' "$patcher"
+has "it joins the engines the app bundles" '^HIGHBALL_ENGINES := .* x64-crossover26.3-r27 x64-crossover26.3-r28$' "$work/pin/Makefile"
+runpin
+is "a second run pins nothing" "" "$(cat "$work/out")"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 27.0 "Wine 11.0 (CrossOver 26.3) r28, D3DMetal 5"
+runpin
+is "a revision needing a newer macOS is pinned and says so" "pinned x64-crossover26.3-r28 like x64-crossover26.3-r27, needs macOS 27.0" "$(cat "$work/out")"
+is "it goes before the download, which stays" "x64-crossover26.3-r19 x64-crossover26.3-r25 x64-crossover26.3-r26 x64-crossover26.3-r28 x64-crossover26.3-r27" "$(highball_order)"
+is "its tool names what it adds" "Highball Wine 11 (r28, D3DMetal 5)" "$(field x64-crossover26.3-r28 display)"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0025 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+manifest "$work/pin/engines" x64-crossover26.3-r29 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r29"
+runpin
+has "a new Wine build is reported, not pinned" "^unknown x64-crossover26.3-r28 https://example.invalid/wine0025.tar.xz$" "$work/out"
+has "a later revision on a known build still pins" "^pinned x64-crossover26.3-r29 like x64-crossover26.3-r27$" "$work/out"
+hasnt "the unknown build gets no entry" 'x64-crossover26.3-r28' "$runner"
+hasnt "nor a patch" 'x64-crossover26.3-r28' "$patcher"
+runpin
+is "a skipped revision older than a pinned one is not reported again" "" "$(cat "$work/out")"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0025 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+runpin; runpin
+is "a new Wine build alone is reported on every run until someone pins it" "unknown x64-crossover26.3-r28 https://example.invalid/wine0025.tar.xz" "$(cat "$work/out")"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+manifest "$work/pin/engines" x64-crossover26.3-r29 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r29"
+runpin
+is "several revisions pin in order" "x64-crossover26.3-r19 x64-crossover26.3-r25 x64-crossover26.3-r26 x64-crossover26.3-r27 x64-crossover26.3-r28 x64-crossover26.3-r29" "$(highball_order)"
+
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+manifest "$work/pin/engines" x64-crossover26.3-r29 wine0024 27.0 "Wine 11.0 (CrossOver 26.3) r29"
+runpin
+is "one needing a newer macOS goes before the comment of the download" "x64-crossover26.3-r28 ships" \
+  "$(grep -B2 'bundleVersion: "x64-crossover26.3-r28"' "$runner" | sed -n '1s/^ *\/\/ \([^ ]* ships\).*/\1/p')"
+hasnt "older revisions and other engine lines are left alone" 'x64-crossover26.3-r24\|sikarugir' "$work/pin/Makefile"
+
+echo "== Highball: a HighballKit bump pins its engines =="
+hb 0.10.15 aaaaaaa1111
+cp "$here"/pin-engines.sh "$work/hb/scripts/sync/"
+pins
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+mkdir -p "$work/hb/app/Sources/NotProtonApp/Model"
+cp "$work/pin/Makefile" "$work/hb/Makefile"
+cp "$work/pin/app/Sources/NotProtonApp/Model/"*.swift "$work/hb/app/Sources/NotProtonApp/Model/"
+printf '    platforms: [.macOS("15.0")],\n' >> "$work/hb/app/Package.swift"
+git_quiet -C "$work/hb" add -A && git_quiet -C "$work/hb" commit -q -m "real pins" && git_quiet -C "$work/hb" push -q origin HEAD:main
+printf 'v0.10.16\n' > "$STUB_DIR/releases"; printf 'aaaaaaa1111\n' > "$STUB_DIR/dbhead"
+export HIGHBALL_MANIFESTS="$work/pin/engines"
+runhb
+unset HIGHBALL_MANIFESTS
+is "the engine is pinned on the Highball branch" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:Makefile | grep -c 'x64-crossover26.3-r27 x64-crossover26.3-r28$')"
+is "its Swift pins are committed with it" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Sources/NotProtonApp/Model/NtdllPatcher.swift | grep -c '"x64-crossover26.3-r28": highballBuild0024')"
+is "the changelog says the engine is supported" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:README.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16: .*Supports Highball engine r28\.")"
+has "the PR names the pinned engine" "x64-crossover26.3-r28 is supported" "$STUB_LOG"
+
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
-echo "==> sync: NotProton merges and conflicts, Highball bumps and engines all answer"
+echo "==> sync: NotProton merges and conflicts, Highball bumps, engines and engine pins all answer"

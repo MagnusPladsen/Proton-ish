@@ -218,6 +218,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-21: HighballKit 0.10.22, highball-db 18f3c87: Highball's fixes and per-game data as of this release.
 - 2026-10-21: The upstream sync runs every three hours instead of daily, and an upstream README edit no longer blocks a NotProton merge: the fork's README wins (`merge=ours`), so those merges ship on their own like the rest.
 - 2026-10-21: NotProton f478d89 merged: CrossOver versions sort in order, appmanifest names keep escaped quotes, more Italian.
+- 2026-10-21: New Highball engine revisions that reuse a supported Wine build are supported by the Highball sync itself, with no manual pin, and the newest one that runs on macOS 15 becomes the engine Proton-ish downloads.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
@@ -259,7 +260,9 @@ current:
   upstream README edit never blocks a merge.
 - **Highball:** a new Highball release bumps the HighballKit pin, and a new highball-db commit refreshes the bundled
   snapshot, in one PR.
-- **Highball engines:** a new engine build becomes an issue with the steps to support it.
+- **Highball engines:** a new engine revision that reuses a Wine build Proton-ish supports is pinned in the Highball
+  PR (`scripts/sync/pin-engines.sh`) and becomes the engine Proton-ish downloads, unless it needs a newer macOS than
+  Proton-ish does. A new Wine build becomes an issue with the steps to support it.
 
 A sync PR bumps `dylib/version.h` to the next beta (or the next patch after 1.0), adds its dated line below, and
 merges itself once the required checks pass; the merge publishes the release, so the app updates through Sparkle
