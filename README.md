@@ -217,6 +217,7 @@ Never report Proton-ish problems to NotProton, CodeWeavers or Valve.
 - 2026-10-20: highball-db f2c34a9: Highball's fixes and per-game data as of this release.
 - 2026-10-21: HighballKit 0.10.22, highball-db 18f3c87: Highball's fixes and per-game data as of this release.
 - 2026-10-21: The upstream sync runs every three hours instead of daily, and an upstream README edit no longer blocks a NotProton merge: the fork's README wins (`merge=ours`), so those merges ship on their own like the rest.
+- 2026-10-21: NotProton f478d89 merged: CrossOver versions sort in order, appmanifest names keep escaped quotes, more Italian.
 ## What Install changes
 
 - **Steam app:** Proton-ish adds its Steam Play code to Steam and re-signs it, which is why it needs App Management.
