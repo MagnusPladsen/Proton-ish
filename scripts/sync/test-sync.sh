@@ -473,5 +473,53 @@ is "and the refusal is the difference" "i386-windows: cannot find build_module" 
 has "and the report" "cannot find build_module" "$work/check.json"
 is "it is an answer, not a failure" "" "$(cat "$work/out")"
 
+echo "== Wine build pin =="
+A=$(printf 'a%.0s' $(seq 64)); B=$(printf 'b%.0s' $(seq 64)); C=$(printf 'c%.0s' $(seq 64)); D=$(printf 'd%.0s' $(seq 64)); L=$(printf 'e%.0s' $(seq 64))
+WINE=1d1a130c0108aaaabbbbccccddddeeeeffff0000111122223333444455556666
+pinfix() {   # match tag
+  wb
+  mkdir -p "$work/wb/ntdll-patch"
+  cp "$here/../../ntdll-patch/resolve.py" "$here/../../ntdll-patch/apply.py" "$here/../../ntdll-patch/build-ntdll.sh" "$work/wb/ntdll-patch/"
+  printf '{"loader":"%s","clean":{"x86_64-windows":"%s","i386-windows":"%s"},"patched":{"x86_64-windows":"%s","i386-windows":"%s"},"match":%s,"differences":[],"report":""}\n' \
+    "$L" "$A" "$B" "$C" "$D" "$1" > "$work/pin.json"
+  printf '{"id":"x64-crossover26.3-r90","minMacOS":"14.0","displayName":"Wine 11.0 (CrossOver 26.3) r90","components":{"wine":{"sha256":"%s","url":"https://example.invalid/%s/%s.tar.gz"}}}\n' \
+    "$WINE" "$2" "$2" > "$work/r90.json"
+  (cd "$work/wb" && find . -type f -exec shasum {} + | sort) > "$work/before"
+}
+runwbpin() { (cd "$work/wb" && python3 -I scripts/sync/wine_build.py pin x64-crossover26.3-r90 "$work/r90.json" < "$work/pin.json") > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"; }
+wbfile() { printf '%s' "$work/wb/$1"; }
+
+pinfix '"x64-crossover26.3-r27"' engine-wine-11.0-20261101T000000Z-0025-test
+runwbpin
+is "pinning prints nothing" "" "$(cat "$work/out")"
+has "resolve.py pins the new 64-bit ntdll" "^    '$A':$" "$(wbfile ntdll-patch/resolve.py)"
+has "and the 32-bit one" "^    '$B':$" "$(wbfile ntdll-patch/resolve.py)"
+is "with the pinned build's constants" "$(python3 -I -c 'import ast,sys; t=ast.parse(open(sys.argv[1]).read()); p=ast.literal_eval(next(n for n in t.body if isinstance(n,ast.Assign) and getattr(n.targets[0],"id","")=="PINNED").value); print(p[sys.argv[2]]==p["e606762e531e8d749cb4075a3fea2ba063f4833dad9903074ec1762f91efc1a3"])' "$(wbfile ntdll-patch/resolve.py)" "$A")" "True"
+has "apply.py gives the 64-bit ntdll the pinned payload" "^    \"$A\": \"detour2-hb-r19.bin\",$" "$(wbfile ntdll-patch/apply.py)"
+has "and the 32-bit one its own" "^    \"$B\": \"detour32-hb-r19.bin\",$" "$(wbfile ntdll-patch/apply.py)"
+has "build-ntdll.sh knows the clean hash" "^HB_0025_CLEAN_X86_64=$A$" "$(wbfile ntdll-patch/build-ntdll.sh)"
+has "and the patched one" "^HB_0025_PATCHED_I386=$D$" "$(wbfile ntdll-patch/build-ntdll.sh)"
+is "and has the flavor in its tools and patch cases" "2" "$(grep -c '^    hb-0025)' "$(wbfile ntdll-patch/build-ntdll.sh)")"
+has "and detects it" 'echo hb-0025; return 0 ;;' "$(wbfile ntdll-patch/build-ntdll.sh)"
+has "and offers it" 'hb-r25, hb-0025, fex' "$(wbfile ntdll-patch/build-ntdll.sh)"
+if sh -n "$(wbfile ntdll-patch/build-ntdll.sh)" && { ! command -v shellcheck >/dev/null || shellcheck "$(wbfile ntdll-patch/build-ntdll.sh)"; }; then ok "the edited build-ntdll.sh still lints"; else bad "the edited build-ntdll.sh still lints" "clean" "errors"; fi
+has "NtdllPatcher names a table after the build" '^    static let highballBuild0025 = highballBuild0024$' "$(wbfile app/Sources/NotProtonApp/Model/NtdllPatcher.swift)"
+has "and gives the engine that table" '^        "x64-crossover26.3-r90": highballBuild0025,$' "$(wbfile app/Sources/NotProtonApp/Model/NtdllPatcher.swift)"
+runner="$work/wb/app/Sources/NotProtonApp/Model/SupportedRunner.swift"
+is "the engine carries its own launcher hash" "$L" "$(field x64-crossover26.3-r90 loaderSHA256)"
+is "and its own patched ntdll" "1" "$(awk '/bundleVersion: "x64-crossover26.3-r90"/{p=1} p&&/^        \),$/{exit} p' "$runner" | grep -c "i386Windows: \"$D\"")"
+is "and is the download" "x64-crossover26.3-r90" "$(highball_order | tr ' ' '\n' | tail -1)"
+has "the app bundles it" '^HIGHBALL_ENGINES := .* x64-crossover26.3-r90$' "$(wbfile Makefile)"
+
+pinfix '"x64-crossover26.3-r27"' engine-wine-11.0-nightly
+runwbpin
+has "a tag with no serial names the build by its hash" '^    static let highballBuild1d1a130c0108 = highballBuild0024$' "$(wbfile app/Sources/NotProtonApp/Model/NtdllPatcher.swift)"
+has "everywhere" '^HB_1D1A130C0108_CLEAN_X86_64=' "$(wbfile ntdll-patch/build-ntdll.sh)"
+
+pinfix null engine-wine-11.0-20261101T000000Z-0025-test
+runwbpin
+has "a result with no match is refused" "exit 2" "$work/out"
+is "and nothing is written" "$(cat "$work/before")" "$(cd "$work/wb" && find . -type f -exec shasum {} + | sort)"
+
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
 echo "==> sync: NotProton merges and conflicts, Highball bumps, engines and engine pins all answer"

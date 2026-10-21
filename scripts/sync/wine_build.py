@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import engine_pins  # noqa: E402
 
@@ -154,7 +155,89 @@ def check(engine_dir):
     return result
 
 
+RESOLVE_PY = pathlib.Path("ntdll-patch/resolve.py")
+APPLY_PY = pathlib.Path("ntdll-patch/apply.py")
+BUILD_NTDLL = pathlib.Path("ntdll-patch/build-ntdll.sh")
+
+
+def serial(wine):
+    tag = wine["url"].rsplit("/", 2)[-2]
+    found = re.search(r"-(\d{4})-", tag)
+    return found[1] if found else wine["sha256"][:12]
+
+
+def insert_after(text, anchor, addition):
+    at = text.index(anchor) + len(anchor)
+    return text[:at] + addition + text[at:]
+
+
+def pin_resolve(text, old, new, note):
+    """PINNED entries for the new ntdlls, copied from the matched build's, after its i386 entry."""
+    entry = lambda digest: re.search(r"^    '%s':\n(?:        .*\n)+" % digest, text, re.M)[0]
+    copies = "".join(entry(old[arch]).replace(old[arch], new[arch]) for arch in ARCHES)
+    return insert_after(text, entry(old["i386-windows"]), f"    # {note}\n" + copies)
+
+
+def pin_apply(text, old, new, note):
+    line = lambda digest: re.search(r'^    "%s": "([^"]+)",\n' % digest, text, re.M)
+    copies = "".join(f'    "{new[arch]}": "{line(old[arch])[1]}",\n' for arch in ARCHES)
+    return insert_after(text, line(old["i386-windows"])[0], f"    # {note}\n" + copies)
+
+
+def pin_build_ntdll(text, old_clean, engine, build, hashes, note):
+    """Variables, detection, flavor list, tools and patch cases for flavor hb-<build>."""
+    prefix = re.search(r"^HB_(\w+)_CLEAN_X86_64=%s$" % old_clean, text, re.M)[1]
+    flavor, var = f"hb-{build}".lower(), f"HB_{build}".upper()
+    old_flavor = re.search(r'"\$HB_%s_CLEAN_X86_64"\)\s+echo (\S+);' % prefix, text)[1]
+    variables = "".join(f"{var}_{kind}_{name}={hashes[kind.lower()][arch]}\n"
+                        for kind in ("CLEAN", "PATCHED") for arch, name in (("x86_64-windows", "X86_64"), ("i386-windows", "I386")))
+    text = insert_after(text, re.search(r"^HB_%s_PATCHED_I386=.*\n" % prefix, text, re.M)[0], f"# {note}\n" + variables)
+    detect = re.search(r'^( +)"\$HB_%s_CLEAN_X86_64"\)( +)echo %s; return 0 ;;\n' % (prefix, old_flavor), text, re.M)
+    text = insert_after(text, detect[0], detect[0].replace(f"HB_{prefix}_", f"{var}_").replace(f"echo {old_flavor};", f"echo {flavor};"))
+    text = text.replace(f"{old_flavor}, fex,", f"{old_flavor}, {flavor}, fex,", 1)
+    tools = re.search(r"^    %s\)( +)tools=.*\n" % re.escape(old_flavor), text, re.M)[0]
+    text = insert_after(text, tools, re.sub(r"BUILD=\S+ ;;", f"BUILD={engine} ;;", tools.replace(f"{old_flavor})", f"{flavor})")))
+    case = re.search(r"^    %s\)\n(?:        .*\n)+?        ;;\n" % re.escape(old_flavor), text, re.M)[0]
+    return insert_after(text, case, case.replace(f"{old_flavor})", f"{flavor})").replace(f"HB_{prefix}_", f"{var}_"))
+
+
+def pin_patcher(text, match, engine, build, note):
+    table = table_name(text, match)
+    end = re.search(r"static let %s: \[NtdllPatch\] = \[\n.*?\n    \]\n" % table, text, re.S)
+    text = insert_after(text, end[0], f"\n    // {note}\n    static let highballBuild{build} = {table}\n")
+    return engine_pins.add_patch_entry(text, match, engine, f"highballBuild{build}")
+
+
+def pin_new_build(result, engine, manifest):
+    match = result["match"]
+    if not match:
+        sys.exit(2)
+    wine = manifest["components"]["wine"]
+    build = serial(wine)
+    old = clean_hashes(engine_pins.RUNNER.read_text(), match)
+    note = f"{engine} (engine build {build}): same offsets as {match}, pinned by scripts/sync/wine_build.py"
+    runner_text = engine_pins.RUNNER.read_text()
+    source_display = re.search(r'display: "([^"]*)"', engine_pins.runner_block(runner_text, match)[0])[1]
+    edits = {
+        RESOLVE_PY: pin_resolve(RESOLVE_PY.read_text(), old, result["clean"], note),
+        APPLY_PY: pin_apply(APPLY_PY.read_text(), old, result["clean"], note),
+        BUILD_NTDLL: pin_build_ntdll(BUILD_NTDLL.read_text(), old["x86_64-windows"], engine, build,
+                                     {"clean": result["clean"], "patched": result["patched"]}, note),
+        engine_pins.PATCHER: pin_patcher(engine_pins.PATCHER.read_text(), match, engine, build, note),
+        engine_pins.RUNNER: engine_pins.add_runner_build(
+            runner_text, match, engine, engine_pins.tool_display(source_display, engine, manifest["displayName"]),
+            engine_pins.needs_newer_macos(manifest, engine_pins.app_minimum_macos(engine_pins.PACKAGE.read_text())),
+            {"loader": result["loader"], "clean": result["clean"], "patched": result["patched"]}),
+        engine_pins.MAKEFILE: engine_pins.add_bundled_engine(engine_pins.MAKEFILE.read_text(), engine),
+    }
+    for path, text in edits.items():
+        path.write_text(text)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] != "check":
-        sys.exit(f"usage: {sys.argv[0]} check <engine dir>")
-    print(json.dumps(check(pathlib.Path(sys.argv[2])), indent=1, sort_keys=True))
+    if len(sys.argv) == 3 and sys.argv[1] == "check":
+        print(json.dumps(check(pathlib.Path(sys.argv[2])), indent=1, sort_keys=True))
+    elif len(sys.argv) == 4 and sys.argv[1] == "pin":
+        pin_new_build(json.load(sys.stdin), sys.argv[2], json.loads(pathlib.Path(sys.argv[3]).read_text()))
+    else:
+        sys.exit(f"usage: {sys.argv[0]} check <engine dir>\n       {sys.argv[0]} pin <engine id> <manifest json> < check result")
