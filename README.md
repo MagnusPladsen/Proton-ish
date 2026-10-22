@@ -149,3 +149,4 @@ Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Li
 - 2026-10-21: NotProton f478d89 merged: CrossOver versions sort in order, appmanifest names keep escaped quotes, more Italian.
 - 2026-10-21: New Highball engine revisions that reuse a supported Wine build are supported by the Highball sync itself, with no manual pin, and the newest one that runs on macOS 15 becomes the engine Proton-ish downloads.
 - 2026-10-21: highball-db 81da423: Highball's fixes and per-game data as of this release.
+- 2026-10-22: README leads with what Proton-ish does and a five-step setup, with the details in docs/. The app recommends buying CrossOver to support future Wine development, under Help → Support Wine Development.
