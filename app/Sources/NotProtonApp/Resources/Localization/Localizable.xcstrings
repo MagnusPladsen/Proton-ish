@@ -6478,6 +6478,22 @@
         }
       }
     },
+    "Tell highball-db, Highball's game database, how the selected game ran. For games run through Highball." : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racconta a highball-db, il database dei giochi di Highball, come ha funzionato il gioco selezionato. Per i giochi eseguiti con Highball."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "告诉 Highball 的游戏数据库 highball-db 所选游戏的运行情况。适用于通过 Highball 运行的游戏。"
+          }
+        }
+      }
+    },
     "Template cleanup incomplete" : {
       "localizations" : {
         "it" : {

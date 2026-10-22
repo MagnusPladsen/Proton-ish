@@ -8,6 +8,8 @@ struct GameReport: Sendable, Equatable {
     let engine: String
     let renderer: String?
     let kitVersion: String?
+    // Highball's settings summary for the launch, one setting per line, as Highball fills the same field
+    let settings: String?
     let appVersion: String
     let chip: String
     let macOS: String
@@ -33,6 +35,7 @@ struct GameReport: Sendable, Equatable {
             URLQueryItem(name: "session", value: "Played through Proton-ish (macOS Steam), Highball engine \(engine)."),
         ]
         if let renderer { items.append(URLQueryItem(name: "renderer", value: renderer)) }
+        if let settings { items.append(URLQueryItem(name: "settings", value: settings)) }
         components.queryItems = items
         // URLComponents leaves "+" alone, which a query decodes as a space
         components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
@@ -52,11 +55,13 @@ struct GameReport: Sendable, Equatable {
     struct LaunchFacts: Equatable {
         var renderer: String?
         var kitVersion: String?
+        var settings: [String] = []
     }
 
     static func lastLaunch(inLog text: String) -> LaunchFacts {
         var facts = LaunchFacts()
         let rendererLine = "highball-env: note: renderer ", kitLine = "highball-env: highball-env HighballKit "
+        let settingsLine = "highball-env: note: settings "
         for line in text.split(separator: "\n") {
             // Each launch starts over: one that fell back to the engine defaults names no renderer
             if line.hasPrefix("=== notproton run ") {
@@ -66,6 +71,8 @@ struct GameReport: Sendable, Equatable {
                 facts.renderer = renderers.contains(renderer) ? renderer : nil
             } else if line.hasPrefix(kitLine) {
                 facts.kitVersion = line.dropFirst(kitLine.count).trimmingCharacters(in: .whitespaces)
+            } else if line.hasPrefix(settingsLine) {
+                facts.settings.append(line.dropFirst(settingsLine.count).trimmingCharacters(in: .whitespaces))
             }
         }
         return facts
@@ -78,8 +85,11 @@ struct GameReport: Sendable, Equatable {
         guard let record, isHighballEngine(record.build) else { return nil }
         let facts = lastLaunch(inLog: tail(of: log ?? PrefixLog.launch.url(for: prefix)))
         return GameReport(
-            title: prefix.title, appID: prefix.appID, engine: record.build, renderer: facts.renderer,
-            kitVersion: facts.kitVersion, appVersion: appVersion, chip: chip, macOS: macOS)
+            // highball-db is English: an unnamed game is "App <id>" whatever the app's language
+            title: prefix.name ?? "App \(prefix.appID)", appID: prefix.appID, engine: record.build, renderer: facts.renderer,
+            kitVersion: facts.kitVersion,
+            settings: facts.settings.isEmpty ? nil : facts.settings.joined(separator: "\n"),
+            appVersion: appVersion, chip: chip, macOS: macOS)
     }
 
     private static func tail(of file: URL) -> String {

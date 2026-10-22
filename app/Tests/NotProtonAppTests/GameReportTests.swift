@@ -6,12 +6,13 @@ import Testing
 @Suite("Game report")
 struct GameReportTests {
 
-    private func report(renderer: String? = "dxmt", kitVersion: String? = "0.10.22", title: String = "Emberward")
-        -> GameReport
-    {
+    private func report(
+        renderer: String? = "dxmt", kitVersion: String? = "0.10.22", settings: String? = nil,
+        title: String = "Emberward"
+    ) -> GameReport {
         GameReport(
             title: title, appID: "2459550", engine: "x64-crossover26.3-r27", renderer: renderer,
-            kitVersion: kitVersion, appVersion: "1.0.5", chip: "Apple M1 Pro", macOS: "26.6.2")
+            kitVersion: kitVersion, settings: settings, appVersion: "1.0.5", chip: "Apple M1 Pro", macOS: "26.6.2")
     }
 
     private func fields(_ url: URL) -> [String: String] {
@@ -49,7 +50,13 @@ struct GameReportTests {
         #expect(query["session"] == "Played through Proton-ish (macOS Steam), Highball engine x64-crossover26.3-r27.")
     }
 
-    @Test("Rating, issues, settings and notes stay the player's")
+    @Test("Highball's settings summary from the launch fills Environment settings")
+    func settingsFilled() {
+        let summary = "mode dxvk, sync msync, Windows win10, scale 96 dpi\nMetal HUD on"
+        #expect(fields(report(settings: summary).url)["settings"] == summary)
+    }
+
+    @Test("Rating, issues and notes stay the player's, and settings without a summary")
     func playerFieldsEmpty() {
         let query = fields(report().url)
         for key in ["rating", "issues", "settings", "notes"] {
@@ -87,6 +94,22 @@ struct GameReportTests {
             highball-env: note: renderer dxmt
             """
         #expect(GameReport.lastLaunch(inLog: log) == GameReport.LaunchFacts(renderer: "dxmt", kitVersion: "0.10.22"))
+    }
+
+    @Test("Environment settings are the last launch's summary lines, in order")
+    func lastLaunchSettings() {
+        let log = """
+            === notproton run Wed Oct 21 20:01:02 CEST 2026 ===
+            highball-env: note: settings mode dxvk, sync msync, Windows win10, scale 96 dpi
+            highball-env: note: settings Metal HUD on
+            === notproton run Thu Oct 22 09:15:40 CEST 2026 ===
+            highball-env: note: renderer dxmt
+            highball-env: note: settings mode dxmt, sync msync, Windows win10, scale 96 dpi
+            highball-env: note: settings frame cap 60
+            """
+        #expect(GameReport.lastLaunch(inLog: log).settings == [
+            "mode dxmt, sync msync, Windows win10, scale 96 dpi", "frame cap 60",
+        ])
     }
 
     @Test("A launch that fell back to the engine defaults reports no earlier launch's facts")
@@ -137,6 +160,19 @@ struct GameReportTests {
         #expect(made?.renderer == "dxvk")
         #expect(made?.title == "Emberward")
         #expect(made?.appID == "2459550")
+    }
+
+    @Test("A game Steam gave no name is reported as App and its AppID, in English")
+    func unnamedGameTitle() {
+        let unnamed = WinePrefix(
+            appID: "2001120", name: nil,
+            library: SteamLibrary(root: URL(filePath: "/Users/tester/Library/Application Support/Steam")),
+            lastUsed: nil)
+        let made = GameReport.make(
+            for: unnamed, record: PrefixBuildRecord(build: "x64-crossover26.3-r19", display: nil),
+            appVersion: "1.0.5",
+            log: FileManager.default.temporaryDirectory.appending(path: "no-such-\(UUID().uuidString).log"))
+        #expect(made?.title == "App 2001120")
     }
 
     @Test("A missing log still gives a report")
