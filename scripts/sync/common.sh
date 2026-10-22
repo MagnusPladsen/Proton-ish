@@ -38,7 +38,7 @@ pr_ever_exists() {
 
 # Copies the engine manifests HighballKit <version> ships into the directory
 fetch_manifests() {   # version dir
-  git clone -q --depth 1 --filter=blob:none --sparse --branch "v$1" https://github.com/gauthierpiarrette/highball.git "$2.git"
+  git clone -q --depth 1 --filter=blob:none --sparse --branch "v$1" "${HIGHBALL_REPO:-https://github.com/gauthierpiarrette/highball.git}" "$2.git"
   git -C "$2.git" sparse-checkout set spike/engines
   mkdir -p "$2"
   cp "$2.git"/spike/engines/*.json "$2/"

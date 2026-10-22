@@ -226,6 +226,12 @@ runhb
 has "both newer go in one PR" "--head sync/highball-0.10.16-db-bbbbbbb " "$STUB_LOG"
 is "the snapshot is refreshed" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16-db-bbbbbbb:third_party/highball-db/highball-db.json | grep -c bbbbbbb2222)"
 
+hb 0.10.15 aaaaaaa1111
+printf 'v0.10.15\n' > "$STUB_DIR/releases"; printf 'bbbbbbb2222\n' > "$STUB_DIR/dbhead"
+(HIGHBALL_MANIFESTS="" HIGHBALL_REPO="$work/no-such-repo.git"; export HIGHBALL_MANIFESTS HIGHBALL_REPO; runhb)
+has "a failed manifest fetch still bumps the database" "pr create .* --head sync/highball-db-bbbbbbb " "$STUB_LOG"
+has "and says the engines were not checked" "engine revisions not checked" "$work/out"
+
 echo "== Highball engine pins =="
 manifest() {   # dir id wine-sha minMacOS displayName
   printf '{"id":"%s","minMacOS":"%s","displayName":"%s","components":{"wine":{"sha256":"%s","url":"https://example.invalid/%s.tar.xz"}}}\n' \
@@ -487,6 +493,14 @@ runcheck
 is "a cave filled differently than the app expects is no match" '["x86_64-windows fill 0x0 != 0xcc"]' "$(check_field differences)"
 
 wb
+sed -i.orig '/"x64-crossover26.3-r2[567]": highballBuild0024,/d' "$work/wb/app/Sources/NotProtonApp/Model/NtdllPatcher.swift"
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll"
+resolved i386-windows "$engine/lib/wine/i386-windows/ntdll.dll"
+runcheck
+is "a build matching only builds with no patch table is no match" "null" "$(check_field match)"
+is "and its differences say so, never empty" "every field matches a pinned build, but none of those has an NtdllPatcher table to copy" "$(check_field differences 0)"
+
+wb
 resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll"
 printf 'cannot find build_module\n' > "$STUB_DIR/resolve/$(sha_of "$engine/lib/wine/i386-windows/ntdll.dll").err"
 runcheck
@@ -613,6 +627,7 @@ is "and pins its ntdll" "1" "$(branch_file ntdll-patch/build-ntdll.sh | grep -c 
 is "committed as the bot" "93226629+MagnusPladsen@users.noreply.github.com" "$(git -C "$work/nw-origin.git" log -1 --format=%ae "sync/engine-$short")"
 has "the PR tells the reviewer to launch a game first" "launch a game through x64-crossover26.3-r90" "$STUB_LOG"
 has "and how to ship it" "scripts/sync/bump-release.sh" "$STUB_LOG"
+has "merged without the bump it ships with the next release" "merged without it, it ships with the next release" "$STUB_LOG"
 has "with the patched hashes on their own line" "^- Patched ntdll: x86_64 " "$STUB_LOG"
 has "and which pinned build it is patched like" "x64-crossover26.3-r27" "$STUB_LOG"
 hasnt "and opens no issue" "issue create" "$STUB_LOG"
@@ -639,6 +654,24 @@ newbuild x64-crossover26.3-r90 "" 12
 runnw
 has "so does one of another size" "exit 1" "$work/out"
 hasnt "making nothing" "create" "$STUB_LOG"
+
+nwb
+ln -sf /etc/hosts "$work/nw-tar/engine/lib/wine/i386-windows/ntdll.dll"
+COPYFILE_DISABLE=1 tar -czf "$STUB_DIR/wine.tar.gz" -C "$work/nw-tar" engine
+newbuild x64-crossover26.3-r90
+runnw
+has "a build whose files are symlinks fails the job" "exit 1" "$work/out"
+has "saying so" "symlink" "$work/out"
+hasnt "and makes nothing of them" "create" "$STUB_LOG"
+has "the download is https only" '^DOWNLOAD=.*--proto =https --proto-redir =https' "$work/nw/scripts/sync/highball-engine.sh"
+
+nwb
+sed -i.orig 's/0025-test/0024-test/g' "$work/nw-engines/x64-crossover26.3-r90.json"
+runnw
+has "a pinned serial with other bytes becomes an issue" "^issue create .* --title Highball engine x64-crossover26.3-r90: Wine build 0024 was rebuilt" "$STUB_LOG"
+has "naming the Wine build so the next run finds it" "Wine build: $short" "$STUB_LOG"
+hasnt "without downloading it" "^download" "$STUB_LOG"
+hasnt "or failing the job" "^exit" "$work/out"
 
 nwb
 newbuild x64-crossover26.3-r91

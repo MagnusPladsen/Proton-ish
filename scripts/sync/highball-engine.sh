@@ -15,7 +15,7 @@ cd "$(dirname "$0")/../.."
 # shellcheck source=scripts/sync/common.sh disable=SC1091
 . scripts/sync/common.sh
 
-DOWNLOAD="${DOWNLOAD:-curl -fsSL --retry 3 -o}"
+DOWNLOAD="${DOWNLOAD:-curl -fsSL --proto =https --proto-redir =https --retry 3 -o}"
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 
@@ -70,6 +70,16 @@ elif issue_ever_exists "$short"; then
 fi
 
 url=$(json_value "$manifest" components.wine.url)
+serial=$(python3 -I -B -c 'import json, sys; sys.path.insert(0, "scripts/sync"); import wine_build; print(wine_build.serial(json.load(open(sys.argv[1]))["components"]["wine"]))' "$manifest")
+# A serial already pinned under other bytes is a rebuild: one issue, nothing downloaded
+if grep -qE "static let highballBuild$serial( =|:)" app/Sources/NotProtonApp/Model/NtdllPatcher.swift; then
+  "$GH" issue create -R "$REPO" --title "Highball engine $engine: Wine build $serial was rebuilt" \
+    --label upstream-sync --label highball-engine \
+    --body "$(printf '## What\nHighball engine `%s` uses a Wine build with serial %s, which Proton-ish has pinned, but with other bytes. Pinning it again would declare `highballBuild%s` twice, so it needs a look by hand.\n\n- Wine build: %s, %s\n\n---\nOpened by the upstream-sync workflow'"'"'s engines job.\n' \
+      "$engine" "$serial" "$serial" "$short" "$url")"
+  sync_log "engine: opened an issue for rebuilt Wine build $serial ($short) of $engine"
+  exit 0
+fi
 size=$(json_value "$manifest" components.wine.size)
 subpath=$(json_value "$manifest" components.wine.extract.subpath)
 subpath="${subpath:-engine}"
@@ -82,10 +92,12 @@ got=$(shasum -a 256 "$scratch/wine.tar.gz" | cut -d' ' -f1)
 mkdir "$scratch/wine"
 tar -xzf "$scratch/wine.tar.gz" -C "$scratch/wine" \
   "$subpath/bin/wine" "$subpath/lib/wine/x86_64-windows/ntdll.dll" "$subpath/lib/wine/i386-windows/ntdll.dll"
+# Hashed and read as the build's own files, never as whatever a link points at
+links=$(find "$scratch/wine" -type l)
+[ -z "$links" ] || { echo "sync: $url holds a symlink where its Wine files should be: ${links#"$scratch/wine/"}" >&2; exit 1; }
 python3 -I scripts/sync/wine_build.py check "$scratch/wine/$subpath" > "$scratch/check.json"
 
 match=$(json_value "$scratch/check.json" match)
-serial=$(python3 -I -B -c 'import json, sys; sys.path.insert(0, "scripts/sync"); import wine_build; print(wine_build.serial(json.load(open(sys.argv[1]))["components"]["wine"]))' "$manifest")
 hashes=$(printf -- '- Wine build: %s, %s\n- Loader: `%s`\n- Clean ntdll: x86_64 `%s`, i386 `%s`' "$short" "$url" \
   "$(json_value "$scratch/check.json" loader)" \
   "$(json_value "$scratch/check.json" clean.x86_64-windows)" "$(json_value "$scratch/check.json" clean.i386-windows)")
@@ -123,7 +135,7 @@ if [ -n "$refresh" ]; then
 fi
 "$GH" pr create -R "$REPO" --base main --head "$branch" \
   --title "sync: Highball engine $engine, Wine build $serial" --label upstream-sync --label highball-engine \
-  --body "$(printf '## What\nHighball engine `%s` uses Wine build %s, which Proton-ish has not pinned. Its ntdll resolves like `%s`'"'"'s: same hooks, stolen bytes, caves and exports, so it takes that build'"'"'s detour payloads.\n\n%s\n- Patched ntdll: x86_64 `%s`, i386 `%s`\n\n## Before merging\n- [ ] Download the engine in the app and launch a game through %s\n- [ ] If it should ship, run `scripts/sync/bump-release.sh "Supports Highball engine %s."` on this branch; merged without it, nothing is released\n\n---\nOpened by the upstream-sync workflow'"'"'s engines job. It does not merge itself: a new Wine build is code the detours have not met. Closing it turns this build down for good.\n' \
+  --body "$(printf '## What\nHighball engine `%s` uses Wine build %s, which Proton-ish has not pinned. Its ntdll resolves like `%s`'"'"'s: same hooks, stolen bytes, caves and exports, so it takes that build'"'"'s detour payloads.\n\n%s\n- Patched ntdll: x86_64 `%s`, i386 `%s`\n\n## Before merging\n- [ ] Download the engine in the app and launch a game through %s\n- [ ] If it should ship, run `scripts/sync/bump-release.sh "Supports Highball engine %s."` on this branch; merged without it, it ships with the next release\n\n---\nOpened by the upstream-sync workflow'"'"'s engines job. It does not merge itself: a new Wine build is code the detours have not met. Closing it turns this build down for good.\n' \
     "$engine" "$serial" "$match" "$hashes" \
     "$(json_value "$scratch/check.json" patched.x86_64-windows)" "$(json_value "$scratch/check.json" patched.i386-windows)" "$engine" "$engine")"
 sync_log "engine: opened a PR on $branch for $engine; it waits for a review"

@@ -33,7 +33,8 @@ if [ -z "${HIGHBALL_MANIFESTS:-}" ]; then
   manifests_tmp=$(mktemp -d)
   trap 'rm -rf "$manifests_tmp"' EXIT
   HIGHBALL_MANIFESTS="$manifests_tmp/engines"
-  fetch_manifests "${newer_kit:-$pinned}" "$HIGHBALL_MANIFESTS"
+  # A failed fetch leaves no manifests: the database and HighballKit bumps still go ahead
+  fetch_manifests "${newer_kit:-$pinned}" "$HIGHBALL_MANIFESTS" 2>&1 || rm -rf "$HIGHBALL_MANIFESTS"
 fi
 to_pin=""
 if ls "$HIGHBALL_MANIFESTS"/*.json >/dev/null 2>&1; then
