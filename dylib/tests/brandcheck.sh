@@ -53,11 +53,13 @@ run_section() {
         ;;
     strings)
         # User-visible "NotProton" outside comments. Skips NotProtonApp/NotProtonLaunchMigrated (regex),
-        # and the fork credit (AboutCredits.swift, catalog lines naming NotProtonNot).
+        # and the fork credit (AboutCredits.swift, catalog lines naming NotProtonNot). A line opening
+        # with # is a comment only in the shell script: in C it is a directive such as #define.
         hits=$(git grep -n -E 'NotProton([^A-Za-z]|$)' -- \
                  'app/Sources/*.swift' 'app/Sources/*.xcstrings' 'dylib/*.c' 'dylib/*.h' 'dylib/feats/compat_run.sh' \
                  ':(exclude)app/Sources/NotProtonApp/Support/AboutCredits.swift' 2>/dev/null \
-               | grep -v -E '^[^:]+:[0-9]+:[[:space:]]*(//|#|\*|/\*)' \
+               | grep -v -E '^[^:]+:[0-9]+:[[:space:]]*(//|\*|/\*)' \
+               | grep -v -E '^dylib/feats/compat_run\.sh:[0-9]+:[[:space:]]*#' \
                | grep -v 'NotProtonNot' || true)
         if [ -n "$hits" ]; then
             printf '==> brandcheck strings: user-visible "NotProton" still present\n%s\n' "$hits"
