@@ -1,6 +1,7 @@
 # Keeps Proton-ish current with its upstreams: NotProton merges, Highball pin and database bumps
 # as pull requests that bump the version and merge themselves once CI passes, which publishes a
-# release; conflicting merges and new Highball engine builds become issues for a person.
+# release; conflicting merges become issues for a person. A new Highball Wine build becomes a PR
+# for review when its ntdll patches like a pinned build's, otherwise an issue.
 name: upstream sync
 
 on:
@@ -77,7 +78,15 @@ jobs:
         if: env.skip != '1'
         with:
           token: ${{ secrets.SYNC_TOKEN }}
-      - name: Open issues for new engine builds
+      # resolve.py disassembles ntdll with capstone. python3 -I skips the user site, so it goes
+      # in a virtual environment put first on PATH
+      - name: Install capstone
+        if: env.skip != '1'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python3" -m pip install --quiet capstone==5.0.9
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - name: Turn a new Wine build into a PR or an issue
         if: env.skip != '1'
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}

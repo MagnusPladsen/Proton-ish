@@ -832,7 +832,17 @@ def shell_vars(path):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        raise SystemExit(f"usage: {sys.argv[0]} [--sh] <CrossOver bundle | wine dir | ntdll.dll> ...")
+        raise SystemExit(f"usage: {sys.argv[0]} [--sh | --json] <CrossOver bundle | wine dir | ntdll.dll> ...\n"
+                         f"       {sys.argv[0]} --pinned <clean ntdll sha256>")
+    # For scripts/sync/wine_build.py: the constants of one ntdll, or the pin of one clean sha
+    if sys.argv[1] in ('--json', '--pinned'):
+        if len(sys.argv) != 3:
+            raise SystemExit(f"{sys.argv[1]} takes one argument")
+        if sys.argv[1] == '--pinned' and sys.argv[2] not in PINNED:
+            sys.exit(1)
+        import json
+        print(json.dumps(resolve(sys.argv[2]) if sys.argv[1] == '--json' else PINNED[sys.argv[2]], sort_keys=True))
+        sys.exit(0)
     if sys.argv[1] == '--sh':
         if len(sys.argv) != 3:
             raise SystemExit("--sh takes one ntdll.dll")
