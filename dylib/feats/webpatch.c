@@ -319,10 +319,10 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
 #define NP_PREFIX_COPY NP_WEB_TEXT("Copying your files\\u2026", "Copying your files\\u2026", "Copying your files\\u2026")
 #define NP_PREFIX_FINISH NP_WEB_TEXT("Finishing\\u2026", "Finishing\\u2026", "Finishing\\u2026")
 #define NP_PREFIX_DONE NP_WEB_TEXT("Prefix rebuilt.", "Prefix rebuilt.", "Prefix rebuilt.")
-#define NP_PREFIX_DONE_BACKUP NP_WEB_TEXT("Prefix rebuilt. A backup of the original is in NotProton's Prefixes view.", "Prefix rebuilt. A backup of the original is in NotProton's Prefixes view.", "Prefix rebuilt. A backup of the original is in NotProton's Prefixes view.")
+#define NP_PREFIX_DONE_BACKUP NP_WEB_TEXT("Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.", "Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.", "Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.")
 #define NP_PREFIX_FAILED NP_WEB_TEXT("Prefix rebuild failed!", "Prefix rebuild failed!", "Prefix rebuild failed!")
 #define NP_PREFIX_LOG NP_WEB_TEXT("Open Log", "Open Log", "Open Log")
-#define NP_PREFIX_APP NP_WEB_TEXT("Couldn't find the NotProton app. Move NotProton to Applications, open it and click Install again.", "Couldn't find the NotProton app. Move NotProton to Applications, open it and click Install again.", "Couldn't find the NotProton app. Move NotProton to Applications, open it and click Install again.")
+#define NP_PREFIX_APP NP_WEB_TEXT("Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.", "Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.", "Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.")
 
 #define NP_CX_PREFIX_ROW \
     "globalThis.MSCXPrefixRow=(e,id)=>{if(e.npApp===id)return;e.npStop&&e.npStop();e.npApp=id;let ter" \
