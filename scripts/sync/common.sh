@@ -40,7 +40,7 @@ next_version() {   # current
   esac
 }
 
-# Adds a dated line at the end of README's "Changes from upstream" list
+# Adds a dated line at the end of CHANGELOG.md's "Changes from upstream" list
 changelog_line() {   # text
   awk -v line="- $(date +%Y-%m-%d): $1" '
     /^## Changes from upstream/ { section = 1 }
@@ -49,7 +49,7 @@ changelog_line() {   # text
     section { for (i = 1; i <= held; i++) print held_line[i]; held = 0 }
     { print }
     END { for (i = 1; i <= held; i++) print held_line[i]; if (section) print line }
-  ' README.md > README.md.new && mv README.md.new README.md
+  ' CHANGELOG.md > CHANGELOG.md.new && mv CHANGELOG.md.new CHANGELOG.md
 }
 
 # Commits the release bump on the current branch and prints the version: merging the PR then
@@ -60,7 +60,7 @@ bump_release() {   # changelog text
   [ "$version" = "$current" ] || sed -i.bak "s/^#define NOTPROTON_VERSION \"$current\"/#define NOTPROTON_VERSION \"$version\"/" dylib/version.h
   rm -f dylib/version.h.bak
   changelog_line "$1"
-  git add dylib/version.h README.md
+  git add dylib/version.h CHANGELOG.md
   git commit -q -m "Release $version: $1
 
 Co-Authored-By: Proton-ish sync <93226629+MagnusPladsen@users.noreply.github.com>"

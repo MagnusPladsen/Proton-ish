@@ -34,11 +34,12 @@ export GH="$work/bin/gh" REPO="example/fork" STUB_DIR="$work/stub" STUB_LOG="$wo
 mkdir -p "$STUB_DIR"
 git_quiet() { git -c user.name=t -c user.email=t@example.invalid -c init.defaultBranch=main "$@"; }
 
-# The version header and README changelog a release bump edits, as the fork lays them out
+# The version header and changelog a release bump edits, as the fork lays them out
 release_files() {
   mkdir -p "$1/dylib"
   printf '#define NOTPROTON_VERSION "0.1.0-beta.5"\n' > "$1/dylib/version.h"
-  printf '# Fork\n\n## Changes from upstream\n\n- 2026-10-01: the first line,\n  wrapped.\n\n## Next section\n\ntext\n' > "$1/README.md"
+  printf '# Fork\n\n## Changes from upstream\n\n- 2026-10-01: the first line,\n  wrapped.\n\n## Next section\n\ntext\n' > "$1/CHANGELOG.md"
+  printf '# Fork\n\ntext\n' > "$1/README.md"
 }
 version_on() { git -C "$1" show "$2:dylib/version.h" | sed -n 's/^#define NOTPROTON_VERSION "\(.*\)"/\1/p'; }
 
@@ -83,9 +84,9 @@ is "the branch is pushed to origin" "1" "$(git -C "$work/origin.git" branch --li
 is "the merge commit is the bot's" "Proton-ish sync" "$(git -C "$work/origin.git" log -1 --format=%an "sync/notproton-$sha")"
 is "the version is bumped past the released one" "0.1.0-beta.6" "$(version_on "$work/origin.git" "sync/notproton-$sha")"
 is "the changelog gets a dated line naming the merge, after the last entry" "1" \
-  "$(git -C "$work/origin.git" show "sync/notproton-$sha:README.md" | grep -c "^- $(date +%Y-%m-%d): NotProton $sha merged")"
-is "the wrapped last entry stays whole" "  wrapped." "$(git -C "$work/origin.git" show "sync/notproton-$sha:README.md" | sed -n '/^- 2026-10-01/{n;p;}')"
-is "the next section still follows a blank line" "" "$(git -C "$work/origin.git" show "sync/notproton-$sha:README.md" | sed -n '/^## Next section/{x;p;}')"
+  "$(git -C "$work/origin.git" show "sync/notproton-$sha:CHANGELOG.md" | grep -c "^- $(date +%Y-%m-%d): NotProton $sha merged")"
+is "the wrapped last entry stays whole" "  wrapped." "$(git -C "$work/origin.git" show "sync/notproton-$sha:CHANGELOG.md" | sed -n '/^- 2026-10-01/{n;p;}')"
+is "the next section still follows a blank line" "" "$(git -C "$work/origin.git" show "sync/notproton-$sha:CHANGELOG.md" | sed -n '/^## Next section/{x;p;}')"
 has "auto-merge is turned on for the PR" "pr merge --auto --merge .* sync/notproton-$sha" "$STUB_LOG"
 has "the PR says what merging publishes" "publishes 0.1.0-beta.6" "$STUB_LOG"
 run notproton.sh
@@ -112,7 +113,7 @@ checkout
 git_quiet -C "$work/repo" checkout -q -b by-hand
 sh "$work/repo/scripts/sync/bump-release.sh" "NotProton abc1234 merged" > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"
 is "the version is bumped on the current branch" "0.1.0-beta.6" "$(version_on "$work/repo" HEAD)"
-is "the changelog line is committed" "1" "$(git -C "$work/repo" show HEAD:README.md | grep -c "^- $(date +%Y-%m-%d): NotProton abc1234 merged")"
+is "the changelog line is committed" "1" "$(git -C "$work/repo" show HEAD:CHANGELOG.md | grep -c "^- $(date +%Y-%m-%d): NotProton abc1234 merged")"
 has "it says what merging publishes" "release 0.1.0-beta.6 bumped on by-hand" "$work/out"
 sh "$work/repo/scripts/sync/bump-release.sh" > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"
 has "without text it refuses" "exit 2" "$work/out"
@@ -195,7 +196,7 @@ has "a newer Highball release opens a PR" "pr create .* --head sync/highball-0.1
 is "the pin is bumped" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Package.swift | grep -c 'exact: "0.10.16"')"
 is "the helper's version constant follows" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Sources/HighballEnvCore/HighballEnvCore.swift | grep -c '"0.10.16"')"
 is "the version is bumped on the Highball branch" "0.1.0-beta.6" "$(version_on "$work/hb-origin.git" sync/highball-0.10.16)"
-is "the changelog names the HighballKit bump" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:README.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16")"
+is "the changelog names the HighballKit bump" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:CHANGELOG.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16")"
 has "auto-merge is turned on for the Highball PR" "pr merge --auto --merge .* sync/highball-0.10.16" "$STUB_LOG"
 runhb
 hasnt "a second run opens no second PR" "pr create" "$STUB_LOG"
@@ -326,7 +327,7 @@ runhb
 unset HIGHBALL_MANIFESTS
 is "the engine is pinned on the Highball branch" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:Makefile | grep -c 'x64-crossover26.3-r27 x64-crossover26.3-r28$')"
 is "its Swift pins are committed with it" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Sources/NotProtonApp/Model/NtdllPatcher.swift | grep -c '"x64-crossover26.3-r28": highballBuild0024')"
-is "the changelog says the engine is supported" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:README.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16: .*Supports Highball engine r28\.")"
+is "the changelog says the engine is supported" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:CHANGELOG.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16: .*Supports Highball engine r28\.")"
 has "the PR names the pinned engine" "x64-crossover26.3-r28 is supported" "$STUB_LOG"
 
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
