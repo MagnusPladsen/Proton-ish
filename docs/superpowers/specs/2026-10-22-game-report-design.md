@@ -1,6 +1,6 @@
 # Game reports to highball-db from Proton-ish
 
-Date: 2026-10-22. Status: draft, builder check done.
+Date: 2026-10-22. Status: approved 2026-10-22.
 
 ## 1. Intent
 
