@@ -44,6 +44,7 @@ SRCS := \
 	dylib/feats/compat.c \
 	dylib/feats/webui.c \
 	dylib/feats/compatsvc.c \
+	dylib/feats/prefixstate.c \
 	dylib/feats/usershortcuts.c \
 	dylib/feats/webpatch.c \
 	dylib/feats/nativeplatform.c \
@@ -70,7 +71,7 @@ DEPS := $(OBJS:.o=.d)
         tests-list overlay-shim overlay-shim-install overlay-shim-tests \
         overlay-shim-bench iconmaker icon \
         appinfo helpers-install ntdll-resolve bridge runcheck compatcheck \
-        compatsvc-check shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck launch-shell activatecheck FORCE
+        compatsvc-check prefixstate-check shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck launch-shell activatecheck FORCE
 
 APP_PAYLOAD := app/Sources/NotProtonApp/Resources/payload
 # Highball engines Proton-ish can download; manifests come from the pinned Highball package
@@ -172,6 +173,14 @@ compatcheck: $(RUN_SCRIPT_H)
 	$(TEST_CC) -I$(GENERATED_DIR) \
 	  -o $(COMPATCHECK) dylib/tests/compatcheck.c && \
 	$(COMPATCHECK)
+
+PREFIXSTATE_CHECK := $(OUT_DIR)/prefixstate-check
+
+prefixstate-check:
+	@if [ ! -f dylib/tests/prefixstate-check.c ]; then $(call SKIP,prefixstate-check,dylib/tests/prefixstate-check.c); exit 0; fi; \
+	mkdir -p $(OUT_DIR) && \
+	$(TEST_CC) -o $(PREFIXSTATE_CHECK) dylib/tests/prefixstate-check.c && \
+	$(PREFIXSTATE_CHECK)
 
 COMPATSVC_CHECK := $(OUT_DIR)/compatsvc-check
 
@@ -388,6 +397,7 @@ panel-behavior:
 	node $(PANEL_TESTS)/localization.js $(OUT_DIR)/panel-emit && \
 	node $(PANEL_TESTS)/fex.js $(OUT_DIR)/panel-emit && \
 	node $(PANEL_TESTS)/renderer-gaps.js $(OUT_DIR)/panel-emit && \
+	node $(PANEL_TESTS)/prefix-row.js $(OUT_DIR)/panel-emit && \
 	echo "==> panel behavior: renders as expected, no stale arguments"
 
 CX_ROOT ?= /Applications/CrossOver Preview.app
@@ -554,7 +564,7 @@ fonts-install:
 	@rsync -a --delete $(FONT_FILES) build/fonts/ "$(SUPPORT_DIR)/fonts/"
 	@echo "==> Installed: $(SUPPORT_DIR)/fonts"
 
-deploy: $(TARGET) dylib-install sigdb-install fonts-install helpers-install
+deploy: $(TARGET) dylib-install sigdb-install fonts-install helpers-install prefix-command-install
 	@if [ ! -d "$(STEAM_APP)" ]; then \
 		echo "==> deploy: $(STEAM_APP) not found"; exit 1; fi
 	$(call install_atomically,$(TARGET),$(DEPLOY_DST))
@@ -629,6 +639,16 @@ APP_ZIP     := $(OUT_DIR)/Proton-ish.zip
 APP_VERSION := $(shell sed -n 's/^\#define NOTPROTON_VERSION "\(.*\)"/\1/p' dylib/version.h)
 
 APP_SIGN_ID ?= -
+
+.PHONY: prefix-command-install
+# Records an app bundle that is already built. Building it here would make every deploy
+# build the whole app.
+prefix-command-install:
+	@if [ ! -x "$(APP_BUNDLE)/Contents/MacOS/NotProtonApp" ]; then \
+		echo "==> no $(APP_BUNDLE) yet, run make app for rebuilds from Steam"; exit 0; fi; \
+	mkdir -p "$(SUPPORT_DIR)" && \
+	printf '%s' "$(CURDIR)/$(APP_BUNDLE)/Contents/MacOS/NotProtonApp" > "$(SUPPORT_DIR)/app-executable.new" && \
+	mv -f "$(SUPPORT_DIR)/app-executable.new" "$(SUPPORT_DIR)/app-executable"
 
 ICONGEN  := $(OUT_DIR)/icongen
 ICON_DOC := $(OUT_DIR)/Proton-ish.icon

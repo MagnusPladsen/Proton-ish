@@ -209,6 +209,13 @@ enum SteamInstaller {
             throw StepFailure(step: step, detail: String(localized: "These files did not update: \(remaining.joined(separator: ", "))."))
         }
 
+        if let executable = Bundle.main.executableURL {
+            do {
+                try RebuildPrefixCommand.recordExecutable(executable, in: support)
+            } catch {
+                AppLog.note("install: could not record the rebuild app: \(error.localizedDescription)")
+            }
+        }
         report(.finished)
         return InstallOutcome(
             stoppedClient: stopped,
