@@ -2,6 +2,14 @@
 
 import Foundation
 
+// What the Compatibility page shows while a rebuild runs. The raw values are what
+// notproton-rebuild holds, which the dylib reads.
+enum RebuildPhase: String {
+    case settingUp = "setup"
+    case copying = "copy"
+    case finishing = "finish"
+}
+
 extension PrefixTools {
     @discardableResult
     static func recreate(
@@ -9,14 +17,14 @@ extension PrefixTools {
         as tool: InstalledTool,
         runners: URL = SupportPaths.runners,
         now: Date = .now,
-        keepBackup: Bool = true
+        keepBackup: Bool = true,
+        progress: (RebuildPhase) -> Void = { _ in }
     ) throws -> URL? {
-        let kept = try recreate(
+        try rebuild(
             prefix, runner: SupportPaths.clonedRoot(forBuild: tool.build, runners: runners),
-            flavor: tool.tool.flavor, now: now, keepBackup: keepBackup
+            flavor: tool.tool.flavor, now: now, keepBackup: keepBackup, record: tool,
+            progress: progress
         )
-        try writeBuildRecord(tool, for: prefix)
-        return kept
     }
 
     @discardableResult
@@ -26,6 +34,14 @@ extension PrefixTools {
         flavor: CompatTool.Flavor = .fex,
         now: Date = .now,
         keepBackup: Bool = true
+    ) throws -> URL? {
+        try rebuild(prefix, runner: runner, flavor: flavor, now: now, keepBackup: keepBackup)
+    }
+
+    private static func rebuild(
+        _ prefix: WinePrefix, runner: URL, flavor: CompatTool.Flavor,
+        now: Date, keepBackup: Bool, record: InstalledTool? = nil,
+        progress: (RebuildPhase) -> Void = { _ in }
     ) throws -> URL? {
         guard let claim = PrefixStore.claim(prefix) else {
             throw StepFailure(
@@ -61,11 +77,13 @@ extension PrefixTools {
         defer { try? fm.removeItem(at: fresh) }
         try fm.createDirectory(at: fresh, withIntermediateDirectories: true)
 
+        progress(.settingUp)
         var environment = environment(prefix: prefix, runner: runner, flavor: flavor)
         environment["WINEPREFIX"] = fresh.path(percentEncoded: false)
         layOutProfile(in: fresh)
         _ = try Shell.check(loader.path(percentEncoded: false), ["wineboot", "--init"], environment: environment)
 
+        progress(.copying)
         let carry = Carry(from: prefix.pfx, to: fresh)
         carry.userData()
         carry.strayFolders()
@@ -78,6 +96,7 @@ extension PrefixTools {
             )
         }
 
+        progress(.finishing)
         let parked = fm.fileExists(atPath: prefix.pfx.path(percentEncoded: false))
         let previous = backupSlot(in: prefix.root, at: now)
         if parked {
@@ -89,6 +108,7 @@ extension PrefixTools {
             if parked { try? fm.moveItem(at: previous, to: prefix.pfx) }
             throw error
         }
+        if let record { try writeBuildRecord(record, for: prefix) }
         guard parked else { return nil }
         guard keepBackup else {
             try? fm.removeItem(at: previous)
