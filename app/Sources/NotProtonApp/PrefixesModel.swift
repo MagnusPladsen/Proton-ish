@@ -154,6 +154,20 @@ final class PrefixesModel {
         PrefixTools.open(log, for: prefix)
     }
 
+    // Decided from the build record alone, so building the menu never reads a log
+    func canReport(_ prefix: WinePrefix) -> Bool {
+        records[prefix.id].map { GameReport.isHighballEngine($0.build) } ?? false
+    }
+
+    func gameReport(for prefix: WinePrefix) -> GameReport? {
+        GameReport.make(for: prefix, record: records[prefix.id], appVersion: AppVersion.bundled)
+    }
+
+    func sendGameReport(for prefix: WinePrefix) {
+        guard let report = gameReport(for: prefix) else { return }
+        NSWorkspace.shared.open(report.url)
+    }
+
     func delete(_ targets: [WinePrefix]) async {
         await eachInTurn(targets, { try PrefixTools.delete($0) }) { deleted in
             if deleted.count == 1 {

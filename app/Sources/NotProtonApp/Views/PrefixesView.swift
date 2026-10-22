@@ -185,6 +185,12 @@ struct PrefixesView: View {
         .disabled(model.selectedPrefix == nil)
         .help("Show the selected prefix in the Finder.")
 
+        Button("Report to highball-db…", systemImage: "flag") {
+            if let prefix = model.selectedPrefix { model.sendGameReport(for: prefix) }
+        }
+        .disabled(!(model.selectedPrefix.map(model.canReport) ?? false))
+        .help("Tell highball-db, Highball's game database, how the selected game ran. For games run through Highball.")
+
         Button("Refresh", systemImage: "arrow.clockwise") {
             Task { await model.load() }
         }
@@ -348,6 +354,9 @@ struct PrefixesView: View {
                         Button(log.label) { model.open(log, for: prefix) }
                             .disabled(!model.hasLog(log, for: prefix))
                     }
+                }
+                if model.canReport(prefix) {
+                    Button("Report to highball-db…") { model.sendGameReport(for: prefix) }
                 }
             }
             if !targets.isEmpty {

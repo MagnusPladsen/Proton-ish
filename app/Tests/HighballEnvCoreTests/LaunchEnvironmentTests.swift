@@ -63,6 +63,21 @@ struct LaunchEnvironmentTests {
         #expect(value("CX_D3DMETALPATH", in: out) == nil)
     }
 
+    @Test("The launch notes Highball's settings summary, as a report's Environment settings")
+    func settingsSummaryNoted() throws {
+        let hb = try install(renderers: ["dxmt", "dxvk"])
+        let settings = run(hb, ["CX_GRAPHICS_BACKEND": "dxvk"]).filter { $0.hasPrefix("# note: settings ") }
+        #expect(settings.first?.hasPrefix("# note: settings mode dxvk, sync ") == true)
+        #expect(settings.first?.contains(", Windows ") == true)
+    }
+
+    @Test("The settings summary names the renderer that ran, not the one asked for")
+    func settingsSummaryResolvedRenderer() throws {
+        let hb = try install(renderers: ["dxmt", "d3dmetal"])
+        let out = run(hb, ["CX_GRAPHICS_BACKEND": "d3dmetal"])
+        #expect(out.contains { $0.hasPrefix("# note: settings mode dxmt, ") })
+    }
+
     @Test("D3DMetal with the licence accepted points Wine at the user's D3DMetal, with DXMT for 32-bit")
     func d3dmetalLicensed() throws {
         let hb = try install(renderers: ["dxmt", "d3dmetal"], licensed: true)

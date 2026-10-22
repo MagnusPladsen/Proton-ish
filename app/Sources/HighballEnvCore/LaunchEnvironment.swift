@@ -85,6 +85,10 @@ public enum LaunchEnvironment {
                 }
             }
             notes.append("renderer \(resolved.renderer.rawValue)")
+            // What Highball puts in a report's Environment settings; Proton-ish's report reads it back
+            var ran = settings
+            ran.renderer = resolved.renderer
+            notes += PlayReport.settingsSummary(ran).split(separator: "\n").map { "settings \($0)" }
             // The same steps WineRunner takes before every launch
             do { try bottle.prepareDLSSBridge(engine: engine, renderer: resolved.renderer) } catch {
                 notes.append("DLSS left off: \(error)")
