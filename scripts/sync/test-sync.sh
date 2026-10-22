@@ -185,6 +185,9 @@ STUB
 chmod +x "$work/bin/swift" "$work/bin/refresh-db"
 export SWIFT="$work/bin/swift" REFRESH_DB="$work/bin/refresh-db"
 runhb() { : > "$STUB_LOG"; sh "$work/hb/scripts/sync/highball.sh" > "$work/out" 2>&1 || echo "exit $?" >> "$work/out"; }
+# Without it the script fetches Highball's manifests from GitHub; these cases have none
+mkdir -p "$work/no-manifests"
+export HIGHBALL_MANIFESTS="$work/no-manifests"
 
 hb 0.10.15 aaaaaaa1111
 printf 'v0.10.15\n' > "$STUB_DIR/releases"; printf 'aaaaaaa1111\n' > "$STUB_DIR/dbhead"
@@ -195,6 +198,7 @@ hasnt "and opens nothing" "create" "$STUB_LOG"
 printf 'v0.10.16\n' > "$STUB_DIR/releases"
 runhb
 has "a newer Highball release opens a PR" "pr create .* --head sync/highball-0.10.16 " "$STUB_LOG"
+has "titled with the release alone" "--title sync: Highball 0.10.16 --label" "$STUB_LOG"
 is "the pin is bumped" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Package.swift | grep -c 'exact: "0.10.16"')"
 is "the helper's version constant follows" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Sources/HighballEnvCore/HighballEnvCore.swift | grep -c '"0.10.16"')"
 is "the version is bumped on the Highball branch" "0.1.0-beta.6" "$(version_on "$work/hb-origin.git" sync/highball-0.10.16)"
@@ -310,23 +314,43 @@ is "one needing a newer macOS goes before the comment of the download" "x64-cros
 hasnt "older revisions and other engine lines are left alone" 'x64-crossover26.3-r24\|sikarugir' "$work/pin/Makefile"
 
 echo "== Highball: a HighballKit bump pins its engines =="
-hb 0.10.15 aaaaaaa1111
-cp "$here"/pin-engines.sh "$here"/engine_pins.py "$work/hb/scripts/sync/"
-pins
+# The Highball checkout with the fork's real pins, and manifests for them (plus any added after)
+hbpins() {
+  hb 0.10.15 aaaaaaa1111
+  cp "$here"/pin-engines.sh "$here"/engine_pins.py "$work/hb/scripts/sync/"
+  pins
+  mkdir -p "$work/hb/app/Sources/NotProtonApp/Model"
+  cp "$work/pin/Makefile" "$work/hb/Makefile"
+  cp "$work/pin/app/Sources/NotProtonApp/Model/"*.swift "$work/hb/app/Sources/NotProtonApp/Model/"
+  printf '    platforms: [.macOS("15.0")],\n' >> "$work/hb/app/Package.swift"
+  git_quiet -C "$work/hb" add -A && git_quiet -C "$work/hb" commit -q -m "real pins" && git_quiet -C "$work/hb" push -q origin HEAD:main
+}
+hbpins
 manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
-mkdir -p "$work/hb/app/Sources/NotProtonApp/Model"
-cp "$work/pin/Makefile" "$work/hb/Makefile"
-cp "$work/pin/app/Sources/NotProtonApp/Model/"*.swift "$work/hb/app/Sources/NotProtonApp/Model/"
-printf '    platforms: [.macOS("15.0")],\n' >> "$work/hb/app/Package.swift"
-git_quiet -C "$work/hb" add -A && git_quiet -C "$work/hb" commit -q -m "real pins" && git_quiet -C "$work/hb" push -q origin HEAD:main
 printf 'v0.10.16\n' > "$STUB_DIR/releases"; printf 'aaaaaaa1111\n' > "$STUB_DIR/dbhead"
-export HIGHBALL_MANIFESTS="$work/pin/engines"
-runhb
-unset HIGHBALL_MANIFESTS
+HIGHBALL_MANIFESTS="$work/pin/engines" runhb
 is "the engine is pinned on the Highball branch" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:Makefile | grep -c 'x64-crossover26.3-r27 x64-crossover26.3-r28$')"
 is "its Swift pins are committed with it" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Sources/NotProtonApp/Model/NtdllPatcher.swift | grep -c '"x64-crossover26.3-r28": highballBuild0024')"
 is "the changelog says the engine is supported" "1" "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:CHANGELOG.md | grep -c "^- $(date +%Y-%m-%d): HighballKit 0.10.16: .*Supports Highball engine r28\.")"
 has "the PR names the pinned engine" "x64-crossover26.3-r28 is supported" "$STUB_LOG"
+
+echo "== Highball: engines pinned on every run =="
+hbpins
+printf 'v0.10.15\n' > "$STUB_DIR/releases"; printf 'aaaaaaa1111\n' > "$STUB_DIR/dbhead"
+HIGHBALL_MANIFESTS="$work/pin/engines" runhb
+has "nothing to pin and nothing newer reports current" "are current" "$work/out"
+hasnt "and opens nothing" "create" "$STUB_LOG"
+
+manifest "$work/pin/engines" x64-crossover26.3-r28 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r28"
+HIGHBALL_MANIFESTS="$work/pin/engines" runhb
+eb=sync/highball-engines-x64-crossover26.3-r28
+has "a same-Wine engine alone opens a PR" "pr create .* --head $eb " "$STUB_LOG"
+has "and turns on auto-merge" "pr merge --auto --merge .* $eb" "$STUB_LOG"
+has "titled with the engine" "--title sync: Highball engines r28 --label" "$STUB_LOG"
+is "the engine is pinned on its branch" "1" "$(git -C "$work/hb-origin.git" show "$eb:Makefile" | grep -c 'x64-crossover26.3-r27 x64-crossover26.3-r28$')"
+is "the version is bumped on the engines branch" "0.1.0-beta.6" "$(version_on "$work/hb-origin.git" "$eb")"
+is "the changelog says only that the engine is supported" "1" "$(git -C "$work/hb-origin.git" show "$eb:CHANGELOG.md" | grep -c "^- $(date +%Y-%m-%d): Supports Highball engine r28\.$")"
+is "the HighballKit pin is left alone" "1" "$(git -C "$work/hb-origin.git" show "$eb:app/Package.swift" | grep -c 'exact: "0.10.15"')"
 
 echo "== resolve.py modes =="
 resolve="$here/../../ntdll-patch/resolve.py"
