@@ -58,7 +58,10 @@ struct GameReport: Sendable, Equatable {
         var facts = LaunchFacts()
         let rendererLine = "highball-env: note: renderer ", kitLine = "highball-env: highball-env HighballKit "
         for line in text.split(separator: "\n") {
-            if line.hasPrefix(rendererLine) {
+            // Each launch starts over: one that fell back to the engine defaults names no renderer
+            if line.hasPrefix("=== notproton run ") {
+                facts = LaunchFacts()
+            } else if line.hasPrefix(rendererLine) {
                 let renderer = line.dropFirst(rendererLine.count).trimmingCharacters(in: .whitespaces)
                 facts.renderer = renderers.contains(renderer) ? renderer : nil
             } else if line.hasPrefix(kitLine) {

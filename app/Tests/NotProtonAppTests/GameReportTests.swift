@@ -89,6 +89,18 @@ struct GameReportTests {
         #expect(GameReport.lastLaunch(inLog: log) == GameReport.LaunchFacts(renderer: "dxmt", kitVersion: "0.10.22"))
     }
 
+    @Test("A launch that fell back to the engine defaults reports no earlier launch's facts")
+    func fallbackLaunchForgetsEarlierFacts() {
+        let log = """
+            === notproton run Wed Oct 21 20:01:02 CEST 2026 ===
+            highball-env: highball-env HighballKit 0.10.22
+            highball-env: note: renderer dxvk
+            === notproton run Thu Oct 22 09:15:40 CEST 2026 ===
+            highball-env: no answer in 10 s, using the engine defaults
+            """
+        #expect(GameReport.lastLaunch(inLog: log) == GameReport.LaunchFacts())
+    }
+
     @Test("A renderer the form does not offer is left out")
     func unknownRenderer() {
         #expect(GameReport.lastLaunch(inLog: "highball-env: note: renderer metalfx\n").renderer == nil)
