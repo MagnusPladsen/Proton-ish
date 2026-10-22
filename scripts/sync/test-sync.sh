@@ -22,6 +22,7 @@ case "$1 $2" in "pr list"|"issue list") [ ! -e "$STUB_DIR/list-fails" ] || exit 
 case "$1 $2" in
   "issue list") cat "$STUB_DIR/issues" 2>/dev/null || : ;;
   "pr list") cat "$STUB_DIR/prs" 2>/dev/null || : ;;
+  "pr view") cat "$STUB_DIR/prview" 2>/dev/null || : ;;
   "release list") cat "$STUB_DIR/releases" 2>/dev/null ;;
   "api repos/gauthierpiarrette/highball-db/commits/main") cat "$STUB_DIR/dbhead" 2>/dev/null ;;
   "pr create"|"issue create") echo "https://example.invalid/1" ;;
@@ -632,6 +633,39 @@ has "PRs are looked for in every state" "^pr list .*--head sync/engine-$short .*
 hasnt "a build that had a PR is not downloaded again" "^download" "$STUB_LOG"
 hasnt "nor gets another" "create" "$STUB_LOG"
 rm -f "$STUB_DIR/prs"
+
+# main moves on under an open review PR until GitHub calls it conflicting
+nw_main_moves() {
+  git_quiet -C "$work/nw" checkout -q main
+  printf 'elsewhere\n' > "$work/nw/elsewhere"
+  git_quiet -C "$work/nw" add elsewhere && git_quiet -C "$work/nw" commit -q -m elsewhere
+  git_quiet -C "$work/nw" push -q origin main
+}
+nwb
+runnw
+nw_main_moves
+printf '7\n' > "$STUB_DIR/prs"; printf 'OPEN CONFLICTING\n' > "$STUB_DIR/prview"
+runnw
+has "a conflicting review PR is refreshed" "refreshed" "$work/out"
+is "on main as it is now" "$(git -C "$work/nw-origin.git" rev-parse main)" "$(git -C "$work/nw-origin.git" rev-parse "sync/engine-$short~1")"
+is "still pinning the build" "1" "$(branch_file ntdll-patch/build-ntdll.sh | grep -c '^HB_0025_CLEAN_X86_64=')"
+hasnt "without a second PR" "create" "$STUB_LOG"
+
+printf 'OPEN MERGEABLE\n' > "$STUB_DIR/prview"
+runnw
+hasnt "a review PR that merges cleanly is left alone" "^download" "$STUB_LOG"
+
+printf 'OPEN CONFLICTING\n' > "$STUB_DIR/prview"
+git_quiet -C "$work/nw" checkout -q -B "sync/engine-$short" "origin/sync/engine-$short"
+printf 'a bump\n' > "$work/nw/bump"
+git -C "$work/nw" add bump && git -c user.name=Someone -c user.email=someone@example.invalid -C "$work/nw" commit -q -m bump
+git -C "$work/nw" push -q origin "sync/engine-$short"
+pushed=$(git -C "$work/nw-origin.git" rev-parse "sync/engine-$short")
+git_quiet -C "$work/nw" checkout -q main
+runnw
+is "a conflicting PR someone has committed to is not pushed over" "$pushed" "$(git -C "$work/nw-origin.git" rev-parse "sync/engine-$short")"
+has "and says so" "a person has committed" "$work/out"
+rm -f "$STUB_DIR/prs" "$STUB_DIR/prview"
 
 nwb
 printf '8\n' > "$STUB_DIR/issues"
