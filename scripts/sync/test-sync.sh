@@ -530,6 +530,11 @@ runwbpin
 has "a result with no match is refused" "exit 2" "$work/out"
 is "and nothing is written" "$(cat "$work/before")" "$(cd "$work/wb" && find . -type f -exec shasum {} + | sort)"
 
+pinfix '"x64-crossover26.3-r27"' engine-wine-11.0-20261101T000000Z-0024-rebuilt
+runwbpin
+has "a build whose serial is already pinned is refused" "build 0024 is already pinned" "$work/out"
+is "and nothing is written for it" "$(cat "$work/before")" "$(cd "$work/wb" && find . -type f -exec shasum {} + | sort)"
+
 echo "== New Highball Wine builds =="
 # The Wine download, served from the file a case builds
 cat > "$work/bin/download" <<'STUB'

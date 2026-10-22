@@ -214,6 +214,10 @@ def pin_new_build(result, engine, manifest):
         sys.exit(2)
     wine = manifest["components"]["wine"]
     build = serial(wine)
+    # A serial is one Wine build: the same serial with other bytes is a rebuild to look at by hand,
+    # and pinning it again would declare its Swift table twice
+    if re.search(rf"static let highballBuild{build}\b", engine_pins.PATCHER.read_text()):
+        sys.exit(f"wine_build: build {build} is already pinned; {engine} uses Wine {wine['sha256'][:12]} with that serial")
     old = clean_hashes(engine_pins.RUNNER.read_text(), match)
     note = f"{engine} (engine build {build}): same offsets as {match}, pinned by scripts/sync/wine_build.py"
     runner_text = engine_pins.RUNNER.read_text()
