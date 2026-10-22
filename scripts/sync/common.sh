@@ -21,6 +21,30 @@ pr_exists() {
   [ -n "$("$GH" pr list -R "$REPO" --head "$1" --state open --json number -q '.[0].number' 2>/dev/null)" ]
 }
 
+# 0 when an upstream-sync issue in any state mentions the text. A failed listing fails the job:
+# guessing "none" would open a second issue
+issue_ever_exists() {
+  found=$("$GH" issue list -R "$REPO" --label upstream-sync --state all --search "$1" --json number -q '.[0].number') ||
+    { echo "sync: cannot list issues for $1" >&2; exit 1; }
+  [ -n "$found" ]
+}
+
+# 0 when a PR in any state, open, closed or merged, came from the branch
+pr_ever_exists() {
+  found=$("$GH" pr list -R "$REPO" --head "$1" --state all --json number -q '.[0].number') ||
+    { echo "sync: cannot list PRs for $1" >&2; exit 1; }
+  [ -n "$found" ]
+}
+
+# Copies the engine manifests HighballKit <version> ships into the directory
+fetch_manifests() {   # version dir
+  git clone -q --depth 1 --filter=blob:none --sparse --branch "v$1" https://github.com/gauthierpiarrette/highball.git "$2.git"
+  git -C "$2.git" sparse-checkout set spike/engines
+  mkdir -p "$2"
+  cp "$2.git"/spike/engines/*.json "$2/"
+  rm -rf "$2.git"
+}
+
 # Bot commits carry the no-reply identity, never a work address
 git_identity() {
   git config user.name "Proton-ish sync"

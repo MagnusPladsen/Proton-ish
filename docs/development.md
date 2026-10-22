@@ -27,9 +27,15 @@ current:
   upstream README edit never blocks a merge.
 - **Highball:** a new Highball release bumps the HighballKit pin, and a new highball-db commit refreshes the bundled
   snapshot, in one PR.
-- **Highball engines:** a new engine revision that reuses a Wine build Proton-ish supports is pinned in the Highball
-  PR (`scripts/sync/pin-engines.sh`) and becomes the engine Proton-ish downloads, unless it needs a newer macOS than
-  Proton-ish does. A new Wine build becomes an issue with the steps to support it.
+- **Highball engines:** a new engine revision that reuses a Wine build Proton-ish supports is pinned on every
+  Highball run (`scripts/sync/pin-engines.sh`), in the Highball PR or a PR of its own, and becomes the engine
+  Proton-ish downloads, unless it needs a newer macOS than Proton-ish does.
+- **New Wine builds:** the engines job (`scripts/sync/highball-engine.sh`) downloads the Wine build a new revision
+  uses and checks its loader and ntdll against the pinned builds (`scripts/sync/wine_build.py check`). When the hooks
+  still match, it pins the build and opens a PR for review, with no release bump and no auto-merge: launch a game
+  through the engine, then bump with `scripts/sync/bump-release.sh` and merge. Closing the PR turns the build down
+  for good. When they don't, it opens an issue with the differences and resolve.py's report, for new detour work by
+  hand. Trial builds no engine manifest uses are ignored.
 
 A sync PR bumps `dylib/version.h` to the next beta (or the next patch after 1.0), adds its dated line to CHANGELOG.md's
 "Changes from upstream", and merges itself once the required checks pass; the merge publishes the release, so the
