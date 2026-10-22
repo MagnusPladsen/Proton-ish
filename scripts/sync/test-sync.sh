@@ -202,6 +202,13 @@ runhb
 hasnt "a second run opens no second PR" "pr create" "$STUB_LOG"
 
 hb 0.10.15 aaaaaaa1111
+printf 'public static let highballKitVersion = "0.10.1"\n' > "$work/hb/app/Sources/HighballEnvCore/HighballEnvCore.swift"
+git_quiet -C "$work/hb" commit -q -am "drifted constant" && git_quiet -C "$work/hb" push -q origin main
+printf 'v0.10.16\n' > "$STUB_DIR/releases"
+runhb
+is "a drifted HighballKit constant follows the pin" 'public static let highballKitVersion = "0.10.16"' "$(git -C "$work/hb-origin.git" show sync/highball-0.10.16:app/Sources/HighballEnvCore/HighballEnvCore.swift)"
+
+hb 0.10.15 aaaaaaa1111
 printf 'v0.10.9\n' > "$STUB_DIR/releases"
 runhb
 hasnt "an older release is not a downgrade" "pr create" "$STUB_LOG"

@@ -46,7 +46,7 @@ git checkout -q -B "$branch" origin/main
 notes=""
 if [ -n "$newer_kit" ]; then
   sed -i.bak "s/gauthierpiarrette\/highball\", exact: \"$pinned\"/gauthierpiarrette\/highball\", exact: \"$newer_kit\"/" app/Package.swift
-  sed -i.bak "s/highballKitVersion = \"$pinned\"/highballKitVersion = \"$newer_kit\"/" app/Sources/HighballEnvCore/HighballEnvCore.swift
+  sed -i.bak "s/highballKitVersion = \"[^\"]*\"/highballKitVersion = \"$newer_kit\"/" app/Sources/HighballEnvCore/HighballEnvCore.swift
   rm -f app/Package.swift.bak app/Sources/HighballEnvCore/HighballEnvCore.swift.bak
   "$SWIFT" package --package-path app resolve >/dev/null
   git add app/Package.swift app/Package.resolved app/Sources/HighballEnvCore/HighballEnvCore.swift
