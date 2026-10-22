@@ -5480,6 +5480,22 @@
         }
       }
     },
+    "Report to highball-db…" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala a highball-db…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告到 highball-db…"
+          }
+        }
+      }
+    },
     "Reset" : {
       "localizations" : {
         "it" : {

@@ -349,6 +349,9 @@ struct PrefixesView: View {
                             .disabled(!model.hasLog(log, for: prefix))
                     }
                 }
+                if model.canReport(prefix) {
+                    Button("Report to highball-db…") { model.sendGameReport(for: prefix) }
+                }
             }
             if !targets.isEmpty {
                 Divider()

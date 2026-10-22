@@ -790,4 +790,41 @@ struct PrefixesModelTests {
         #expect(model.usage.isEmpty)
         #expect(!model.isLoading)
     }
+
+    // A loaded model over one prefix whose build record holds `record`, or none when nil
+    private func loadedPrefix(record: String?) async throws -> (URL, PrefixesModel, WinePrefix) {
+        let (dir, library) = try makeLibrary(appIDs: ["2459550"])
+        if let record {
+            try "\(record)\n".write(
+                to: library.compatdata.appending(path: "2459550/\(PrefixTools.buildRecordName)"),
+                atomically: true, encoding: .utf8)
+        }
+        let model = PrefixesModel(libraries: { [library] }, installedTools: { [] })
+        await model.load()
+        return (dir, model, try #require(model.prefixes.first))
+    }
+
+    @Test("A Highball prefix offers a report")
+    func highballPrefixReports() async throws {
+        let (dir, model, prefix) = try await loadedPrefix(record: "x64-crossover26.3-r27")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        #expect(model.canReport(prefix))
+        #expect(model.gameReport(for: prefix)?.engine == "x64-crossover26.3-r27")
+    }
+
+    @Test("A CrossOver prefix offers none")
+    func crossOverPrefixNoReport() async throws {
+        let (dir, model, prefix) = try await loadedPrefix(record: "26.3.0.41073")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        #expect(!model.canReport(prefix))
+        #expect(model.gameReport(for: prefix) == nil)
+    }
+
+    @Test("A prefix with no build record offers none")
+    func unrecordedPrefixNoReport() async throws {
+        let (dir, model, prefix) = try await loadedPrefix(record: nil)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        #expect(!model.canReport(prefix))
+        #expect(model.gameReport(for: prefix) == nil)
+    }
 }
