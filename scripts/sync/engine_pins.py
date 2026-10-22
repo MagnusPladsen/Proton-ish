@@ -45,10 +45,13 @@ def runner_block(runner_text, engine):
                      runner_text, re.M | re.S)
 
 
+# The manifest's displayName is Highball's text, written into a Swift string literal: escaped,
+# on one line
 def tool_display(source_display, engine, manifest_display):
     display = source_display[:source_display.index("(") + 1] + f"r{revision(engine)}"
     if ", " in manifest_display:
-        display += ", " + manifest_display.split(", ", 1)[1]
+        added = re.sub(r"[\x00-\x1f\x7f]+", " ", manifest_display.split(", ", 1)[1])
+        display += ", " + added.replace("\\", "\\\\").replace('"', '\\"')
     return display + ")"
 
 
@@ -70,7 +73,7 @@ def add_runner_build(runner_text, source, engine, display, needs_newer, hashes=N
         return None
     copy = entry[0].replace(source, engine)
     copy = re.sub(r'releaseVersion: "[^"]*"', f'releaseVersion: "r{revision(engine)}"', copy)
-    copy = re.sub(r'display: "[^"]*"', f'display: "{display}"', copy)
+    copy = re.sub(r'display: "(?:[^"\\]|\\.)*"', lambda _: f'display: "{display}"', copy)
     if hashes:
         copy = _set_hashes(copy, hashes)
         note = f"{engine} has its own Wine build, patched like {source}"
@@ -131,7 +134,7 @@ def pin(manifests, dry_run):
         newer = needs_newer_macos(data, minimum)
         runner = entry and add_runner_build(
             runner_text, source, engine,
-            tool_display(re.search(r'display: "([^"]*)"', entry[0])[1], engine, data["displayName"]), newer)
+            tool_display(re.search(r'display: "((?:[^"\\]|\\.)*)"', entry[0])[1], engine, data["displayName"]), newer)
         patcher = runner and add_patch_entry(patcher_text, source, engine)
         if not patcher:
             print(f"unknown {engine} {wine.get('url', '')}")

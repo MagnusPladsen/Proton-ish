@@ -285,6 +285,18 @@ is "it goes before the download, which stays" "x64-crossover26.3-r19 x64-crossov
 is "its tool names what it adds" "Highball Wine 11 (r28, D3DMetal 5)" "$(field x64-crossover26.3-r28 display)"
 
 pins
+python3 -I -c 'import json, sys; print(json.dumps({"id": "x64-crossover26.3-r28", "minMacOS": "14.0",
+  "displayName": "Wine 11.0 (CrossOver 26.3) r28, D3DMetal \"5\" \\1\nbeta", "components": {"wine": {"sha256": "wine0024",
+  "url": "https://example.invalid/wine0024.tar.xz"}}}))' > "$work/pin/engines/x64-crossover26.3-r28.json"
+runpin
+has "quotes, backslashes and newlines in a display name stay inside its Swift string" \
+  'display: "Highball Wine 11 (r28, D3DMetal \\"5\\" \\\\1 beta)"),$' "$runner"
+manifest "$work/pin/engines" x64-crossover26.3-r29 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r29"
+runpin
+is "a revision copied from that entry gets a display of its own" "Highball Wine 11 (r29)" "$(field x64-crossover26.3-r29 display)"
+has "with nothing of the old one left over" 'display: "Highball Wine 11 (r29)"),$' "$runner"
+
+pins
 manifest "$work/pin/engines" x64-crossover26.3-r28 wine0025 14.0 "Wine 11.0 (CrossOver 26.3) r28"
 manifest "$work/pin/engines" x64-crossover26.3-r29 wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r29"
 runpin

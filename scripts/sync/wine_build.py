@@ -230,7 +230,7 @@ def pin_new_build(result, engine, manifest):
     old = clean_hashes(engine_pins.RUNNER.read_text(), match)
     note = f"{engine} (engine build {build}): same offsets as {match}, pinned by scripts/sync/wine_build.py"
     runner_text = engine_pins.RUNNER.read_text()
-    source_display = re.search(r'display: "([^"]*)"', engine_pins.runner_block(runner_text, match)[0])[1]
+    source_display = re.search(r'display: "((?:[^"\\]|\\.)*)"', engine_pins.runner_block(runner_text, match)[0])[1]
     edits = {
         RESOLVE_PY: pin_resolve(RESOLVE_PY.read_text(), old, result["clean"], note),
         APPLY_PY: pin_apply(APPLY_PY.read_text(), old, result["clean"], note),
