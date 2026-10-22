@@ -1708,6 +1708,38 @@
         }
       }
     },
+    "Buying CrossOver is the most direct way to support future Wine development. Proton-ish fully supports it alongside Highball's engine, so you can use either." : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acquistare CrossOver è il modo più diretto per sostenere il futuro sviluppo di Wine. Proton-ish lo supporta pienamente accanto al motore di Highball, quindi puoi usare l'uno o l'altro."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买 CrossOver 是支持 Wine 未来发展最直接的方式。Proton-ish 完整支持 CrossOver，也支持 Highball 的引擎，两者任你选用。"
+          }
+        }
+      }
+    },
+    "Buying CrossOver supports future Wine development: CodeWeavers does much of the Wine work every engine builds on, Highball's included." : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acquistare CrossOver sostiene il futuro sviluppo di Wine: CodeWeavers svolge gran parte del lavoro su Wine su cui si basa ogni motore, compreso quello di Highball."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买 CrossOver 可以支持 Wine 的未来发展：CodeWeavers 承担了大量 Wine 开发工作，包括 Highball 在内的每个引擎都建立在这些工作之上。"
+          }
+        }
+      }
+    },
     "Calculating…" : {
       "localizations" : {
         "it" : {
@@ -1944,22 +1976,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请先关闭 Steam，再继续。"
-          }
-        }
-      }
-    },
-    "CodeWeavers employs most of the people who work on Wine and funds nearly all of the Wine work for macOS. Highball's engine is built from the CrossOver sources CodeWeavers publishes. Sales of CrossOver pay for all of it." : {
-      "localizations" : {
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "CodeWeavers employs most of the people who work on Wine and funds nearly all of the Wine work for macOS. Highball's engine is built from the CrossOver sources CodeWeavers publishes. Sales of CrossOver pay for all of it."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CodeWeavers 雇用了大多数 Wine 开发者，并资助了几乎全部面向 macOS 的 Wine 工作。Highball 的引擎基于 CodeWeavers 公开的 CrossOver 源码构建。这一切都由 CrossOver 的销售收入支付。"
           }
         }
       }
@@ -2398,22 +2414,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CrossOver 似乎尚未激活。"
-          }
-        }
-      }
-    },
-    "CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on." : {
-      "localizations" : {
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CrossOver 的支持和性能最好。如果条件允许，请购买 CrossOver：CodeWeavers 资助了大量 Wine 开发工作，包括 Highball 在内的每个免费引擎都建立在这些工作之上。"
           }
         }
       }
@@ -3010,6 +3010,22 @@
         }
       }
     },
+    "Either way, enjoy your games. This note is always under Help → Support Wine Development." : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In ogni caso, buon divertimento. Questa nota è sempre disponibile in Aiuto → Sostieni lo sviluppo di Wine."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无论选择哪个，都祝你玩得开心。此说明始终可在“帮助 → 支持 Wine 开发”中找到。"
+          }
+        }
+      }
+    },
     "Enable D3DMetal" : {
       "localizations" : {
         "it" : {
@@ -3342,22 +3358,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "如果 Proton-ish 安装在那里，它将保持安装状态。仍要继续吗？"
-          }
-        }
-      }
-    },
-    "If you can, buy CrossOver and use it in Proton-ish: it gives the best support and performance, and it keeps Wine on the Mac alive. If you cannot, play on, and come back to this when you can. This note is always under Help → Why Buy CrossOver." : {
-      "localizations" : {
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "If you can, buy CrossOver and use it in Proton-ish: it gives the best support and performance, and it keeps Wine on the Mac alive. If you cannot, play on, and come back to this when you can. This note is always under Help → Why Buy CrossOver."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "如果条件允许，请购买 CrossOver 并在 Proton-ish 中使用它：它提供最好的支持与性能，也让 Mac 上的 Wine 得以延续。如果暂时不行，照常游玩，有条件时再回来。此说明始终可在“帮助 → 为什么购买 CrossOver”中找到。"
           }
         }
       }
@@ -4712,18 +4712,18 @@
         }
       }
     },
-    "Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make." : {
+    "Proton-ish is free, and so is Highball's engine. Both run on Wine, and most Wine development is done by CodeWeavers, the company behind CrossOver." : {
       "localizations" : {
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make."
+            "state" : "translated",
+            "value" : "Proton-ish è gratuito, e lo è anche il motore di Highball. Entrambi si basano su Wine, e la maggior parte dello sviluppo di Wine è opera di CodeWeavers, l'azienda che sviluppa CrossOver."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Proton-ish 是免费的，Highball 的引擎也是。但它们底层的 Wine 并非无需成本。"
+            "value" : "Proton-ish 是免费的，Highball 的引擎也是。两者都基于 Wine 运行，而 Wine 的大部分开发工作由 CrossOver 背后的公司 CodeWeavers 完成。"
           }
         }
       }
@@ -6414,6 +6414,38 @@
         }
       }
     },
+    "Support Wine Development…" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostieni lo sviluppo di Wine…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 Wine 开发…"
+          }
+        }
+      }
+    },
+    "Support Wine development" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostieni lo sviluppo di Wine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 Wine 开发"
+          }
+        }
+      }
+    },
     "Task Manager" : {
       "localizations" : {
         "it" : {
@@ -7418,38 +7450,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不支持版本 %@（支持：%@）"
-          }
-        }
-      }
-    },
-    "Who pays for Wine on the Mac" : {
-      "localizations" : {
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Who pays for Wine on the Mac"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "谁在为 Mac 上的 Wine 付费"
-          }
-        }
-      }
-    },
-    "Why Buy CrossOver…" : {
-      "localizations" : {
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Why Buy CrossOver…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "为什么购买 CrossOver…"
           }
         }
       }
