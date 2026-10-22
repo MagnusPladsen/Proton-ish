@@ -1,5 +1,5 @@
 #!/bin/sh
-# Bumps dylib/version.h to the next release and adds the dated README line, as one commit on the
+# Bumps dylib/version.h to the next release and adds the dated CHANGELOG.md line, as one commit on the
 # current branch. For merges done by hand; the sync scripts do the same on their own.
 # Usage: scripts/sync/bump-release.sh "NotProton 2791679 merged"
 set -eu

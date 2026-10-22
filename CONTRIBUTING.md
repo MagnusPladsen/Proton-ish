@@ -22,12 +22,12 @@ Proton-ish changes or non-CrossOver issues to the upstream NotProton project, wh
    `np_`/`NP_` C symbols, `NOTPROTON_*` environment variables, and prefix marker files (`notproton-build`,
    `*.notproton-orig`, `notproton-template`, lock files).
 4. Keep `make brandcheck` clean, and run the full check before opening a PR (see "Building from source"
-   in README.md).
+   in docs/development.md).
 5. Comment style: short comments where the logic is complex, written for a human reader.
 6. Code that runs inside Steam (the dylib), the run script and lsteamclient interact in subtle ways.
    Think about multiple Steam accounts, multiple libraries, multiple macOS users and different file
    systems before changing them.
-7. Every change that affects users gets a dated line under "Changes from upstream" in README.md.
+7. Every change that affects users gets a dated line under "Changes from upstream" in CHANGELOG.md.
 
 Upstream's own contribution guidelines, which much of the above is based on, are at
 https://github.com/NotProtonNot/NotProton/blob/main/CONTRIBUTING.md.

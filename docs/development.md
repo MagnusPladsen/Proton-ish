@@ -31,7 +31,7 @@ current:
   PR (`scripts/sync/pin-engines.sh`) and becomes the engine Proton-ish downloads, unless it needs a newer macOS than
   Proton-ish does. A new Wine build becomes an issue with the steps to support it.
 
-A sync PR bumps `dylib/version.h` to the next beta (or the next patch after 1.0), adds its dated line to the README's
+A sync PR bumps `dylib/version.h` to the next beta (or the next patch after 1.0), adds its dated line to CHANGELOG.md's
 "Changes from upstream", and merges itself once the required checks pass; the merge publishes the release, so the
 app updates through Sparkle without anyone pressing a button. A merge with conflicts stays with a person: merge by
 hand on a branch, run `scripts/sync/bump-release.sh "NotProton <sha> merged"`, open the PR. The workflow needs a
