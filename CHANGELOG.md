@@ -56,3 +56,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-21: highball-db 81da423: Highball's fixes and per-game data as of this release.
 - 2026-10-22: README leads with what Proton-ish does and a five-step setup, with the details in docs/. The app recommends buying CrossOver to support future Wine development, under Help → Support Wine Development.
 - 2026-10-22: Games run through Highball can be reported to highball-db from Prefixes (Report to highball-db…, in the toolbar or a game's menu), with the engine, the game's settings and your Mac filled in and marked as Proton-ish. The HighballKit version in launch logs is right again.
+- 2026-10-22: New Highball Wine builds are checked against the pinned ones: one whose ntdll resolves like a supported build becomes a pull request to review, the others an issue with the differences. Engine revisions on a supported Wine build are pinned on every sync.
