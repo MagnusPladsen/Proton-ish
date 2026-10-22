@@ -54,6 +54,9 @@ Proton-ish supports it fully alongside Highball's engine. The app shows this not
 
 ## Reporting problems
 
+Played a Highball game? Right-click it in **Prefixes** and choose **Report to highball-db…**: the form opens in your
+browser with the game, engine and Mac filled in, marked as Proton-ish.
+
 Open an [issue](https://github.com/MagnusPladsen/Proton-ish/issues) with the game's `protonish-run.log` (in the game's
 prefix). The Steam integration, the setup and the launch are Proton-ish's, even when Highball's engine runs the game,
 so start here. If it turns out to be the engine, the issue will point you to the right place: highball-db for a game
