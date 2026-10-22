@@ -35,7 +35,8 @@ current:
   still match, it pins the build and opens a PR for review, with no release bump and no auto-merge: launch a game
   through the engine, then bump with `scripts/sync/bump-release.sh` and merge. Closing the PR turns the build down
   for good. When they don't, it opens an issue with the differences and resolve.py's report, for new detour work by
-  hand. Trial builds no engine manifest uses are ignored.
+  hand. A build reusing the serial of a pinned one with other bytes gets an issue too, before any download. Trial
+  builds no engine manifest uses are ignored.
 
 A sync PR bumps `dylib/version.h` to the next beta (or the next patch after 1.0), adds its dated line to CHANGELOG.md's
 "Changes from upstream", and merges itself once the required checks pass; the merge publishes the release, so the
