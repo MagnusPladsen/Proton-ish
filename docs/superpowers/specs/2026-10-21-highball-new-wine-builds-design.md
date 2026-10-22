@@ -73,7 +73,8 @@ build 0021 (r19) and takes r19's payloads unchanged, only the image hashes diffe
   or a step fails). No third path.
 - D2. "Match" means every value `resolve.py` reports for both architectures equals the pinned
   build's: hook RVA, stolen bytes, cave RVA and size, placement, `wm`, `resume`, `load_path`,
-  every export address, image base, machine and magic. Any difference is G2.
+  the address of every export the pinned build records (the ones its payload calls; resolve.py
+  also lists exports the payload never uses), image base, machine and magic. Any difference is G2.
 - D3. Payloads are reused by resource name (`detour2-hb-r19`, `detour32-hb-r19` today); no new
   `.bin` files and no `Package.swift` change in a G1 PR.
 - D4. The new table in `NtdllPatcher.swift` is named after the engine build serial

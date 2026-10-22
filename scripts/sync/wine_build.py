@@ -151,7 +151,8 @@ def check(engine_dir):
             continue
         image = table_image(patcher_text, table) if table else {}
         found = [line for arch in ARCHES for line in differences(arch, resolved[arch], pins[arch], image.get(arch))]
-        if n == 0:
+        # The newest build that differs says how
+        if not result["differences"]:
             result["differences"] = found
         if found or not table:
             continue
@@ -161,6 +162,8 @@ def check(engine_dir):
             return result
         result.update(match=engine, patched=patched, differences=[])
         return result
+    if not result["differences"]:
+        result["differences"] = ["every field matches a pinned build, but none of those has an NtdllPatcher table to copy"]
     return result
 
 
