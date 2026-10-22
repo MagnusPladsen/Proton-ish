@@ -483,6 +483,14 @@ is "and the refusal is the difference" "i386-windows: cannot find build_module" 
 has "and the report" "cannot find build_module" "$work/check.json"
 is "it is an answer, not a failure" "" "$(cat "$work/out")"
 
+wb
+resolved x86_64-windows "$engine/lib/wine/x86_64-windows/ntdll.dll"
+printf 'Traceback (most recent call last):\nModuleNotFoundError: No module named %s\n' "'capstone'" \
+  > "$STUB_DIR/resolve/$(sha_of "$engine/lib/wine/i386-windows/ntdll.dll").err"
+runcheck
+has "a resolve.py that crashes fails the check" "exit 1" "$work/out"
+has "saying so" "resolve.py crashed" "$work/out"
+
 echo "== Wine build pin =="
 A=$(printf 'a%.0s' $(seq 64)); B=$(printf 'b%.0s' $(seq 64)); C=$(printf 'c%.0s' $(seq 64)); D=$(printf 'd%.0s' $(seq 64)); L=$(printf 'e%.0s' $(seq 64))
 WINE=1d1a130c0108aaaabbbbccccddddeeeeffff0000111122223333444455556666
@@ -666,6 +674,13 @@ runnw
 is "a conflicting PR someone has committed to is not pushed over" "$pushed" "$(git -C "$work/nw-origin.git" rev-parse "sync/engine-$short")"
 has "and says so" "a person has committed" "$work/out"
 rm -f "$STUB_DIR/prs" "$STUB_DIR/prview"
+
+nwb
+printf 'Traceback (most recent call last):\nModuleNotFoundError: No module named %s\n' "'capstone'" \
+  > "$STUB_DIR/resolve/$(sha_of "$work/nw-tar/engine/lib/wine/x86_64-windows/ntdll.dll").err"
+runnw
+has "a crashing resolve.py fails the job" "exit 1" "$work/out"
+hasnt "instead of opening an issue for good" "create" "$STUB_LOG"
 
 nwb
 printf '8\n' > "$STUB_DIR/issues"

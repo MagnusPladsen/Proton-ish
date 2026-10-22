@@ -39,6 +39,15 @@ def run(arguments):
     return subprocess.run(arguments, capture_output=True, text=True)
 
 
+# resolve.py refuses an ntdll with a one-line SystemExit; a traceback or a signal is resolve.py
+# itself broken (capstone missing, a bug), which fails the job instead of opening an issue for good
+def run_resolve(resolve, arguments):
+    done = run(resolve + arguments)
+    if done.returncode < 0 or "Traceback (most recent call last)" in done.stderr:
+        sys.exit(f"wine_build: resolve.py crashed on {' '.join(arguments)}:\n{done.stderr.strip()}")
+    return done
+
+
 def number(text):
     return int(text.replace("_", ""), 0)
 
@@ -116,13 +125,13 @@ def check(engine_dir):
               "match": None, "patched": None, "differences": [], "report": ""}
     resolved, reports = {}, []
     for arch in ARCHES:
-        done = run(resolve + ["--json", str(dlls[arch])])
+        done = run_resolve(resolve, ["--json", str(dlls[arch])])
         if done.returncode:
             result["differences"].append(f"{arch}: {done.stderr.strip()}")
             reports.append(done.stderr)
             continue
         resolved[arch] = json.loads(done.stdout)
-        report = run(resolve + [str(dlls[arch])])
+        report = run_resolve(resolve, [str(dlls[arch])])
         reports.append(report.stdout if report.returncode == 0 else report.stderr)
     result["report"] = "\n".join(reports)
     if result["differences"]:
@@ -134,7 +143,7 @@ def check(engine_dir):
     for n, engine in enumerate(engines):
         pins = {}
         for arch, digest in clean_hashes(runner_text, engine).items():
-            done = run(resolve + ["--pinned", digest])
+            done = run_resolve(resolve, ["--pinned", digest])
             if done.returncode == 0:
                 pins[arch] = json.loads(done.stdout)
         table = table_name(patcher_text, engine)
