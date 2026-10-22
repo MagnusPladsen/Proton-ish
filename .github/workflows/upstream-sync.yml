@@ -21,7 +21,7 @@ jobs:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
           if [ -z "$SYNC_TOKEN" ]; then
-            echo "::notice::SYNC_TOKEN is not set; see README.md, Maintenance"
+            echo "::notice::SYNC_TOKEN is not set; see docs/development.md, Maintenance"
             echo "skip=1" >> "$GITHUB_ENV"
           fi
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
           if [ -z "$SYNC_TOKEN" ]; then
-            echo "::notice::SYNC_TOKEN is not set; see README.md, Maintenance"
+            echo "::notice::SYNC_TOKEN is not set; see docs/development.md, Maintenance"
             echo "skip=1" >> "$GITHUB_ENV"
           fi
       - uses: actions/checkout@v4
@@ -70,7 +70,7 @@ jobs:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
           if [ -z "$SYNC_TOKEN" ]; then
-            echo "::notice::SYNC_TOKEN is not set; see README.md, Maintenance"
+            echo "::notice::SYNC_TOKEN is not set; see docs/development.md, Maintenance"
             echo "skip=1" >> "$GITHUB_ENV"
           fi
       - uses: actions/checkout@v4

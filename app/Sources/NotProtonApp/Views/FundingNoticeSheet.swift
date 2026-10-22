@@ -1,4 +1,4 @@
-// Who pays for Wine on the Mac: shown once on first launch and from Help → Why Buy CrossOver
+// Why buying CrossOver supports Wine: shown once on first launch and from Help → Support Wine Development
 
 import SwiftUI
 
@@ -10,10 +10,10 @@ struct FundingNoticeSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Who pays for Wine on the Mac").font(.headline)
-            Text("Proton-ish is free, and so is Highball's engine. The Wine underneath them is not free to make.")
-            Text("CodeWeavers employs most of the people who work on Wine and funds nearly all of the Wine work for macOS. Highball's engine is built from the CrossOver sources CodeWeavers publishes. Sales of CrossOver pay for all of it.")
-            Text("If you can, buy CrossOver and use it in Proton-ish: it gives the best support and performance, and it keeps Wine on the Mac alive. If you cannot, play on, and come back to this when you can. This note is always under Help → Why Buy CrossOver.")
+            Text("Support Wine development").font(.headline)
+            Text("Proton-ish is free, and so is Highball's engine. Both run on Wine, and most Wine development is done by CodeWeavers, the company behind CrossOver.")
+            Text("Buying CrossOver is the most direct way to support future Wine development. Proton-ish fully supports it alongside Highball's engine, so you can use either.")
+            Text("Either way, enjoy your games. This note is always under Help → Support Wine Development.")
             HStack {
                 Button("Buy CrossOver") {
                     openURL(ProjectLinks.crossOver)

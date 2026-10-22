@@ -376,7 +376,7 @@ struct StatusView: View {
                 Text("CrossOver")
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("CrossOver gives the best support and performance. If you can, buy CrossOver: CodeWeavers funds much of the Wine work that every free engine, Highball's included, builds on.")
+                    Text("Buying CrossOver supports future Wine development: CodeWeavers does much of the Wine work every engine builds on, Highball's included.")
                         .foregroundStyle(.secondary)
                     HStack {
                         Link("CrossOver at CodeWeavers", destination: ProjectLinks.crossOver)

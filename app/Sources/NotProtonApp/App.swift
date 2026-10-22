@@ -46,7 +46,7 @@ struct NotProtonApp: App {
 
         CommandGroup(after: .help) {
             Divider()
-            Button("Why Buy CrossOver…") { showsFundingNotice = true }
+            Button("Support Wine Development…") { showsFundingNotice = true }
             Button("Support CodeWeavers") { NSWorkspace.shared.open(ProjectLinks.crossOver) }
         }
 
