@@ -60,3 +60,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-22: New Highball Wine builds are checked against the pinned ones: one whose ntdll resolves like a supported build becomes a pull request to review, the others an issue with the differences. Engine revisions on a supported Wine build are pinned on every sync.
 - 2026-10-22: NotProton 730f100 merged: a game's Compatibility page offers to rebuild its prefix (with or without a backup) after a CrossOver build switch or when the prefix doesn't fit the build, and a prefix from another build of the same arch runs in place.
 - 2026-10-22: NotProton 480675e merged (see the release notes for the upstream changes).
+- 2026-10-23: highball-db 26d3c05: Highball's fixes and per-game data as of this release.
