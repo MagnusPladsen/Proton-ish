@@ -31,6 +31,7 @@ struct StatusSnapshot: Sendable {
     // What Steam's own config names right now; the request above applies when Steam starts
     var steamLiveDefaultTool: String?
     var otherEngineFixes: Bool = true
+    var rosettaMissing = false
 
     static func capture(bundledVersion: String) -> StatusSnapshot {
         let installs = CrossOverSource.discover()
@@ -58,7 +59,8 @@ struct StatusSnapshot: Sendable {
             defaultToolRequest: DefaultTool.request(),
             steamDefaultTool: DefaultTool.steamDefault(),
             steamLiveDefaultTool: SteamCompatConfig.defaultTool(at: SupportPaths.Steam.compatConfig),
-            otherEngineFixes: OtherEngineFixes.isOn()
+            otherEngineFixes: OtherEngineFixes.isOn(),
+            rosettaMissing: Rosetta.isMissing()
         )
     }
 }

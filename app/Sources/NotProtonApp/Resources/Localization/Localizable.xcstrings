@@ -2220,6 +2220,22 @@
         }
       }
     },
+    "Copy Command" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia comando"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝命令"
+          }
+        }
+      }
+    },
     "Copy the built bridge files" : {
       "localizations" : {
         "it" : {
@@ -3342,6 +3358,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Highball 引擎已下载。请点击“安装”，然后点击引擎旁的“设置”。"
+          }
+        }
+      }
+    },
+    "Highball engines and CrossOver under Rosetta need it to run Windows games, so they fail to start without it. Install it in Terminal with: %@" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I motori Highball e CrossOver con Rosetta ne hanno bisogno per avviare i giochi Windows, che senza non partono. Installalo nel Terminale con: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highball 引擎和通过 Rosetta 运行的 CrossOver 需要它来运行 Windows 游戏，否则游戏无法启动。请在终端中运行以下命令安装：%@"
           }
         }
       }
@@ -5764,6 +5796,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在访达中显示"
+          }
+        }
+      }
+    },
+    "Rosetta 2 is not installed" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rosetta 2 non è installato"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装 Rosetta 2"
           }
         }
       }
