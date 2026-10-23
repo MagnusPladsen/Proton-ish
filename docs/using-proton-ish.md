@@ -41,10 +41,10 @@ A prefix built before this (beta.4 and earlier saved under the Mac user's name) 
 files move into `steamuser`, of two differing copies the newer wins, and the loser stays in `<user> BACKUP` next to
 it. Links Wine made to your Mac folders (Documents, Downloads, …) are dropped, never followed.
 
-**Reporting a game.** How a game ran is worth a report: select it in **Prefixes** and click **Report to highball-db…**
-(in the toolbar, or right-click the game). highball-db's form opens in your browser with the engine, the settings the
-game last ran with (renderer included) and your Mac filled in, marked as Proton-ish. You add the game's name, the
-rating and the renderer, and submit it with your GitHub account.
+**Reporting a game.** How a game ran is worth a report: pick it under **Report a Game** on the **Status** page, or
+select it in **Prefixes** and click **Report to highball-db…** (in the toolbar, or right-click the game).
+highball-db's form opens in your browser with the game, the engine, the settings the game last ran with (renderer
+included) and your Mac filled in, marked as Proton-ish. You add the rating and submit it with your GitHub account.
 
 Design and roadmap: [design spec](superpowers/specs/2026-10-14-protonish-highball-design.md).
 
