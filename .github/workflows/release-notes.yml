@@ -1,0 +1,34 @@
+name: release notes
+
+# Rewrites a published release's notes the way the release workflow writes them now, from
+# CHANGELOG.md (scripts/sync/release-notes.sh). The download and the update feed are untouched.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, such as v1.0.12
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  notes:
+    name: rewrite the notes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rewrite the notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in v[0-9]*) ;; *) echo "not a release tag: $TAG" >&2; exit 1 ;; esac
+          sh scripts/sync/release-notes.sh "$TAG" > notes.md
+          cat notes.md
+          gh release edit "$TAG" --repo "$REPO" --notes-file notes.md

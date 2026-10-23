@@ -25,6 +25,8 @@ case "$1 $2" in
   "pr view") cat "$STUB_DIR/prview" 2>/dev/null || : ;;
   "release list") cat "$STUB_DIR/releases" 2>/dev/null ;;
   "api repos/gauthierpiarrette/highball-db/commits/main") cat "$STUB_DIR/dbhead" 2>/dev/null ;;
+  # The body of a release commit's PR when it is a sync PR, as the -q filter leaves it
+  "api repos/example/fork/commits/"*) cat "$STUB_DIR/syncbody" 2>/dev/null || : ;;
   "pr create"|"issue create") echo "https://example.invalid/1" ;;
   # GitHub refuses auto-merge until it has registered the new head's checks
   "pr merge")
@@ -747,6 +749,52 @@ runnw
 hasnt "with no new Wine build nothing is downloaded" "^download" "$STUB_LOG"
 hasnt "or made" "create" "$STUB_LOG"
 hasnt "and the job passes" "^exit" "$work/out"
+
+echo "== Release notes =="
+# A fork with a released changelog; each change commits and may tag a release
+rn() {
+  rm -rf "$work/rn"; mkdir -p "$work/rn/scripts/sync"
+  cp "$here"/common.sh "$here"/release-notes.sh "$work/rn/scripts/sync/"
+  printf '# Fork\n\n## Changes from upstream\n\n- 2026-10-01: the first line,\n  wrapped.\n' > "$work/rn/CHANGELOG.md"
+  git_quiet -C "$work/rn" init -q && git_quiet -C "$work/rn" add -A && git_quiet -C "$work/rn" commit -q -m base
+  git_quiet -C "$work/rn" tag v1.0.0
+}
+entry() {   # changelog line(s), commit subject
+  printf '%s\n' "$1" >> "$work/rn/CHANGELOG.md"
+  git_quiet -C "$work/rn" commit -q -am "$2"
+}
+notes() { (cd "$work/rn" && sh scripts/sync/release-notes.sh "$@") 2>&1; }
+
+rn
+entry '- 2026-10-23: Report a game from the Status page,
+  with the game filled in.' "Report a game"
+is "a release's notes are its changelog entries since the last release, without dates" \
+  "- Report a game from the Status page, with the game filled in." "$(notes)"
+has "the PR is looked up by the release commit" "^api repos/example/fork/commits/$(git -C "$work/rn" rev-parse HEAD)/pulls " "$STUB_LOG"
+git_quiet -C "$work/rn" tag v1.0.1
+entry '- 2026-10-24: Rosetta 2 is checked.' "Rosetta"
+entry '- 2026-10-24: Defaults apply.' "Defaults"
+is "every entry since the last release is listed" "- Rosetta 2 is checked.
+- Defaults apply." "$(notes)"
+is "an older release's notes are its own" "- Report a game from the Status page, with the game filled in." "$(notes v1.0.1)"
+is "the first release lists every entry" "- the first line, wrapped." "$(notes v1.0.0)"
+# shellcheck disable=SC2016 # Markdown code fences, not command substitution
+printf '## What\nMerges upstream NotProton abc1234.\n\n## Upstream commits\n```\nabc1234 Fix\n```\n---\nOpened by the upstream-sync workflow.\n' > "$STUB_DIR/syncbody"
+is "a sync PR's description follows its entry, without the maintainers' footer" "- Rosetta 2 is checked.
+- Defaults apply.
+
+## What
+Merges upstream NotProton abc1234.
+
+## Upstream commits
+\`\`\`
+abc1234 Fix
+\`\`\`" "$(notes)"
+rm -f "$STUB_DIR/syncbody"
+git_quiet -C "$work/rn" commit -q --allow-empty -m "Build fix"
+git_quiet -C "$work/rn" tag v1.0.2
+git_quiet -C "$work/rn" commit -q --allow-empty -m "Rebuild the release"
+is "a release without a changelog entry falls back to its commit subject" "Rebuild the release" "$(notes)"
 
 if [ "$fails" -ne 0 ]; then echo "==> sync: $fails check(s) failed"; exit 1; fi
 echo "==> sync: NotProton merges and conflicts, Highball bumps, engines and engine pins all answer"
