@@ -44,6 +44,8 @@ SRCS := \
 	dylib/feats/compat.c \
 	dylib/feats/webui.c \
 	dylib/feats/compatsvc.c \
+	dylib/feats/defaults.c \
+	dylib/feats/compatpage.c \
 	dylib/feats/prefixstate.c \
 	dylib/feats/usershortcuts.c \
 	dylib/feats/webpatch.c \
@@ -71,7 +73,7 @@ DEPS := $(OBJS:.o=.d)
         tests-list overlay-shim overlay-shim-install overlay-shim-tests \
         overlay-shim-bench iconmaker icon \
         appinfo helpers-install ntdll-resolve bridge runcheck compatcheck \
-        compatsvc-check prefixstate-check shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck launch-shell activatecheck FORCE
+        compatsvc-check prefixstate-check defaults-check compatpage-check defaults-drift shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck launch-shell activatecheck FORCE
 
 APP_PAYLOAD := app/Sources/NotProtonApp/Resources/payload
 # Highball engines Proton-ish can download; manifests come from the pinned Highball package
@@ -189,6 +191,27 @@ compatsvc-check:
 	mkdir -p $(OUT_DIR) && \
 	$(TEST_CC) -o $(COMPATSVC_CHECK) dylib/tests/compatsvc-check.c && \
 	$(COMPATSVC_CHECK)
+
+DEFAULTS_CHECK := $(OUT_DIR)/defaults-check
+
+$(DEFAULTS_CHECK): dylib/tests/defaults-check.c dylib/feats/defaults.c dylib/feats/defaults.h \
+                   dylib/util/buildid.h dylib/util/file.c dylib/util/file.h
+	@mkdir -p $(dir $@)
+	$(TEST_CC) -o $@ dylib/tests/defaults-check.c dylib/util/file.c
+
+defaults-check: $(DEFAULTS_CHECK)
+	@$(DEFAULTS_CHECK)
+
+COMPATPAGE_CHECK := $(OUT_DIR)/compatpage-check
+
+compatpage-check:
+	@if [ ! -f dylib/tests/compatpage-check.c ]; then $(call SKIP,compatpage-check,dylib/tests/compatpage-check.c); exit 0; fi; \
+	mkdir -p $(OUT_DIR) && \
+	$(TEST_CC) -o $(COMPATPAGE_CHECK) dylib/tests/compatpage-check.c dylib/feats/defaults.c dylib/util/file.c && \
+	$(COMPATPAGE_CHECK)
+
+defaults-drift: $(DEFAULTS_CHECK)
+	@sh dylib/tests/defaults-drift.sh $(DEFAULTS_CHECK)
 
 SHORTCUT_BUNDLE_CHECK := $(OUT_DIR)/shortcut-bundle-check
 SHORTCUTCHECK         := $(OUT_DIR)/shortcutcheck
@@ -398,6 +421,7 @@ panel-behavior:
 	node $(PANEL_TESTS)/fex.js $(OUT_DIR)/panel-emit && \
 	node $(PANEL_TESTS)/renderer-gaps.js $(OUT_DIR)/panel-emit && \
 	node $(PANEL_TESTS)/prefix-row.js $(OUT_DIR)/panel-emit && \
+	node $(PANEL_TESTS)/defaults.js $(OUT_DIR)/panel-emit && \
 	echo "==> panel behavior: renders as expected, no stale arguments"
 
 CX_ROOT ?= /Applications/CrossOver Preview.app
