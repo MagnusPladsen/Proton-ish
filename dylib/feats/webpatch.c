@@ -584,7 +584,7 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "{data:\"dxmt\",label:\"DXMT\"}," \
     "{data:\"dxvk\",label:\"DXVK\"}," \
     "{data:\"wined3d\",label:\"WineD3D\"}].filter(x=>!(fex||nd)||x.data!==\"d3dmetal\")" \
-    ".filter(x=>!nx||x.data!==\"dxvk\")," \
+    ".filter(x=>!(nx&&\"dxvk\"===x.data))," \
     "pick=f=>\"1\"===f(\"DXMT_METALFX_SPATIAL_SWAPCHAIN\")?(U.find(u=>u.data&&+u.data===pf(f(\"DXMT_CONFIG\")||\"\"))" \
     "||{data:String(pf(f(\"DXMT_CONFIG\")||\"\"))}).data:\"\";" \
     "return(0," RT ".jsx)(\"div\",{className:\"MSCXPanel\",children:(0," RT ".jsxs)(" RT ".Fragment,{children:[" \
