@@ -41,6 +41,7 @@ struct GameReportTests {
         #expect(url.path() == "/gauthierpiarrette/highball-db/issues/new")
         #expect(query["template"] == "report.yml")
         #expect(query["title"] == "Emberward")
+        #expect(query["game"] == "Emberward")
         #expect(query["steam_appid"] == "2459550")
         #expect(query["engine"] == "x64-crossover26.3-r27")
         #expect(query["renderer"] == "dxmt")
@@ -73,7 +74,9 @@ struct GameReportTests {
 
     @Test("A title keeps its punctuation")
     func titlePunctuation() {
-        #expect(fields(report(title: "Café ☕ & Co #2").url)["title"] == "Café ☕ & Co #2")
+        let query = fields(report(title: "Café ☕ & Co #2").url)
+        #expect(query["title"] == "Café ☕ & Co #2")
+        #expect(query["game"] == "Café ☕ & Co #2")
     }
 
     @Test("A plus sign is not read as a space by the form")
@@ -82,6 +85,7 @@ struct GameReportTests {
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedQuery ?? ""
         #expect(!query.contains("+"))
         #expect(fields(url)["title"] == "Ys I + II")
+        #expect(fields(url)["game"] == "Ys I + II")
     }
 
     @Test("The last launch's renderer and HighballKit win")
@@ -137,6 +141,25 @@ struct GameReportTests {
         for build in ["26.3.0.41073", "99.0.0.12345", ""] {
             #expect(!GameReport.isHighballEngine(build), "\(build)")
         }
+    }
+
+    @Test("Only games last run on a Highball engine can be reported, the most recently played first")
+    func reportableGames() {
+        let library = SteamLibrary(root: URL(filePath: "/Users/tester/Library/Application Support/Steam"))
+        func game(_ appID: String, playedAgo days: Double?) -> WinePrefix {
+            WinePrefix(appID: appID, name: "Game \(appID)", library: library,
+                       lastUsed: days.map { Date(timeIntervalSinceNow: -$0 * 86_400) })
+        }
+        let older = game("1", playedAgo: 9), newer = game("2", playedAgo: 1), never = game("3", playedAgo: nil)
+        let crossOver = game("4", playedAgo: 0), unrecorded = game("5", playedAgo: 0)
+        let records = [
+            older.id: PrefixBuildRecord(build: "x64-crossover26.3-r19", display: nil),
+            newer.id: PrefixBuildRecord(build: "x64-crossover26.3-r27", display: nil),
+            never.id: PrefixBuildRecord(build: "x64-crossover26.3-r25", display: nil),
+            crossOver.id: PrefixBuildRecord(build: "26.3.0.41073", display: "CrossOver 26.3"),
+        ]
+        let reportable = GameReport.reportable([older, crossOver, never, unrecorded, newer], records: records)
+        #expect(reportable.map(\.appID) == ["2", "1", "3"])
     }
 
     @Test("A CrossOver prefix has no report, whatever its log says")

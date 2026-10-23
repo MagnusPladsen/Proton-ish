@@ -24,7 +24,9 @@ struct GameReport: Sendable, Equatable {
         var components = URLComponents(string: "https://github.com/gauthierpiarrette/highball-db/issues/new")!
         var items = [
             URLQueryItem(name: "template", value: "report.yml"),
+            // The form's game field; title= is GitHub's issue title, which the form names the report by
             URLQueryItem(name: "title", value: title),
+            URLQueryItem(name: "game", value: title),
             URLQueryItem(name: "steam_appid", value: appID),
             URLQueryItem(name: "chip", value: chip),
             URLQueryItem(name: "macos", value: macOS),
@@ -50,6 +52,13 @@ struct GameReport: Sendable, Equatable {
     // Engine ids are <arch>-<line>-r<N>; CrossOver builds are dotted numbers
     static func isHighballEngine(_ build: String) -> Bool {
         build.wholeMatch(of: #/[a-z0-9_]+-[a-z0-9._]+-r[0-9]+/#) != nil
+    }
+
+    // The games a report can be made for, the most recently played first
+    static func reportable(_ prefixes: [WinePrefix], records: [String: PrefixBuildRecord]) -> [WinePrefix] {
+        prefixes
+            .filter { prefix in records[prefix.id].map { isHighballEngine($0.build) } ?? false }
+            .sorted { ($0.lastUsed ?? .distantPast) > ($1.lastUsed ?? .distantPast) }
     }
 
     struct LaunchFacts: Equatable {

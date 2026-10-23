@@ -53,6 +53,8 @@ struct StatusRow: View {
     var secondaryAction: StatusAction?
     var action: StatusAction?
     var menu: [StatusAction] = []
+    // Shows the menu as a labelled button, for a row whose only action is choosing from it
+    var menuLabel: String?
     var toggle: Binding<Bool>?
 
     var body: some View {
@@ -116,15 +118,19 @@ struct StatusRow: View {
                 Menu {
                     menuItems(menu, hidingUnavailable: false)
                 } label: {
-                    Label("More", systemImage: "ellipsis")
-                        .labelStyle(.iconOnly)
+                    if let menuLabel {
+                        Text(menuLabel)
+                    } else {
+                        Label("More", systemImage: "ellipsis")
+                            .labelStyle(.iconOnly)
+                    }
                 }
                 .menuStyle(.button)
                 .buttonStyle(.bordered)
-                .menuIndicator(.hidden)
+                .menuIndicator(menuLabel == nil ? .hidden : .automatic)
                 .fixedSize()
-                .help("More actions")
-                .accessibilityLabel("More actions, \(title)")
+                .help(menuLabel == nil ? String(localized: "More actions") : "")
+                .accessibilityLabel(menuLabel.map { Text("\($0), \(title)") } ?? Text("More actions, \(title)"))
                 .padding(.leading, action == nil ? 0 : 8)
             }
         }
@@ -160,6 +166,7 @@ struct StatusRow: View {
 
 struct StatusView: View {
     @Environment(SystemStatus.self) private var status
+    @Environment(PrefixesModel.self) private var prefixes
     @State private var licenceSheet: HighballLicenceSheet.Mode?
 
     private static let updateBlockPrompt =
@@ -637,7 +644,22 @@ struct StatusView: View {
         if snapshot.installedRunners.contains(where: { $0.runtime == .highball }) {
             defaultToolRow(snapshot)
             otherEngineFixesRow(snapshot)
+            reportGameRow
         }
+    }
+
+    // The games come from the Prefixes model, loaded here when the Prefixes pane has not been opened yet
+    private var reportGameRow: some View {
+        let games = prefixes.reportablePrefixes
+        return StatusRow(
+            title: String(localized: "Report a Game"),
+            value: games.isEmpty
+                ? String(localized: "Once you have played a game on a Highball engine, you can tell highball-db how it ran from here.")
+                : String(localized: "Tell highball-db how a game ran on a Highball engine. The report opens in your browser with the game, engine and your Mac filled in, for you to rate and submit."),
+            menu: games.map { game in StatusAction(label: game.title) { prefixes.sendGameReport(for: game) } },
+            menuLabel: String(localized: "Report to highball-db…")
+        )
+        .task { if !prefixes.hasLoaded && !prefixes.isLoading { await prefixes.load() } }
     }
 
     private func otherEngineFixesRow(_ snapshot: StatusSnapshot) -> some View {

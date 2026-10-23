@@ -4258,6 +4258,22 @@
         }
       }
     },
+    "Once you have played a game on a Highball engine, you can tell highball-db how it ran from here." : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopo aver giocato a un gioco con un motore Highball, da qui puoi dire a highball-db come è andato."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Highball 引擎上玩过游戏后，可以在这里告诉 highball-db 它的运行情况。"
+          }
+        }
+      }
+    },
     "Only fixes verified on this Wine engine apply. One game can opt in with the launch option PROTONISH_RECIPE_OTHER_ENGINES=1." : {
       "localizations" : {
         "it" : {
@@ -5576,6 +5592,22 @@
         }
       }
     },
+    "Report a Game" : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala un gioco"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告游戏"
+          }
+        }
+      }
+    },
     "Report to highball-db…" : {
       "localizations" : {
         "it" : {
@@ -6570,6 +6602,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "任务管理器"
+          }
+        }
+      }
+    },
+    "Tell highball-db how a game ran on a Highball engine. The report opens in your browser with the game, engine and your Mac filled in, for you to rate and submit." : {
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racconta a highball-db come è andato un gioco con un motore Highball. La segnalazione si apre nel browser con il gioco, il motore e il tuo Mac già compilati: tu dai il voto e la invii."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "告诉 highball-db 游戏在 Highball 引擎上的运行情况。报告会在浏览器中打开，并已填好游戏、引擎和你的 Mac 信息，由你评分并提交。"
           }
         }
       }
