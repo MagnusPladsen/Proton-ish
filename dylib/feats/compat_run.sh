@@ -1088,6 +1088,23 @@ import_prefix_settings() {
     || echo "=== prefix settings import exited status=$import_status ===" >> "$log" 2>&1 || true
 }
 
+# x86_64 Wine on Apple silicon runs under Rosetta 2. Without it every Wine binary fails with
+# "Bad CPU type in executable", which Steam shows as OS Error 0.
+on_apple_silicon() {
+  [ "$(/usr/sbin/sysctl -n hw.optional.arm64 2>/dev/null)" = 1 ]
+}
+
+rosetta_runs() {
+  /usr/bin/arch -x86_64 /usr/bin/true 2>/dev/null
+}
+
+refuse_without_rosetta() {
+  [ "${wine_unix##*/}" = x86_64-unix ] && on_apple_silicon && ! rosetta_runs || return 0
+  echo "=== Rosetta 2 is not installed and $np_display runs x86_64 Wine, install it with: softwareupdate --install-rosetta --agree-to-license ===" >> "$log" 2>&1 || true
+  show_alert "Rosetta 2 is not installed" "$(alert_safe "$np_display") needs Rosetta 2 to run Windows games on this Mac. Install it in Terminal with: softwareupdate --install-rosetta --agree-to-license. Then launch the game again."
+  exit 1
+}
+
 stage_step="runner check"
 if [ -z "$np_build" ] || [ ! -d "$CX_ROOT/lib/wine" ]; then
   echo "=== build ${np_build:-(none recorded)} behind this compatibility tool is not set up, set it up in Proton-ish ===" >> "$log" 2>&1 || true
@@ -1095,6 +1112,8 @@ if [ -z "$np_build" ] || [ ! -d "$CX_ROOT/lib/wine" ]; then
   exit 1
 fi
 echo "runner: build $np_build ($np_display) at $CX_ROOT" >> "$log" 2>&1 || true
+stage_step="rosetta check"
+refuse_without_rosetta
 
 # wineserver refuses to start when its directory is open to other users, which happens when
 # another tool created it with the default umask
@@ -1308,7 +1327,11 @@ prefix_is_bare() (
       case "$part" in
         /drive_c|/drive_c/users|/drive_c/users/steamuser|/dosdevices)
           [ -d "$node" ] || return 1 ;;
-        /drive_c/users/steamuser/*)
+        # A launch that failed before the prefix was seeded has still staged Highball's settings
+        # and the Steam bridge; without system.reg the prefix was never built, so it stays bare
+        /drive_c/highball|'/drive_c/Program Files (x86)'|'/drive_c/Program Files (x86)/Steam')
+          [ -d "$node" ] || return 1 ;;
+        /drive_c/users/steamuser/*|/drive_c/highball/*|'/drive_c/Program Files (x86)/Steam/'*)
           [ -d "$node" ] || [ -f "$node" ] || return 1 ;;
         *) return 1 ;;
       esac

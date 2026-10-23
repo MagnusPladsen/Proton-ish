@@ -458,5 +458,26 @@ check test "$cache_status" -eq 0
 check test ! -e "$WINEPREFIX/system.reg"
 check test "$(cat "$template_dir/ready")" = stale
 
+# A launch that failed before seeding, Rosetta 2 missing say, has staged Highball's settings
+# and the Steam bridge into a prefix that was never built
+fixture
+mkdir -p "$WINEPREFIX/drive_c/highball/logs" "$WINEPREFIX/drive_c/Program Files (x86)/Steam"
+printf conf > "$WINEPREFIX/drive_c/highball/dxvk.conf"
+printf exe > "$WINEPREFIX/drive_c/Program Files (x86)/Steam/steam.exe"
+check prefix_is_bare
+copy_template_into_prefix
+check test -f "$WINEPREFIX/system.reg"
+check test -f "$WINEPREFIX/drive_c/highball/dxvk.conf"
+check test -f "$WINEPREFIX/drive_c/Program Files (x86)/Steam/steam.exe"
+
+fixture
+mkdir -p "$WINEPREFIX/drive_c/Program Files (x86)/Game"
+check test "$(prefix_is_bare && echo unsafe || echo refused)" = refused
+
+fixture
+mkdir -p "$WINEPREFIX/drive_c/highball"
+printf reg > "$WINEPREFIX/system.reg"
+check test "$(prefix_is_bare && echo unsafe || echo refused)" = refused
+
 printf 'seedcheck: %s failures\n' "$fails"
 test "$fails" -eq 0

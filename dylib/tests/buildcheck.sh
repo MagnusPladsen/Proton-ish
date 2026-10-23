@@ -333,6 +333,40 @@ switch_world other-build
 session new-build "$crash_log" 5
 is "a game seen working on another build is not blamed on this switch" none "$([ -f "$data/notproton-switch" ] && state || echo none)"
 
+echo "== Rosetta 2 =="
+for name in on_apple_silicon rosetta_runs; do
+	[ -n "$(extract "$name")" ] || { echo "FAIL: $name not found in $SRC"; exit 1; }
+done
+rosetta_check=$(extract refuse_without_rosetta)
+[ -n "$rosetta_check" ] || { echo "FAIL: refuse_without_rosetta not found in $SRC"; exit 1; }
+rosetta() {   # Wine's unix dir, Apple silicon (1 or 0), Rosetta runs (1 or 0)
+	(
+		log="$work/rosetta.log"
+		np_display="Highball Wine 11 (r27)"
+		wine_unix="$work/runner/lib/wine/$1"
+		silicon=$2 translates=$3
+		# shellcheck disable=SC2329 # refuse_without_rosetta calls these
+		on_apple_silicon() { [ "$silicon" = 1 ]; }
+		# shellcheck disable=SC2329
+		rosetta_runs() { [ "$translates" = 1 ]; }
+		# shellcheck disable=SC2329
+		alert_safe() { printf '%s' "$1"; }
+		# shellcheck disable=SC2329
+		show_alert() { printf 'alert: %s: %s\n' "$1" "$2"; }
+		eval "$rosetta_check"
+		refuse_without_rosetta
+		echo launched
+	) 2>&1 || echo "status=$?"
+}
+: > "$work/rosetta.log"
+out=$(rosetta x86_64-unix 1 0)
+is "x86_64 Wine without Rosetta 2 stops the launch" "status=1" "$(printf '%s\n' "$out" | tail -1)"
+is "with an alert saying how to install it" "1" "$(printf '%s\n' "$out" | grep -c '^alert: Rosetta 2 is not installed: .*softwareupdate --install-rosetta --agree-to-license')"
+is "and a line in the run log" "1" "$(grep -c 'Rosetta 2 is not installed' "$work/rosetta.log")"
+is "with Rosetta 2 the launch goes on" "launched" "$(rosetta x86_64-unix 1 1)"
+is "arm64 Wine needs no Rosetta 2" "launched" "$(rosetta aarch64-unix 1 0)"
+is "nor does an Intel Mac" "launched" "$(rosetta x86_64-unix 0 0)"
+
 if [ "$fails" -eq 0 ]; then
 	echo "==> buildcheck: all assertions hold"
 else
