@@ -330,6 +330,15 @@ struct StatusView: View {
                 }
             }
 
+            if snapshot.rosettaMissing {
+                StatusRow(
+                    title: String(localized: "Rosetta 2 is not installed"),
+                    value: String(localized: "Highball engines and CrossOver under Rosetta need it to run Windows games, so they fail to start without it. Install it in Terminal with: \(Rosetta.installCommand)"),
+                    tone: .warning,
+                    action: StatusAction(label: String(localized: "Copy Command")) { Rosetta.copyInstallCommand() }
+                )
+            }
+
             Section("Steam") {
                 StatusRow(
                     title: String(localized: "Location"),
