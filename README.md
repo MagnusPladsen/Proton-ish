@@ -2,6 +2,8 @@
 
 [![Latest release](https://img.shields.io/github/v/release/MagnusPladsen/Proton-ish)](https://github.com/MagnusPladsen/Proton-ish/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/MagnusPladsen/Proton-ish/total)](https://github.com/MagnusPladsen/Proton-ish/releases)
+[![Visits](https://hits.sh/github.com/MagnusPladsen/Proton-ish.svg?label=visits)](https://hits.sh/github.com/MagnusPladsen/Proton-ish/)
+[![Website](https://img.shields.io/badge/website-proton--ish.pladsen.dev-1a8787)](https://proton-ish.pladsen.dev)
 [![App build](https://github.com/MagnusPladsen/Proton-ish/actions/workflows/app.yml/badge.svg?branch=main)](https://github.com/MagnusPladsen/Proton-ish/actions/workflows/app.yml)
 [![macOS 15+ on Apple Silicon](https://img.shields.io/badge/macOS-15%2B%20Apple%20Silicon-blue?logo=apple)](#set-up)
 [![Licence: GPLv3](https://img.shields.io/github/license/MagnusPladsen/Proton-ish)](NOTICE)
