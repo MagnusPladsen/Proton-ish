@@ -66,3 +66,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-23: Without Rosetta 2 a game no longer fails with "OS Error 0": Proton-ish says Rosetta 2 is missing and how to install it, and a prefix that launch left behind is set up properly once it is.
 - 2026-10-23: The Status page warns when Rosetta 2 is missing on an Apple silicon Mac, with the command to install it.
 - 2026-10-23: highball-db f9f1037: Highball's fixes and per-game data as of this release.
+- 2026-10-23: New app icon: a glass of wine inside Proton-style orbits, made to stay clear in the Dock and as a small icon.
