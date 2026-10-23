@@ -7,48 +7,83 @@ let canvas: CGFloat = 1024
 let center = CGPoint(x: canvas / 2, y: canvas / 2)
 let space = CGColorSpace(name: CGColorSpace.sRGB)!
 let white = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
-let coverage: CGFloat = 0.90
+let coverage: CGFloat = 0.76
 
-// Two crossed orbits around a wine drop, with one electron on the front of an orbit
-let orbitRadiusX: CGFloat = 470
-let orbitRadiusY: CGFloat = 150
-let orbitAngles: [CGFloat] = [35, -35]
-let strokeWidth: CGFloat = 40
-let knockoutGap: CGFloat = 22
-let dropRadius: CGFloat = 104
-let dropShiftY: CGFloat = -40
-let electronRadius: CGFloat = 40
-let electronOrbit = 0
-let electronAngle: CGFloat = -40
+// A wine glass inside two crossed orbits, with the orbits' front halves passing over the glass
+let orbitCenter = CGPoint(x: canvas / 2, y: 556)
+let orbitRadiusX: CGFloat = 380
+let orbitRadiusY: CGFloat = 118
+let orbitStroke: CGFloat = 32
+let knockoutGap: CGFloat = 16
+let rimY: CGFloat = 756
+let bowlHalfWidth: CGFloat = 180
+let bowlDepth: CGFloat = 330
+let glassStroke: CGFloat = 34
+let stemLength: CGFloat = 190
+let baseHalfWidth: CGFloat = 130
+let wineLevel: CGFloat = 0.42
+let bowlBottom = rimY - bowlDepth
+let stemBottom = bowlBottom - stemLength
 
-enum Element: String, CaseIterable {
-    case orbitsBack = "Orbits Back"
-    case drop = "Drop"
-    case orbitsFront = "Orbits Front"
-    case electron = "Electron"
+enum Orbit: CaseIterable {
+    case sky, lavender
 
-    var fileName: String {
-        rawValue.lowercased().replacingOccurrences(of: " ", with: "-") + ".png"
-    }
+    var angle: CGFloat { self == .sky ? -24 : 24 }
 
-    var depth: Double {
+    var fill: String {
         switch self {
-        case .orbitsBack: 0.40
-        case .drop: 0.80
-        case .orbitsFront: 0.95
-        case .electron: 1.00
-        }
-    }
-
-    var translucency: Double {
-        switch self {
-        case .orbitsBack: 0.30
-        case .drop: 0.45
-        case .orbitsFront: 0.30
-        case .electron: 0.40
+        case .sky: "srgb:0.49020,0.82745,0.98824,1.00000"
+        case .lavender: "srgb:0.76863,0.70980,0.99216,1.00000"
         }
     }
 }
+
+enum Element: CaseIterable {
+    case orbitBack(Orbit)
+    case wine
+    case glass
+    case orbitFront(Orbit)
+
+    static var allCases: [Element] {
+        Orbit.allCases.map(orbitBack) + [.wine, .glass] + Orbit.allCases.map(orbitFront)
+    }
+
+    var name: String {
+        switch self {
+        case .orbitBack(let orbit): "Orbit Back \(orbit == .sky ? "Sky" : "Lavender")"
+        case .wine: "Wine"
+        case .glass: "Glass"
+        case .orbitFront(let orbit): "Orbit Front \(orbit == .sky ? "Sky" : "Lavender")"
+        }
+    }
+
+    var fileName: String {
+        name.lowercased().replacingOccurrences(of: " ", with: "-") + ".png"
+    }
+
+    var fill: String {
+        switch self {
+        case .orbitBack(let orbit), .orbitFront(let orbit): orbit.fill
+        case .wine: "srgb:0.88235,0.11373,0.28235,1.00000"
+        case .glass: "srgb:1.00000,1.00000,1.00000,1.00000"
+        }
+    }
+}
+
+// Icon Composer groups, back to front, each with its layers; icon.json lists them front to back
+struct Group {
+    let name: String
+    let elements: [Element]
+    let depth: Double
+    let translucency: Double
+}
+
+let groups = [
+    Group(name: "Orbits Back", elements: Orbit.allCases.map(Element.orbitBack), depth: 0.40, translucency: 0.15),
+    Group(name: "Wine", elements: [.wine], depth: 0.70, translucency: 0.10),
+    Group(name: "Glass", elements: [.glass], depth: 0.85, translucency: 0.35),
+    Group(name: "Orbits Front", elements: Orbit.allCases.map(Element.orbitFront), depth: 0.95, translucency: 0.15),
+]
 
 func makeContext(size: CGFloat) -> CGContext {
     let context = CGContext(
@@ -65,13 +100,9 @@ func makeContext(size: CGFloat) -> CGContext {
     return context
 }
 
-func orbitFrame(_ angle: CGFloat) -> CGAffineTransform {
-    CGAffineTransform(translationX: center.x, y: center.y)
-        .rotated(by: angle * .pi / 180)
-}
-
-func orbitPath(_ angle: CGFloat) -> CGPath {
-    var transform = orbitFrame(angle)
+func orbitPath(_ orbit: Orbit) -> CGPath {
+    var transform = CGAffineTransform(translationX: orbitCenter.x, y: orbitCenter.y)
+        .rotated(by: orbit.angle * .pi / 180)
     let box = CGRect(
         x: -orbitRadiusX,
         y: -orbitRadiusY,
@@ -81,69 +112,88 @@ func orbitPath(_ angle: CGFloat) -> CGPath {
     return CGPath(ellipseIn: box, transform: &transform)
 }
 
-// The half of an orbit's plane that passes in front of the drop
-func halfPlane(_ angle: CGFloat, front: Bool) -> CGPath {
-    let big = canvas * 2
+// The orbits pass in front of the glass below their centre and behind it above
+func halfPlane(front: Bool) -> CGRect {
     let overlap: CGFloat = 6
-    let rect = front
-        ? CGRect(x: -big, y: -big, width: big * 2, height: big + overlap)
-        : CGRect(x: -big, y: -overlap, width: big * 2, height: big + overlap)
-    var transform = orbitFrame(angle)
-    return CGPath(rect: rect, transform: &transform)
+    return front
+        ? CGRect(x: 0, y: 0, width: canvas, height: orbitCenter.y + overlap)
+        : CGRect(x: 0, y: orbitCenter.y - overlap, width: canvas, height: canvas - orbitCenter.y + overlap)
 }
 
-// A teardrop: round bottom, point at the top
-func dropPath(grownBy grow: CGFloat = 0) -> CGPath {
-    let r = dropRadius + grow
-    let cx = center.x
-    let cy = center.y + dropShiftY
-    let tip = CGPoint(x: cx, y: cy + r * 2.1)
+func bowlPath() -> CGPath {
+    let left = center.x - bowlHalfWidth
+    let right = center.x + bowlHalfWidth
     let path = CGMutablePath()
-    path.move(to: tip)
+    path.move(to: CGPoint(x: left, y: rimY))
+    path.addLine(to: CGPoint(x: right, y: rimY))
     path.addCurve(
-        to: CGPoint(x: cx + r, y: cy),
-        control1: CGPoint(x: cx + r * 0.35, y: cy + r * 1.4),
-        control2: CGPoint(x: cx + r, y: cy + r * 0.75)
+        to: CGPoint(x: center.x, y: bowlBottom),
+        control1: CGPoint(x: right + 6, y: rimY - bowlDepth * 0.62),
+        control2: CGPoint(x: center.x + bowlHalfWidth * 0.62, y: bowlBottom)
     )
-    path.addArc(center: CGPoint(x: cx, y: cy), radius: r, startAngle: 0, endAngle: .pi, clockwise: true)
     path.addCurve(
-        to: tip,
-        control1: CGPoint(x: cx - r, y: cy + r * 0.75),
-        control2: CGPoint(x: cx - r * 0.35, y: cy + r * 1.4)
+        to: CGPoint(x: left, y: rimY),
+        control1: CGPoint(x: center.x - bowlHalfWidth * 0.62, y: bowlBottom),
+        control2: CGPoint(x: left - 6, y: rimY - bowlDepth * 0.62)
     )
     path.closeSubpath()
     return path
 }
 
-func electronCenter() -> CGPoint {
-    let t = electronAngle * .pi / 180
-    return CGPoint(x: orbitRadiusX * cos(t), y: orbitRadiusY * sin(t))
-        .applying(orbitFrame(orbitAngles[electronOrbit]))
+func winePath() -> CGPath {
+    let surface = rimY - bowlDepth * wineLevel
+    let half = bowlHalfWidth * (1 - pow(wineLevel, 2.2) * 0.18)
+    let bottom = bowlBottom + 4
+    let shoulder = surface - (surface - bottom) * 0.55
+    let path = CGMutablePath()
+    path.move(to: CGPoint(x: center.x - half, y: surface))
+    path.addLine(to: CGPoint(x: center.x + half, y: surface))
+    path.addCurve(
+        to: CGPoint(x: center.x, y: bottom),
+        control1: CGPoint(x: center.x + half, y: shoulder),
+        control2: CGPoint(x: center.x + bowlHalfWidth * 0.6, y: bottom)
+    )
+    path.addCurve(
+        to: CGPoint(x: center.x - half, y: surface),
+        control1: CGPoint(x: center.x - bowlHalfWidth * 0.6, y: bottom),
+        control2: CGPoint(x: center.x - half, y: shoulder)
+    )
+    path.closeSubpath()
+    return path
 }
 
-func strokeHalves(front: Bool, into context: CGContext) {
-    for angle in orbitAngles {
-        context.saveGState()
-        context.addPath(halfPlane(angle, front: front))
-        context.clip()
-        context.setLineWidth(strokeWidth)
-        context.addPath(orbitPath(angle))
-        context.strokePath()
-        context.restoreGState()
-    }
+// The glass outline, stem and base, thickened by grow for knockouts
+func fillGlass(grownBy grow: CGFloat, in context: CGContext) {
+    let width = glassStroke + grow
+    context.setLineWidth(width)
+    context.setLineJoin(.round)
+    context.addPath(bowlPath())
+    context.strokePath()
+    context.fill(CGRect(x: center.x - width / 2, y: stemBottom, width: width, height: stemLength))
+    let base = CGRect(
+        x: center.x - baseHalfWidth - grow / 2,
+        y: stemBottom - width / 2,
+        width: baseHalfWidth * 2 + grow,
+        height: width
+    )
+    context.addPath(CGPath(roundedRect: base, cornerWidth: width / 2, cornerHeight: width / 2, transform: nil))
+    context.fillPath()
 }
 
-func cutFrontHalves(from context: CGContext) {
+func strokeOrbit(_ orbit: Orbit, front: Bool, width: CGFloat, in context: CGContext) {
+    context.saveGState()
+    context.clip(to: halfPlane(front: front))
+    context.setLineWidth(width)
+    context.addPath(orbitPath(orbit))
+    context.strokePath()
+    context.restoreGState()
+}
+
+func cutFrontOrbits(from context: CGContext) {
     context.saveGState()
     context.setBlendMode(.clear)
-    for angle in orbitAngles {
-        context.saveGState()
-        context.addPath(halfPlane(angle, front: true))
-        context.clip()
-        context.setLineWidth(strokeWidth + knockoutGap * 2)
-        context.addPath(orbitPath(angle))
-        context.strokePath()
-        context.restoreGState()
+    for orbit in Orbit.allCases {
+        strokeOrbit(orbit, front: true, width: orbitStroke + knockoutGap * 2, in: context)
     }
     context.restoreGState()
 }
@@ -153,32 +203,28 @@ func draw(_ element: Element, into context: CGContext) {
     context.setFillColor(white)
 
     switch element {
-    case .orbitsBack:
-        strokeHalves(front: false, into: context)
+    case .orbitBack(let orbit):
+        strokeOrbit(orbit, front: false, width: orbitStroke, in: context)
         context.setBlendMode(.clear)
-        context.addPath(dropPath(grownBy: knockoutGap))
+        fillGlass(grownBy: knockoutGap * 2, in: context)
+        context.addPath(bowlPath())
         context.fillPath()
         context.setBlendMode(.normal)
 
-    case .drop:
-        context.addPath(dropPath())
+    case .wine:
+        context.addPath(winePath())
         context.fillPath()
-        cutFrontHalves(from: context)
-
-    case .orbitsFront:
-        strokeHalves(front: true, into: context)
-        let e = electronCenter()
-        let gap = electronRadius + knockoutGap
         context.setBlendMode(.clear)
-        context.fillEllipse(in: CGRect(x: e.x - gap, y: e.y - gap, width: gap * 2, height: gap * 2))
+        fillGlass(grownBy: 0, in: context)
         context.setBlendMode(.normal)
+        cutFrontOrbits(from: context)
 
-    case .electron:
-        let e = electronCenter()
-        context.fillEllipse(in: CGRect(
-            x: e.x - electronRadius, y: e.y - electronRadius,
-            width: electronRadius * 2, height: electronRadius * 2
-        ))
+    case .glass:
+        fillGlass(grownBy: 0, in: context)
+        cutFrontOrbits(from: context)
+
+    case .orbitFront(let orbit):
+        strokeOrbit(orbit, front: true, width: orbitStroke, in: context)
     }
 }
 
@@ -253,21 +299,22 @@ func write(_ image: CGImage, to url: URL) throws {
     }
 }
 
-func group(for element: Element) -> [String: Any] {
+func iconGroup(_ group: Group) -> [String: Any] {
     [
         "blur-material": NSNull(),
-        "layers": [
+        "layers": group.elements.reversed().map { element -> [String: Any] in
             [
-                "fill": ["solid": "srgb:1.00000,1.00000,1.00000,1.00000"],
+                "fill": ["solid": element.fill],
                 "image-name": element.fileName,
-                "name": element.rawValue,
+                "name": element.name,
             ]
-        ],
+        },
+        "name": group.name,
         "opacity": 1,
-        "refractivity": ["depth": element.depth, "enabled": true, "strength": 0.005],
+        "refractivity": ["depth": group.depth, "enabled": true, "strength": 0.005],
         "shadow": ["kind": "neutral", "opacity": 0.5],
         "specular": "inside",
-        "translucency": ["enabled": true, "value": element.translucency],
+        "translucency": ["enabled": true, "value": group.translucency],
     ]
 }
 
@@ -291,11 +338,11 @@ let document: [String: Any] = [
     "features": ["refractivity", "specular-location"],
     "fill": [
         "linear-gradient": [
-            "srgb:0.10196,0.52941,0.52941,1.00000",
-            "srgb:0.04706,0.27059,0.30196,1.00000",
+            "srgb:0.16471,0.18431,0.41961,1.00000",
+            "srgb:0.07059,0.05882,0.18039,1.00000",
         ]
     ],
-    "groups": Element.allCases.map(group(for:)),
+    "groups": groups.reversed().map(iconGroup),
     "supported-platforms": ["circles": ["watchOS"], "squares": "shared"],
 ]
 try JSONSerialization
