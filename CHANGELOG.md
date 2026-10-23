@@ -63,3 +63,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-23: highball-db 26d3c05: Highball's fixes and per-game data as of this release.
 - 2026-10-23: Report a game to highball-db from the Status page (Report a Game, in the Highball section), and reports fill in highball-db's game field.
 - 2026-10-23: NotProton fdced10 merged: Default Compatibility Settings in Steam Settings > Compatibility, saved per runner and per CrossOver version and applied when a game launches, and a prefix rebuild is offered again when the tool changes right after one.
+- 2026-10-23: Without Rosetta 2 a game no longer fails with "OS Error 0": Proton-ish says Rosetta 2 is missing and how to install it, and a prefix that launch left behind is set up properly once it is.
