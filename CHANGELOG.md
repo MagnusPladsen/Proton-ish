@@ -61,3 +61,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-22: NotProton 730f100 merged: a game's Compatibility page offers to rebuild its prefix (with or without a backup) after a CrossOver build switch or when the prefix doesn't fit the build, and a prefix from another build of the same arch runs in place.
 - 2026-10-22: NotProton 480675e merged (see the release notes for the upstream changes).
 - 2026-10-23: highball-db 26d3c05: Highball's fixes and per-game data as of this release.
+- 2026-10-23: Report a game to highball-db from the Status page (Report a Game, in the Highball section), and reports fill in highball-db's game field.
