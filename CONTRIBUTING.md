@@ -10,7 +10,9 @@ Proton-ish changes or non-CrossOver issues to the upstream NotProton project, wh
 - Open a pull request into `main`. Merging it is what ships: when the merge bumps the version in
   `dylib/version.h`, the release workflow builds, signs the update feed and publishes the release.
   A merge without a version bump releases nothing.
-- The pull request description becomes the release notes, so write it for players.
+- The release notes are the CHANGELOG.md entries added since the last release, so write those for
+  players (`scripts/sync/bump-release.sh "<entry>"` adds one with the bump). A sync PR's description,
+  listing the upstream commits, follows them. Other PR descriptions are for reviewers.
 - A version with a suffix (`0.1.0-beta.3`) is published as a pre-release.
 - The release also bumps the `proton-ish` cask in [MagnusPladsen/homebrew-tap](https://github.com/MagnusPladsen/homebrew-tap) (needs the `TAP_TOKEN` secret).
 
