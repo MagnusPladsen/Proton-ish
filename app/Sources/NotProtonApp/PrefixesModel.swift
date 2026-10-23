@@ -158,6 +158,10 @@ final class PrefixesModel {
         records[prefix.id].map { GameReport.isHighballEngine($0.build) } ?? false
     }
 
+    var reportablePrefixes: [WinePrefix] {
+        GameReport.reportable(prefixes, records: records)
+    }
+
     func gameReport(for prefix: WinePrefix) -> GameReport? {
         GameReport.make(for: prefix, record: records[prefix.id], appVersion: AppVersion.bundled)
     }
