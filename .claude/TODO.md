@@ -19,7 +19,10 @@
 - [x] Highball engine r25 (engine build 0024) supported next to r19; HighballKit 0.10.16 (completed: 2026-10-16)
 
 ## Low Priority / Future
-- [ ] Reach out to Highball after the beta has testers: stable engine manifest, steamclient patch in highball-engine, shared compat data (added: 2026-10-14)
+- [x] Reach out to Highball: asked for a stable place for the engine manifests (spike/engines) and how they want Proton-ish reports marked (completed: 2026-10-23)
+- [ ] Follow up with Highball when they answer: manifest location, report marking (added: 2026-10-23)
+- [ ] Later, if new Highball Wine builds keep needing detour work: ask for a heads-up before a release changes the Wine build (added: 2026-10-23)
+- [ ] Maybe much later: offer to contribute the steamclient (lsteamclient) loading to Highball's Wine source, so the ntdll patch is no longer needed (added: 2026-10-23)
 
 ## Completed
 - [x] Safeguard for /tmp/.wine-<uid> with too-open permissions (completed: 2026-10-14)
