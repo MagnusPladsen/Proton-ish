@@ -69,3 +69,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-23: New app icon: a glass of wine inside Proton-style orbits, made to stay clear in the Dock and as a small icon.
 - 2026-10-23: highball-db d090c74: Highball's fixes and per-game data as of this release.
 - 2026-10-23: highball-db b232d98: Highball's fixes and per-game data as of this release.
+- 2026-10-24: highball-db 932b60d: Highball's fixes and per-game data as of this release.
