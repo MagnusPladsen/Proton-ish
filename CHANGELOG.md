@@ -72,3 +72,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-24: highball-db 932b60d: Highball's fixes and per-game data as of this release.
 - 2026-10-24: highball-db 21ed898: Highball's fixes and per-game data as of this release.
 - 2026-10-24: highball-db 57363bb: Highball's fixes and per-game data as of this release.
+- 2026-10-24: highball-db dedc9f4: Highball's fixes and per-game data as of this release.
