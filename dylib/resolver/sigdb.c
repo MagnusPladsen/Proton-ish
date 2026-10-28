@@ -171,6 +171,16 @@ static void load_anchor(cJSON *sig_obj, np_anchor_t *a) {
     } else if (strcmp(ks, "aob") == 0) {
         a->kind = NP_MATCH_AOB;
         return;
+    } else if (strcmp(ks, "rtti_slot") == 0) {
+        str_field(obj, "value", a->str, sizeof(a->str));
+        a->slot = int_field(obj, "slot", -1);
+        if (!a->str[0] || a->slot < 0) {
+            NP_WARN("sigdb: rtti_slot anchor needs a type name and a slot; ignoring it");
+            a->kind = NP_MATCH_NONE;
+            return;
+        }
+        a->kind = NP_MATCH_RTTI_SLOT;
+        return;
     } else {
         return;
     }
@@ -243,6 +253,8 @@ int np_load_profile(const char *path, np_sigdb_t *out) {
 
             if ((v = cJSON_GetObjectItem(elem, "deprecated")))
                 e->deprecated = cJSON_IsTrue(v);
+            if ((v = cJSON_GetObjectItem(elem, "optional")))
+                e->optional = cJSON_IsTrue(v);
             if ((v = cJSON_GetObjectItem(elem, "match_offset"))) {
                 if (cJSON_IsNumber(v)) {
                     e->match_offset = (int32_t)v->valueint;

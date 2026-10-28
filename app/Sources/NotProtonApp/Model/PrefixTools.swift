@@ -181,12 +181,20 @@ enum PrefixTools {
         )
     }
 
+    // A launch setting the prefix up or a rebuild started from Steam holds the lock in another
+    // process. Wine started now would write into a prefix that is half made or about to be replaced.
+    private static func requireUnclaimed(step: String, prefix: WinePrefix) throws {
+        guard !PrefixStore.isClaimed(prefix) else {
+            throw StepFailure(step: step, detail: String(localized: "\(prefix.title) is running. Quit the game first."))
+        }
+    }
+
     static func launch(
         _ tool: WineTool, in prefix: WinePrefix, runner: URL, flavor: CompatTool.Flavor = .fex
     ) throws {
-        let loader = try readyLoader(
-            step: String(localized: "Open \(tool.label)"), prefix: prefix, runner: runner, flavor: flavor
-        )
+        let step = String(localized: "Open \(tool.label)")
+        try requireUnclaimed(step: step, prefix: prefix)
+        let loader = try readyLoader(step: step, prefix: prefix, runner: runner, flavor: flavor)
         try Shell.detach(
             loader.path(percentEncoded: false),
             [tool.rawValue],
@@ -209,6 +217,7 @@ enum PrefixTools {
         flavor: CompatTool.Flavor = .fex
     ) throws {
         let step = String(localized: "Run \(executable.lastPathComponent)")
+        try requireUnclaimed(step: step, prefix: prefix)
         let loader = try readyLoader(step: step, prefix: prefix, runner: runner, flavor: flavor)
         guard FileManager.default.fileExists(atPath: executable.path(percentEncoded: false)) else {
             throw StepFailure(step: step, detail: String(localized: "No file at \(executable.path(percentEncoded: false))."))
@@ -245,21 +254,25 @@ enum PrefixTools {
 
         """#
 
-    static func winetricksVerbs(_ text: String) -> [String] {
-        text.split(whereSeparator: \.isWhitespace).map(String.init)
-    }
-
-    static func winetricks(_ verbs: [String], in prefix: WinePrefix) async throws -> URL {
-        let step = String(localized: "Run Winetricks")
-        let chosen = try resolvedTool(step: step, for: prefix)
-        let script = try await PinnedDownload.obtain(
+    static func winetricksScript(
+        step: String = String(localized: "List Winetricks packages"),
+        report: @Sendable (PinnedDownload.Progress) -> Void = { _ in }
+    ) async throws -> URL {
+        try await PinnedDownload.obtain(
             file: "winetricks",
             sha256: winetricksSHA256,
             bases: [URL(string: "https://raw.githubusercontent.com/Winetricks/winetricks/\(winetricksRelease)/src")!],
             into: SupportPaths.winetricksDownloads,
             step: step,
-            from: "GitHub"
+            from: "GitHub",
+            report: report
         )
+    }
+
+    static func winetricks(_ verbs: [String], in prefix: WinePrefix) async throws -> URL {
+        let step = String(localized: "Run Winetricks")
+        let chosen = try resolvedTool(step: step, for: prefix)
+        let script = try await winetricksScript(step: step)
         return try winetricks(
             verbs, in: prefix, script: script,
             runner: SupportPaths.clonedRoot(forBuild: chosen.build), flavor: chosen.tool.flavor
@@ -272,11 +285,12 @@ enum PrefixTools {
     ) throws -> URL {
         let step = String(localized: "Run Winetricks")
         guard !verbs.isEmpty else {
-            throw StepFailure(step: step, detail: String(localized: "Enter at least one verb, like vcrun2022."))
+            throw StepFailure(step: step, detail: String(localized: "Choose at least one package."))
         }
         // Under -q annihilate wipes the prefix and its saves without asking, prefix= switches to
         // another prefix, and options like --self-update change winetricks itself.
-        if let refused = verbs.first(where: { $0 == "annihilate" || $0.hasPrefix("prefix=") || $0.hasPrefix("-") }) {
+        let damaging: Set<String> = ["annihilate", "isolate_home", "sandbox"]
+        if let refused = verbs.first(where: { damaging.contains($0) || $0.hasPrefix("prefix=") || $0.hasPrefix("-") }) {
             throw StepFailure(step: step, detail: String(localized: "Proton-ish does not run \(refused) with Winetricks."))
         }
         guard let claim = PrefixStore.claim(prefix) else {
@@ -341,6 +355,15 @@ enum PrefixTools {
 
     static func open(_ log: PrefixLog, for prefix: WinePrefix) {
         NSWorkspace.shared.open(log.url(for: prefix))
+    }
+
+    static func hasWinetricksLog(for prefix: WinePrefix) -> Bool {
+        FileManager.default.fileExists(
+            atPath: prefix.root.appending(path: winetricksLogName).path(percentEncoded: false))
+    }
+
+    static func openWinetricksLog(for prefix: WinePrefix) {
+        NSWorkspace.shared.open(prefix.root.appending(path: winetricksLogName))
     }
 
     static func reveal(at url: URL) {

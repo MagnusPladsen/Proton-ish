@@ -5,8 +5,15 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define NP_FILE_NOFOLLOW 0x1
+
+// Caller owns the returned buffer.
+uint8_t *np_read_file_max(const char *path, size_t max, int flags, size_t *out_len);
+
 // Caller owns the returned buffer. Refuses anything over 16 MB.
 uint8_t *np_read_whole_file(const char *path, size_t *out_len);
+
+int np_write_file_new(const char *path, const void *data, size_t size);
 
 const char *np_home_dir(void);
 

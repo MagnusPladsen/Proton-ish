@@ -1,6 +1,7 @@
 // Mac and Windows app lists for the Steam macOS library filter
 #include "nativeplatform.h"
 #include "../util/file.h"
+#include "../util/spawn.h"
 #include "../util/log.h"
 
 #include <crt_externs.h>
@@ -71,15 +72,12 @@ static char *run_helper(void) {
 
     posix_spawn_file_actions_t actions;
     posix_spawnattr_t attr;
-    sigset_t none, all;
-    sigemptyset(&none);
-    sigfillset(&all);
     if (posix_spawn_file_actions_init(&actions) != 0) {
         close(fds[0]);
         close(fds[1]);
         return NULL;
     }
-    if (posix_spawnattr_init(&attr) != 0) {
+    if (np_spawn_attr_clean(&attr, 0) != 0) {
         posix_spawn_file_actions_destroy(&actions);
         close(fds[0]);
         close(fds[1]);
@@ -88,9 +86,6 @@ static char *run_helper(void) {
     posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
     posix_spawn_file_actions_adddup2(&actions, fds[1], STDOUT_FILENO);
     posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
-    posix_spawnattr_setsigmask(&attr, &none);
-    posix_spawnattr_setsigdefault(&attr, &all);
-    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_CLOEXEC_DEFAULT);
     char *argv[] = { tool, vdf, "--platforms", NULL };
     pid_t pid;
     long long deadline = now_ms() + HELPER_TIMEOUT_MS;

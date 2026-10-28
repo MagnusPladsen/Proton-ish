@@ -205,6 +205,27 @@ struct PrefixToolsTests {
         }
     }
 
+    // A rebuild started from Steam's Compatibility page holds the claim in its own process
+    @Test("Wine tools and picked programs refuse while another process claims the prefix")
+    func toolsRefuseWhilePrefixIsClaimed() throws {
+        let (dir, runner, prefix) = try usedPrefixAndRunner()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let exe = dir.appending(path: "setup.exe")
+        try Data("MZ".utf8).write(to: exe)
+
+        let claim = try #require(PrefixStore.claim(prefix))
+        #expect(PrefixStore.isClaimed(prefix))
+        let refused = "\(prefix.title) is running. Quit the game first."
+        #expect { try PrefixTools.launch(.winecfg, in: prefix, runner: runner) } throws: { error in
+            (error as? StepFailure)?.detail == refused
+        }
+        #expect { try PrefixTools.run(exe, in: prefix, runner: runner) } throws: { error in
+            (error as? StepFailure)?.detail == refused
+        }
+        claim.release()
+        #expect(!PrefixStore.isClaimed(prefix))
+    }
+
     @Test("Winetricks refuses before it runs when it cannot work or would leave the prefix")
     func winetricksRefusesEarly() throws {
         let dir = FileManager.default.temporaryDirectory.appending(path: "np-winetricks-\(UUID().uuidString)")
@@ -212,19 +233,19 @@ struct PrefixToolsTests {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let script = dir.appending(path: "winetricks")
 
-        #expect(PrefixTools.winetricksVerbs("  vcrun2022\tcorefonts \n") == ["vcrun2022", "corefonts"])
-
         func refusal(_ verbs: String) -> String? {
             do {
                 _ = try PrefixTools.winetricks(
-                    PrefixTools.winetricksVerbs(verbs), in: samplePrefix(), script: script, runner: dir)
+                    verbs.split(separator: " ").map(String.init), in: samplePrefix(), script: script, runner: dir)
                 return nil
             } catch {
                 return (error as? StepFailure)?.detail
             }
         }
-        #expect(refusal(" ")?.contains("at least one verb") == true)
+        #expect(refusal(" ")?.contains("at least one package") == true)
         #expect(refusal("vcrun2022 annihilate")?.contains("annihilate") == true)
+        #expect(refusal("sandbox")?.contains("sandbox") == true)
+        #expect(refusal("corefonts isolate_home")?.contains("isolate_home") == true)
         #expect(refusal("prefix=other corefonts")?.contains("prefix=other") == true)
         #expect(refusal("--self-update")?.contains("--self-update") == true)
         #expect(refusal("corefonts")?.contains("No compatibility tool") == true)

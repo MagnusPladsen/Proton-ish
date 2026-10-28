@@ -1,5 +1,6 @@
 // extracts icon from Windows application binary, used for non-Steam shortcuts
 #include "peicon.h"
+#include "pe.h"
 
 #include <fcntl.h>
 #include <stdint.h>
@@ -9,24 +10,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define NP_PE_MAX_SECTIONS 96
 #define NP_PE_MAX_LEAVES   4096
 #define NP_PE_MAX_IMAGE    (16 * 1024 * 1024)
 #define NP_PE_MAX_DEPTH    3
-#define NP_PE_MAX_ENTRIES  512
 #define NP_PE_MAX_VISITS   65536
 #define NP_PE_MAX_ICO      (32 * 1024 * 1024)
 #define NP_PE_MAX_ICO_IMGS 64
 
-#define NP_RT_ICON         3
-#define NP_RT_GROUP_ICON   14
-
-typedef struct {
-    uint32_t va;
-    uint32_t size;
-    uint32_t raw;
-    uint32_t raw_size;
-} np_sect_t;
 
 typedef struct {
     uint32_t type;
@@ -36,60 +26,26 @@ typedef struct {
 } np_leaf_t;
 
 typedef struct {
-    const uint8_t *p;
-    size_t         n;
-    np_sect_t      sects[NP_PE_MAX_SECTIONS];
-    int            nsects;
-    np_leaf_t     *leaves;
-    int            nleaves;
-    uint32_t       visits;
+    np_pe_view_t v;
+    np_leaf_t   *leaves;
+    int          nleaves;
+    uint32_t     visits;
 } np_pe_t;
 
 static int rd_u8(const np_pe_t *pe, size_t off, uint8_t *out) {
-    if (off >= pe->n) return 0;
-    *out = pe->p[off];
-    return 1;
+    return np_pe_rd8(&pe->v, off, out);
 }
 
 static int rd_u16(const np_pe_t *pe, size_t off, uint16_t *out) {
-    if (pe->n < 2 || off > pe->n - 2) return 0;
-    *out = (uint16_t)((uint16_t)pe->p[off] | ((uint16_t)pe->p[off + 1] << 8));
-    return 1;
+    return np_pe_rd16(&pe->v, off, out);
 }
 
 static int rd_u32(const np_pe_t *pe, size_t off, uint32_t *out) {
-    if (pe->n < 4 || off > pe->n - 4) return 0;
-    *out = (uint32_t)pe->p[off]             | ((uint32_t)pe->p[off + 1] << 8) |
-           ((uint32_t)pe->p[off + 2] << 16) | ((uint32_t)pe->p[off + 3] << 24);
-    return 1;
+    return np_pe_rd32(&pe->v, off, out);
 }
 
 static int rva_to_off(const np_pe_t *pe, uint32_t rva, size_t *out) {
-    for (int i = 0; i < pe->nsects; i++) {
-        const np_sect_t *s = &pe->sects[i];
-        uint32_t span = s->size > s->raw_size ? s->size : s->raw_size;
-        if (rva >= s->va && (uint64_t)rva < (uint64_t)s->va + span) {
-            *out = (size_t)s->raw + (size_t)(rva - s->va);
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int read_sections(np_pe_t *pe, size_t peo, int count, size_t opt_size) {
-    if (count <= 0 || count > NP_PE_MAX_SECTIONS) return 0;
-
-    size_t cursor = peo + 24 + opt_size;
-    for (int i = 0; i < count; i++) {
-        np_sect_t s;
-        if (!rd_u32(pe, cursor + 8,  &s.size)     ||
-            !rd_u32(pe, cursor + 12, &s.va)       ||
-            !rd_u32(pe, cursor + 16, &s.raw_size) ||
-            !rd_u32(pe, cursor + 20, &s.raw)) return 0;
-        pe->sects[pe->nsects++] = s;
-        cursor += 40;
-    }
-    return 1;
+    return np_pe_rva_off(&pe->v, rva, out);
 }
 
 static void walk(np_pe_t *pe, size_t base, size_t node, int depth,
@@ -171,7 +127,7 @@ static void *build_ico(np_pe_t *pe, uint32_t rsrc_rva, size_t *out_len) {
     uint16_t count;
     if (!rva_to_off(pe, group->rva, &group_at)) return NULL;
     if (group->size < 6) return NULL;
-    if (pe->n < group->size || group_at > pe->n - group->size) return NULL;
+    if (pe->v.n < group->size || group_at > pe->v.n - group->size) return NULL;
     if (!rd_u16(pe, group_at + 4, &count) || count == 0) return NULL;
     if (group->size < 6 + (uint32_t)count * 14) return NULL;
     if (count > NP_PE_MAX_ICO_IMGS) count = NP_PE_MAX_ICO_IMGS;
@@ -200,7 +156,7 @@ static void *build_ico(np_pe_t *pe, uint32_t rsrc_rva, size_t *out_len) {
         const np_leaf_t *img = image_with_id(pe, id);
         if (!img || img->size == 0 || img->size > NP_PE_MAX_IMAGE) continue;
         if (!rva_to_off(pe, img->rva, &at)) continue;
-        if (pe->n < img->size || at > pe->n - img->size) continue;
+        if (pe->v.n < img->size || at > pe->v.n - img->size) continue;
 
         int seen = 0;
         for (int j = 0; j < written; j++) {
@@ -249,7 +205,7 @@ static void *build_ico(np_pe_t *pe, uint32_t rsrc_rva, size_t *out_len) {
 
         size_t src = 0;
         if (!rva_to_off(pe, picked[i]->rva, &src)) continue;
-        memcpy(ico + at, pe->p + src, picked[i]->size);
+        memcpy(ico + at, pe->v.p + src, picked[i]->size);
         at += picked[i]->size;
     }
 
@@ -262,43 +218,13 @@ static void *build_ico(np_pe_t *pe, uint32_t rsrc_rva, size_t *out_len) {
 static void *icon_from_map(const uint8_t *map, size_t len, size_t *out_len) {
     np_pe_t pe;
     memset(&pe, 0, sizeof(pe));
-    pe.p = map;
-    pe.n = len;
+    if (!np_pe_open(&pe.v, map, len)) return NULL;
     pe.visits = NP_PE_MAX_VISITS;
-
-    uint16_t mz;
-    uint32_t peo32, sig;
-    if (!rd_u16(&pe, 0, &mz) || mz != 0x5A4D) return NULL;
-    if (!rd_u32(&pe, 0x3C, &peo32)) return NULL;
-
-    size_t peo = peo32;
-    if (!rd_u32(&pe, peo, &sig) || sig != 0x00004550) return NULL;
-
-    uint16_t nsects, opt_size, magic;
-    if (!rd_u16(&pe, peo + 6, &nsects) || !rd_u16(&pe, peo + 20, &opt_size) ||
-        !rd_u16(&pe, peo + 24, &magic)) return NULL;
-
-    size_t dir_base, count_at;
-    if (magic == 0x10B) {
-        dir_base = peo + 24 + 96;
-        count_at = peo + 24 + 92;
-    } else if (magic == 0x20B) {
-        dir_base = peo + 24 + 112;
-        count_at = peo + 24 + 108;
-    } else {
-        return NULL;
-    }
-
-    uint32_t dir_count, rsrc_rva;
-    if (!rd_u32(&pe, count_at, &dir_count) || dir_count <= 2) return NULL;
-    if (!rd_u32(&pe, dir_base + 16, &rsrc_rva) || rsrc_rva == 0) return NULL;
-
-    if (!read_sections(&pe, peo, (int)nsects, opt_size)) return NULL;
 
     pe.leaves = calloc(NP_PE_MAX_LEAVES, sizeof(*pe.leaves));
     if (!pe.leaves) return NULL;
 
-    void *ico = build_ico(&pe, rsrc_rva, out_len);
+    void *ico = build_ico(&pe, pe.v.rsrc_rva, out_len);
     free(pe.leaves);
     return ico;
 }

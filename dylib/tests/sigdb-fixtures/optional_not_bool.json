@@ -1,0 +1,18 @@
+{
+ "schema_version": 3,
+ "profile_version": 1,
+ "arch": "arm64",
+ "platform": "macos",
+ "steam_build": 0,
+ "steam_build_date": "",
+ "signatures": [
+  {
+   "name": "CCompatManager::Init",
+   "anchor": {
+    "kind": "string",
+    "value": "no string anywhere in the client by this name"
+   },
+   "optional": "yes"
+  }
+ ]
+}

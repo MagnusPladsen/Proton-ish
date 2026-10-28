@@ -508,6 +508,24 @@ uintptr_t np_locate_anchor(const struct mach_header_64 *mh, intptr_t slide,
     if (anchor->kind == NP_MATCH_CALLS)
         return sole_fn_by_calls(mh, slide, text_base, text_size, anchor);
 
+    if (anchor->kind == NP_MATCH_RTTI_SLOT) {
+        if (anchor->slot < 0) return 0;
+        uintptr_t vptr = np_rtti_vptr(mh, slide, text_base, text_size, anchor->str);
+        if (!vptr) return 0;
+
+        uintptr_t slot = vptr + (uintptr_t)anchor->slot * sizeof(uintptr_t);
+        uintptr_t sect_base = 0;
+        size_t    sect_size = 0;
+        if (np_get_section_containing(mh, slide, slot, &sect_base, &sect_size) != 0)
+            return 0;
+        if (sect_size < sizeof(uintptr_t)) return 0;
+        if (slot - sect_base > sect_size - sizeof(uintptr_t)) return 0;
+
+        uintptr_t fn = *(const uintptr_t *)slot;
+        if (fn < text_base || fn > text_base + text_size - sizeof(uint32_t)) return 0;
+        return np_looks_like_prologue(fn) ? fn : 0;
+    }
+
     // Both STRING and INSN_AFTER_STRING start with a string xref.
     uintptr_t str = cstring_va(mh, slide, anchor->str);
     if (!str) return 0;

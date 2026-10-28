@@ -72,6 +72,7 @@ static int anchor_targets_function_entry(np_match_kind_t kind) {
         case NP_MATCH_VTABLE_SLOT:
         case NP_MATCH_CALL_TARGET:
         case NP_MATCH_CALLS:
+        case NP_MATCH_RTTI_SLOT:
             return 1;
         case NP_MATCH_NONE:
         case NP_MATCH_INSN_AFTER_STRING:
@@ -172,10 +173,20 @@ int np_required_for_module(const np_sigdb_t *sigdb, const char *module) {
     int n = 0;
     for (int i = 0; i < sigdb->sig_count; i++) {
         const np_sig_entry_t *sig = &sigdb->signatures[i];
-        if (!sig->deprecated && strcmp(sig->module, module) == 0)
+        if (!sig->deprecated && !sig->optional && strcmp(sig->module, module) == 0)
             n++;
     }
     return n;
+}
+
+int np_module_has_signatures(const np_sigdb_t *sigdb, const char *module) {
+    if (!sigdb || !module) return 0;
+    for (int i = 0; i < sigdb->sig_count; i++) {
+        const np_sig_entry_t *sig = &sigdb->signatures[i];
+        if (!sig->deprecated && strcmp(sig->module, module) == 0)
+            return 1;
+    }
+    return 0;
 }
 
 int np_resolve_signatures(const struct mach_header_64 *mh, intptr_t slide,
@@ -194,6 +205,7 @@ int np_resolve_signatures(const struct mach_header_64 *mh, intptr_t slide,
     NP_LOG("resolver: scanning %s __TEXT @ 0x%lx (%zu bytes)", module, text, text_sz);
 
     int resolved = 0;
+    int optional = 0, optional_resolved = 0;
 
     for (int i = 0; i < sigdb->sig_count; i++) {
         np_sig_entry_t *sig = &sigdb->signatures[i];
@@ -211,14 +223,22 @@ int np_resolve_signatures(const struct mach_header_64 *mh, intptr_t slide,
         if (addr && !usable_code_address(sig->name, addr, text, text_sz))
             addr = 0;
 
-        if (addr)
+        if (sig->optional) {
+            optional++;
+            if (addr)
+                optional_resolved++;
+            else
+                NP_WARN("resolver: optional '%s' did not resolve, its hooks stay off",
+                        sig->name);
+        } else if (addr) {
             resolved++;
+        }
 
         push(out, sig->name, addr);
     }
 
-    NP_LOG("resolver: %s %d/%d signatures resolved", module, resolved,
-           np_required_for_module(sigdb, module));
+    NP_LOG("resolver: %s %d/%d signatures resolved, %d/%d optional", module, resolved,
+           np_required_for_module(sigdb, module), optional_resolved, optional);
     return resolved;
 }
 

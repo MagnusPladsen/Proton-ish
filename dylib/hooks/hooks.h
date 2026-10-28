@@ -23,6 +23,7 @@ typedef struct {
     void            *entry;
     void           **trampoline;
     np_patch_mode_t  mode;
+    int              optional;
 } np_patch_entry_t;
 
 int               np_hooks_compat_count(void);
@@ -57,11 +58,27 @@ np_patch_entry_t *np_hooks_shortcut_bundle_defs(void);
 
 void np_hooks_shortcut_bundle_bind(const struct mach_header_64 *steamui);
 
+int               np_hooks_ceg_count(void);
+np_patch_entry_t *np_hooks_ceg_defs(void);
+
+int               np_hooks_ceg_service_count(void);
+np_patch_entry_t *np_hooks_ceg_service_defs(void);
+
+int np_hooks_ceg_bind_service(const char *image_path, uintptr_t thread_process);
+void np_hooks_ceg_probe_job(uintptr_t extract_guids);
+
+void np_hooks_ceg_service_installed(void);
+
+int np_hooks_install_steamservice(const struct mach_header_64 *mh, intptr_t slide,
+                                  const char *image_path, np_resolve_result_t *resolved,
+                                  int *total_out);
+
 int np_hooks_install_all(const struct mach_header_64 *mh, intptr_t slide,
                          np_resolve_result_t *resolved, int *total_out);
 
 int np_hooks_install_steamui(const struct mach_header_64 *mh, intptr_t slide,
-                             np_resolve_result_t *resolved, int *total_out);
+                             const char *image_path, np_resolve_result_t *resolved,
+                             int *total_out);
 
 // True when `label` is one entry of the comma-separated value of env var `var`.
 // NOTPROTON_DISABLE uses this to skip named hooks.

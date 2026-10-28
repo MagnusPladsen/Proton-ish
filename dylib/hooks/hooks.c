@@ -43,6 +43,11 @@ static const np_hook_group_t np_groups[] = {
     { "compat", np_hooks_compat_count, np_hooks_compat_defs },
     { "webui",  np_hooks_webui_count,  np_hooks_webui_defs  },
     { "launch", np_hooks_launch_count, np_hooks_launch_defs },
+    { "ceg",    np_hooks_ceg_count,    np_hooks_ceg_defs    },
+};
+
+static const np_hook_group_t np_steamservice_groups[] = {
+    { "ceg", np_hooks_ceg_service_count, np_hooks_ceg_service_defs },
 };
 
 static const np_hook_group_t np_steamui_groups[] = {
@@ -50,6 +55,8 @@ static const np_hook_group_t np_steamui_groups[] = {
     { "icon",     np_hooks_icon_count,            np_hooks_icon_defs            },
     { "bundle",   np_hooks_shortcut_bundle_count, np_hooks_shortcut_bundle_defs },
 };
+
+#define NP_ENTRY_OFF (-1)
 
 // Installs one entry. Returns 1 when the patch lands, 0 when it is skipped or fails.
 static int np_apply_entry(np_resolve_result_t *resolved, const char *group,
@@ -61,6 +68,10 @@ static int np_apply_entry(np_resolve_result_t *resolved, const char *group,
 
     uintptr_t addr = e->address ? e->address
                    : e->signature ? np_lookup_address(resolved, e->signature) : 0;
+    if (!addr && e->optional) {
+        NP_LOG("[%s] %s: optional and unresolved, left off", group, e->label);
+        return NP_ENTRY_OFF;
+    }
     if (!addr) {
         NP_WARN("[%s] %s: unresolved, cannot install", group, e->label);
         return 0;
@@ -93,8 +104,11 @@ static int install_groups(const np_hook_group_t *groups, size_t n_groups,
         np_patch_entry_t *entries = group->entries();
         int n = group->count();
         for (int i = 0; i < n; i++) {
+            int rc = np_apply_entry(resolved, group->group, &entries[i]);
+            if (rc == NP_ENTRY_OFF)
+                continue;
             total++;
-            landed += np_apply_entry(resolved, group->group, &entries[i]);
+            landed += rc;
         }
     }
 
@@ -104,8 +118,10 @@ static int install_groups(const np_hook_group_t *groups, size_t n_groups,
 }
 
 int np_hooks_install_steamui(const struct mach_header_64 *mh, intptr_t slide,
-                             np_resolve_result_t *resolved, int *total_out) {
+                             const char *image_path, np_resolve_result_t *resolved,
+                             int *total_out) {
     (void)slide;
+    (void)image_path;
     np_hooks_shortcut_bundle_bind(mh);
 
     int total  = 0;
@@ -116,6 +132,28 @@ int np_hooks_install_steamui(const struct mach_header_64 *mh, intptr_t slide,
     if (total_out)
         *total_out = total;
     NP_LOG("hooks: steamui %d/%d installed", landed, total);
+    return landed;
+}
+
+int np_hooks_install_steamservice(const struct mach_header_64 *mh, intptr_t slide,
+                                  const char *image_path, np_resolve_result_t *resolved,
+                                  int *total_out) {
+    (void)mh;
+    (void)slide;
+    int total  = 0;
+    int landed = 0;
+    if (np_hooks_ceg_bind_service(image_path,
+            np_lookup_address(resolved, "CWorkItemFunctionCall::ThreadProcess"))) {
+        landed = install_groups(np_steamservice_groups,
+                                sizeof(np_steamservice_groups) / sizeof(np_steamservice_groups[0]),
+                                resolved, &total);
+        if (landed == total && total > 0)
+            np_hooks_ceg_service_installed();
+    }
+
+    if (total_out)
+        *total_out = total;
+    NP_LOG("hooks: steamservice %d/%d installed", landed, total);
     return landed;
 }
 
@@ -139,6 +177,8 @@ int np_hooks_install_all(const struct mach_header_64 *mh, intptr_t slide,
         np_lookup_address(resolved, "CCompatManager::WindowsOnlyLookup"));
     np_usershortcuts_bind(mh, slide,
         np_lookup_address(resolved, "CUserShortcuts::SetShortcutExe"));
+    np_hooks_ceg_probe_job(
+        np_lookup_address(resolved, "CClientDRMDownloadJob::ExtractGUIDsFromFile"));
 
     uintptr_t register_fn = np_lookup_address(resolved,
                                              "CWebUIJobDispatcher::RegisterHandler");

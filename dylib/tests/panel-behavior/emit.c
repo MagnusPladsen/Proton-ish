@@ -4,6 +4,7 @@
 #include "../../feats/webpatch.c"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int np_log_level = 0;
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
         }
         np_webpatch_set_renderer_gaps(gaps[0], counts[0], gaps[1], counts[1]);
         if (data) set_sample_data();
+        np_webpatch_set_features(getenv("NP_TEST_READY"), getenv("NP_TEST_FEATS"));
         put_panel(strncmp(form, "component", 9) == 0 ? NP_CX_OPTIONS_COMPONENT
                                                      : NP_CX_OPTIONS_STATEMENT);
         return 0;

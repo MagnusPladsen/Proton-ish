@@ -5,9 +5,12 @@
 #include "nativeplatform.h"
 #include "../util/log.h"
 
+#include <dirent.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define NP_STR_(x) #x
 #define NP_STR(x) NP_STR_(x)
@@ -36,6 +39,9 @@
 #define NP_NO_DXVK_TOOLS "\017"
 #define NP_DEFAULTS "\027"
 #define NP_BUILDS "\030"
+// MSCXReady and MSCXFeat.
+#define NP_READY "\031"
+#define NP_FEATS "\032"
 
 #define NP_TOOL_NAME_MAX 128
 
@@ -249,6 +255,181 @@ void np_webpatch_set_builds(const np_webpatch_build_t *builds, size_t count) {
     set_input(IN_BUILDS, js_done(&j));
 }
 
+static int has_suffix(const char *s, const char *suf);
+
+// "Developer" section rows are declared in ~/Library/Application Support/protonish/plugins/*.conf,
+// one "key = value" per line, applied at launch by compat_run.sh.
+#define NP_FEAT_DIR      "Library/Application Support/protonish/plugins"
+#define NP_FEAT_MAX      32
+#define NP_FEAT_REQ_MAX  4
+#define NP_FEAT_STR      192
+#define NP_FEAT_DESC     512
+
+typedef struct {
+    char key[NP_FEAT_STR];
+    char label[NP_FEAT_STR];
+    char desc[NP_FEAT_DESC];
+    char section[32];
+    char on[32];
+    char off[32];
+    char depends[NP_FEAT_STR];
+    char req[NP_FEAT_REQ_MAX][NP_FEAT_STR];
+    int  nreq;
+} np_feat_t;
+
+static int feat_exists(const char *home, const char *rel) {
+    char path[2048];
+    struct stat st;
+    if (!rel || !*rel) return 0;
+    if (*rel == '/') return stat(rel, &st) == 0 && S_ISREG(st.st_mode);
+    if (snprintf(path, sizeof(path), "%s/%s", home, rel) >= (int)sizeof(path)) return 0;
+    return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+// isspace() without the locale, to match [[:space:]] in compat_run.sh.
+static int feat_space(char c) {
+    return c == ' ' || (c >= '\t' && c <= '\r');
+}
+
+static void feat_trim(char *v) {
+    size_t n = strlen(v);
+    while (n && feat_space(v[n - 1])) v[--n] = 0;
+}
+
+// compat_run.sh ignores keys that aren't valid shell variable names, so the compatibility panel does the same thing
+static int feat_key_ok(const char *k) {
+    if (strncmp(k, "NOTPROTON_", 10) != 0 || !k[10]) return 0;
+    for (k += 10; *k; k++)
+        if (!((*k >= 'A' && *k <= 'Z') || (*k >= '0' && *k <= '9') || *k == '_')) return 0;
+    return 1;
+}
+
+// Takes the first value when a setting appears twice so as to match compat_run.sh.
+static void feat_set(char *dst, size_t size, const char *v, int *bad) {
+    if (*dst) return;
+    if (strlen(v) >= size) *bad = 1;
+    snprintf(dst, size, "%s", v);
+}
+
+static np_feat_t *feat_find(np_feat_t *list, int n, const char *key) {
+    for (int i = 0; i < n; i++)
+        if (strcmp(list[i].key, key) == 0) return &list[i];
+    return NULL;
+}
+
+// Unknown fields are ignored so a plugin file written for a later version still loads.
+static void feat_read_file(const char *path, np_feat_t *list, int *count) {
+    char line[2048];
+    np_feat_t f;
+    int bad = 0;
+    FILE *fp = fopen(path, "r");
+    if (!fp) return;
+    memset(&f, 0, sizeof(f));
+    while (fgets(line, sizeof(line), fp)) {
+        char *eq, *v, *k = line;
+        size_t len = strcspn(line, "\n");
+        if (len >= sizeof(line) - 1) {
+            NP_WARN("plugins: %s has a line over %zu bytes, ignored", path, sizeof(line) - 2);
+            fclose(fp);
+            return;
+        }
+        line[len] = 0;
+        while (feat_space(*k)) k++;
+        if (*k == '#' || !(eq = strchr(k, '='))) continue;
+        *eq = 0;
+        v = eq + 1;
+        feat_trim(k);
+        while (feat_space(*v)) v++;
+        feat_trim(v);
+        if (!*v) continue;
+        if (strcmp(k, "key") == 0) feat_set(f.key, sizeof(f.key), v, &bad);
+        else if (strcmp(k, "label") == 0) feat_set(f.label, sizeof(f.label), v, &bad);
+        else if (strcmp(k, "description") == 0) feat_set(f.desc, sizeof(f.desc), v, &bad);
+        else if (strcmp(k, "section") == 0) feat_set(f.section, sizeof(f.section), v, &bad);
+        else if (strcmp(k, "on") == 0) feat_set(f.on, sizeof(f.on), v, &bad);
+        else if (strcmp(k, "off") == 0) feat_set(f.off, sizeof(f.off), v, &bad);
+        else if (strcmp(k, "depends") == 0) feat_set(f.depends, sizeof(f.depends), v, &bad);
+        else if (strcmp(k, "requires") == 0 && f.nreq < NP_FEAT_REQ_MAX)
+            feat_set(f.req[f.nreq++], NP_FEAT_STR, v, &bad);
+    }
+    fclose(fp);
+    if (bad) {
+        NP_WARN("plugins: %s has a value that's too long, ignored", path);
+        return;
+    }
+    if (!*f.on) snprintf(f.on, sizeof(f.on), "1");
+    if (!*f.section) snprintf(f.section, sizeof(f.section), "dev");
+    if (!*f.key) {
+        NP_WARN("plugins: %s has no key, ignored", path);
+        return;
+    }
+    if (!feat_key_ok(f.key)) {
+        NP_WARN("plugins: %s has an invalid key %s, ignored", path, f.key);
+        return;
+    }
+    if (!*f.label) {
+        NP_WARN("plugins: %s has no label, ignored", path);
+        return;
+    }
+    if (strcmp(f.section, "dev") != 0) {
+        NP_WARN("plugins: %s is not in the dev section, ignored", path);
+        return;
+    }
+    if (feat_find(list, *count, f.key)) {
+        NP_WARN("plugins: %s repeats key %s, ignored", path, f.key);
+        return;
+    }
+    if (*count >= NP_FEAT_MAX) {
+        NP_WARN("plugins: %s is over the %d plugin limit, ignored", path, NP_FEAT_MAX);
+        return;
+    }
+    list[(*count)++] = f;
+}
+
+static int feat_load(const char *home, np_feat_t *list) {
+    char dir[2048];
+    struct dirent *de;
+    DIR *d;
+    int count = 0;
+    char **names = NULL;
+    int nnames = 0;
+
+    if (snprintf(dir, sizeof(dir), "%s/" NP_FEAT_DIR, home) >= (int)sizeof(dir)) return 0;
+    if ((d = opendir(dir))) {
+        while ((de = readdir(d))) {
+            char **grown;
+            if (de->d_name[0] == '.' || strchr(de->d_name, '\n')) continue;
+            if (!has_suffix(de->d_name, ".conf")) continue;
+            grown = realloc(names, (size_t)(nnames + 1) * sizeof(*names));
+            if (!grown) break;
+            names = grown;
+            names[nnames] = strdup(de->d_name);
+            if (!names[nnames]) break;
+            nnames++;
+        }
+        closedir(d);
+        for (int i = 1; i < nnames; i++)
+            for (int j = i; j > 0 && strcmp(names[j - 1], names[j]) > 0; j--) {
+                char *t = names[j - 1]; names[j - 1] = names[j]; names[j] = t;
+            }
+        for (int i = 0; i < nnames; i++) {
+            char path[4096];
+            if (snprintf(path, sizeof(path), "%s/%s", dir, names[i]) < (int)sizeof(path))
+                feat_read_file(path, list, &count);
+            free(names[i]);
+        }
+        free(names);
+    }
+
+    return count;
+}
+
+static _Thread_local char g_feat_ready[NP_FEAT_MAX * (NP_FEAT_STR + 8) + 4] = "{}";
+static _Thread_local char g_feat_rows[NP_FEAT_MAX * (2 * (3 * NP_FEAT_STR + NP_FEAT_DESC + 64) + 32) + 4] = "[]";
+static _Thread_local int  g_feat_ready_done;
+static _Thread_local int  g_feat_pinned;
+static void feat_build(void);
+
 static const char *marker_text(char c) {
     if (c == NP_FALLBACK_TOOL[0]) return input_text(IN_FALLBACK_TOOL);
     if (c == NP_FEX_TOOLS[0]) return input_text(IN_FEX_TOOLS);
@@ -256,6 +437,10 @@ static const char *marker_text(char c) {
     if (c == NP_NO_DXVK_TOOLS[0]) return input_text(IN_NO_DXVK_TOOLS);
     if (c == NP_DEFAULTS[0]) return input_text(IN_DEFAULTS);
     if (c == NP_BUILDS[0]) return input_text(IN_BUILDS);
+    if (c == NP_READY[0] || c == NP_FEATS[0]) {
+        if (!g_feat_ready_done) feat_build();
+        return c == NP_READY[0] ? g_feat_ready : g_feat_rows;
+    }
     return NULL;
 }
 
@@ -346,6 +531,65 @@ static int out_put(np_out_t *o, const char *p, size_t n) {
     memcpy(o->buf + o->len, p, n);
     o->len += n;
     return 1;
+}
+
+static int out_jsstr(np_out_t *o, const char *v) {
+    if (!out_put(o, "\"", 1)) return 0;
+    for (const char *p = v; *p; p++) {
+        if (*p == '"' || *p == '\\') { if (!out_put(o, "\\", 1)) return 0; }
+        else if ((unsigned char)*p < 0x20) continue;
+        if (!out_put(o, p, 1)) return 0;
+    }
+    return out_put(o, "\"", 1);
+}
+
+static void feat_build(void) {
+    const char *home = getenv("HOME");
+    np_feat_t list[NP_FEAT_MAX];
+    np_out_t ready = { 0 }, rows = { 0 };
+    int n = 0, wrote = 0;
+
+    g_feat_ready_done = 1;
+    snprintf(g_feat_ready, sizeof(g_feat_ready), "{}");
+    snprintf(g_feat_rows, sizeof(g_feat_rows), "[]");
+    if (!home) return;
+    n = feat_load(home, list);
+    if (!out_put(&ready, "{", 1) || !out_put(&rows, "[", 1)) goto done;
+    for (int i = 0; i < n; i++) {
+        int ok = list[i].nreq == 0;
+        char item[NP_FEAT_STR + 32];
+        int len;
+        for (int j = 0; j < list[i].nreq; j++)
+            if (feat_exists(home, list[i].req[j])) { ok = 1; break; }
+        len = snprintf(item, sizeof(item), "%s\"%s\":%d", i ? "," : "", list[i].key, ok);
+        if (len < 0 || len >= (int)sizeof(item) || !out_put(&ready, item, (size_t)len)) goto done;
+
+        if (wrote++ && !out_put(&rows, ",", 1)) goto done;
+        if (!out_put(&rows, "{k:", 3) || !out_jsstr(&rows, list[i].key)) goto done;
+        if (!out_put(&rows, ",l:", 3) || !out_jsstr(&rows, list[i].label)) goto done;
+        if (!out_put(&rows, ",on:", 4) || !out_jsstr(&rows, list[i].on)) goto done;
+        if (!out_put(&rows, ",off:", 5) || !out_jsstr(&rows, list[i].off)) goto done;
+        if (!out_put(&rows, ",dep:", 5) || !out_jsstr(&rows, list[i].depends)) goto done;
+        if (!out_put(&rows, ",d:", 3) || !out_jsstr(&rows, list[i].desc)) goto done;
+        if (!out_put(&rows, "}", 1)) goto done;
+    }
+    if (!out_put(&ready, "}", 1) || !out_put(&rows, "]", 1)) goto done;
+    if (ready.len < sizeof(g_feat_ready) && rows.len < sizeof(g_feat_rows)) {
+        snprintf(g_feat_ready, sizeof(g_feat_ready), "%.*s", (int)ready.len, ready.buf);
+        snprintf(g_feat_rows, sizeof(g_feat_rows), "%.*s", (int)rows.len, rows.buf);
+    } else {
+        NP_WARN("plugins: too large to show, all ignored");
+    }
+done:
+    free(ready.buf);
+    free(rows.buf);
+}
+
+void np_webpatch_set_features(const char *ready, const char *rows) {
+    snprintf(g_feat_ready, sizeof(g_feat_ready), "%s", ready ? ready : "{}");
+    snprintf(g_feat_rows, sizeof(g_feat_rows), "%s", rows ? rows : "[]");
+    g_feat_ready_done = 1;
+    g_feat_pinned = 1;
 }
 
 static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
@@ -459,21 +703,21 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "Runs on Windows, no Mac OS version", \
     "Funziona su Windows, nessuna versione macOS")
 
-// Rebuild row in the CrossOver panel. Chinese and Italian wait for a translator.
+// Rebuild row in the CrossOver panel. Chinese waits for a translator.
 // The row is redrawn on every poll, so the bar keeps its phase from when the rebuild started
 // instead of restarting on each redraw.
-#define NP_PREFIX_NEED NP_WEB_TEXT("Switching to this compatibility tool requires a prefix rebuild. Rebuild now?", "Switching to this compatibility tool requires a prefix rebuild. Rebuild now?", "Switching to this compatibility tool requires a prefix rebuild. Rebuild now?")
-#define NP_PREFIX_BACKUP NP_WEB_TEXT("Backup & Rebuild Prefix", "Backup & Rebuild Prefix", "Backup & Rebuild Prefix")
-#define NP_PREFIX_REBUILD NP_WEB_TEXT("Rebuild Prefix", "Rebuild Prefix", "Rebuild Prefix")
-#define NP_PREFIX_RUNNING NP_WEB_TEXT("Quit the game to rebuild.", "Quit the game to rebuild.", "Quit the game to rebuild.")
-#define NP_PREFIX_SETUP NP_WEB_TEXT("Rebuilding prefix\\u2026", "Rebuilding prefix\\u2026", "Rebuilding prefix\\u2026")
-#define NP_PREFIX_COPY NP_WEB_TEXT("Copying your files\\u2026", "Copying your files\\u2026", "Copying your files\\u2026")
-#define NP_PREFIX_FINISH NP_WEB_TEXT("Finishing\\u2026", "Finishing\\u2026", "Finishing\\u2026")
-#define NP_PREFIX_DONE NP_WEB_TEXT("Prefix rebuilt.", "Prefix rebuilt.", "Prefix rebuilt.")
-#define NP_PREFIX_DONE_BACKUP NP_WEB_TEXT("Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.", "Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.", "Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.")
-#define NP_PREFIX_FAILED NP_WEB_TEXT("Prefix rebuild failed!", "Prefix rebuild failed!", "Prefix rebuild failed!")
-#define NP_PREFIX_LOG NP_WEB_TEXT("Open Log", "Open Log", "Open Log")
-#define NP_PREFIX_APP NP_WEB_TEXT("Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.", "Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.", "Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.")
+#define NP_PREFIX_NEED NP_WEB_TEXT("Switching to this compatibility tool requires a prefix rebuild. Rebuild now?", "Switching to this compatibility tool requires a prefix rebuild. Rebuild now?", "Per passare a questo strumento di compatibilit\\u00e0 bisogna ricostruire il prefisso. Ricostruirlo ora?")
+#define NP_PREFIX_BACKUP NP_WEB_TEXT("Backup & Rebuild Prefix", "Backup & Rebuild Prefix", "Backup e ricostruisci prefisso")
+#define NP_PREFIX_REBUILD NP_WEB_TEXT("Rebuild Prefix", "Rebuild Prefix", "Ricostruisci prefisso")
+#define NP_PREFIX_RUNNING NP_WEB_TEXT("Quit the game to rebuild.", "Quit the game to rebuild.", "Chiudi il gioco per ricostruire il prefisso.")
+#define NP_PREFIX_SETUP NP_WEB_TEXT("Rebuilding prefix\\u2026", "Rebuilding prefix\\u2026", "Ricostruzione del prefisso\\u2026")
+#define NP_PREFIX_COPY NP_WEB_TEXT("Copying your files\\u2026", "Copying your files\\u2026", "Copia dei tuoi file\\u2026")
+#define NP_PREFIX_FINISH NP_WEB_TEXT("Finishing\\u2026", "Finishing\\u2026", "Ultimi passaggi\\u2026")
+#define NP_PREFIX_DONE NP_WEB_TEXT("Prefix rebuilt.", "Prefix rebuilt.", "Prefisso ricostruito.")
+#define NP_PREFIX_DONE_BACKUP NP_WEB_TEXT("Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.", "Prefix rebuilt. A backup of the original is in Proton-ish's Prefixes view.", "Prefisso ricostruito. Il backup dell'originale \\u00e8 nella sezione Prefissi di Proton-ish.")
+#define NP_PREFIX_FAILED NP_WEB_TEXT("Prefix rebuild failed!", "Prefix rebuild failed!", "Ricostruzione del prefisso non riuscita.")
+#define NP_PREFIX_LOG NP_WEB_TEXT("Open Log", "Open Log", "Apri registro")
+#define NP_PREFIX_APP NP_WEB_TEXT("Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.", "Couldn't find the Proton-ish app. Move Proton-ish to Applications, open it and click Install again.", "App Proton-ish non trovata. Sposta Proton-ish in Applicazioni, aprila e fai di nuovo clic su Installa.")
 
 #define NP_CX_PREFIX_ROW \
     "globalThis.MSCXPrefixRow=(e,id)=>{if(e.npApp===id)return;e.npStop&&e.npStop();e.npApp=id;let ter" \
@@ -528,6 +772,8 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     ".MSCXPanel .MSCXRow{display:flex;flex-direction:row;padding:9px;margin:0;" \
     "font-size:14px;line-height:18px;color:#dfe3e6;background:rgba(59,63,72,.5);border-radius:3px}" \
     ".MSCXPanel .MSCXRow:hover{box-shadow:0 6px 8px 0 rgba(0,0,0,.16)}" \
+    ".MSCXPanel .MSCXRowDesc{flex-wrap:wrap;align-items:center}" \
+    ".MSCXPanel .MSCXRowDesc>:last-child{flex-basis:100%}" \
     ".MSCXNoBottomGap{margin-bottom:0}" \
     ".DesktopUI .MSCXSetBtn,.MSCXSetBtn.DesktopUI{color:#dfe3e6;background-color:rgba(59,63,72,.5);" \
     "padding:8px 14px;font-size:13px;line-height:18px}" \
@@ -557,8 +803,18 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
 
 // FEX runs arm64 Wine, which has no D3DMetal and never runs under Rosetta.
 #define NP_CX_PANEL(RT, BARREL) \
-    "({fex,nd,nx,get:G,saved:readSaved,set:s,clearUnused,head,dflt})=>{" \
+    "({fex,nd,nx,get:G,saved:readSaved,set:s,clearUnused,head,dflt,dev})=>{" \
     "const npZh=" NP_WEB_IS_ZH ",npIt=" NP_WEB_IS_IT ",npL=(en,zh,it)=>npZh?zh:npIt?it:en," \
+    "MSCXReady=" NP_READY ",MSCXFeat=" NP_FEATS "," \
+    "on1=(k,n=0)=>{const p=MSCXFeat.find(x=>x.k===k);" \
+    "return!!p&&n<32&&MSCXReady[k]!==0&&G(k)===p.on&&(!p.dep||on1(p.dep,n+1))}," \
+    "P=f=>{const rd=MSCXReady[f.k]!==0;" \
+    "return(0," RT ".jsx)(" BARREL ".Yh," \
+    "{className:\"MSCXRow\"+(f.d?\" MSCXRowDesc\":\"\")," \
+    "label:rd?f.l:f.l+npL(\" (not installed)\",\" (未安装)\",\" (not installed)\"),disabled:!rd," \
+    "description:f.d||undefined," \
+    "checked:rd&&G(f.k)===f.on," \
+    "onChange:v=>s([[f.k,v?f.on:(f.off||\"\")]])},f.k)}," \
     "w=(k,v,none)=>dflt&&v===(dflt(k)||none)?\"\":v," \
     "T=(k,l)=>(0," RT ".jsx)(" BARREL ".Yh,{className:\"MSCXRow\",label:l," \
     "checked:\"1\"===G(k),onChange:v=>s([[k,w(k,v?\"1\":\"0\",\"0\")]])},k)," \
@@ -605,7 +861,7 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "]},\"gfx\")," \
     "dx&&(0," RT ".jsx)(" BARREL ".XY," \
     "{label:npL(\"MetalFX Upscaling (Samples from the resolution the game is set to)\"," \
-    "\"MetalFX 超分辨率（以游戏设置的分辨率为采样来源）\",\"Upscaling MetalFX (ingrandisce l'immagine dalla risoluzione impostata nel gioco)\")," \
+    "\"MetalFX 超分辨率（以游戏设置的分辨率为采样来源）\",\"Upscaling MetalFX (ingrandisce l'immagine dalla risoluzione del gioco)\")," \
     "children:(0," RT ".jsx)(" BARREL ".m,{rgOptions:U," \
     "selectedOption:sw?(U.find(u=>u.data&&+u.data===fn)||{data:String(fn)}).data:\"\"," \
     "onChange:v=>s(dflt&&v.data===pick(k=>dflt(k)||\"\")" \
@@ -619,7 +875,9 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "]},\"ctl\")," \
     "fex&&(0," RT ".jsx)(" BARREL ".XY,{label:\"FEX\"," \
     "children:D(\"FEX_X87REDUCEDPRECISION\"," \
-    "\"Reduced x87 Precision (Reducing precision improves game performance, is enabled by default in CrossOver Preview)\")},\"fex\")" \
+    "\"Reduced x87 Precision (Reducing precision improves game performance, is enabled by default in CrossOver Preview)\")},\"fex\")," \
+    "dev&&MSCXFeat.length?(0," RT ".jsx)(" BARREL ".XY,{label:npL(\"Developer\",\"开发者\",\"Developer\")," \
+    "children:MSCXFeat.filter(f=>!f.dep||on1(f.dep)).map(P)},\"dev\"):null" \
     "]})})}"
 
 #define NP_CX_OPTIONS_BODY(RT, BARREL) \
@@ -634,7 +892,7 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "G=k=>\"DXMT_CONFIG\"===k?(own.some(fk)?g(k):DF[k]||\"\"):has(k)?g(k):DF[k]||\"\";" \
     "if(t.unAppID<2147483648&&(t.vecPlatforms||[]).indexOf(\"osx\")>=0" \
     "&&!t.strCompatToolName)return null;" \
-    "return MSCXPanel({fex,nd,nx,get:G,saved:g,set:L.s,clearUnused:1,dflt:lost?null:k=>DF[k],head:" \
+    "return MSCXPanel({fex,nd,nx,get:G,saved:g,set:L.s,clearUnused:1,dev:1,dflt:lost?null:k=>DF[k],head:" \
     "typeof MSCXPrefixRow==\"function\"&&(0," RT ".jsx)(\"div\",{className:\"MSCXRow\",ref:e=>e&&MSCXPrefixRow(e,t.unAppID)},\"npstate\")" \
     "})}"
 
@@ -664,19 +922,19 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "if(" NP_STR(NP_COMPATSVC_PARTLY_APPLIED) "===x.GetEResult()){all[nn]=d;lost=1;globalThis.MSCXDefaultsLost=1;bump(c=>c+1);console.error(\"Proton-ish: Apply left some versions " \
     "with their own settings, so Default Compatibility Settings are hidden until Steam restarts\");return}" \
     "done(x,()=>{all[nn]=d;BL.forEach(y=>{y.runner===nn&&(y.override=null)})})" \
-    "&&my===gen&&sok(\"Applied. Every \"+kk+\" Compatibility Tool now uses these settings.\")})})}," \
+    "&&my===gen&&sok(" NP_WEB_IS_IT "?\"Applicate. Ora tutti gli strumenti di compatibilit\\u00e0 \"+kk+\" usano queste impostazioni.\":\"Applied. Every \"+kk+\" Compatibility Tool now uses these settings.\")})})}," \
     "pickTool=t=>{const p=BL.find(x=>x.id===t);if(p){si(p.id);sr(\"fex\"===p.runner?1:0);clr()}}," \
     "btn=(k,l,t,f,dsc)=>(0," RT ".jsx)(" BARREL ".D0,{label:l,description:dsc," \
     "childrenContainerWidth:\"min\",children:(0," RT ".jsx)(" BARREL ".$n,{className:\"MSCXSetBtn\"," \
     "onClick:f,children:t})},k);" \
     "eff(()=>{const on=e=>pickTool(e.detail);globalThis.addEventListener?.(\"mscxdefaulttool\",on);" \
     "return()=>globalThis.removeEventListener?.(\"mscxdefaulttool\",on)},[]);if(lost)return null;" \
-    "return MSCXPanel({fex,get:G,saved:G,set:s,head:(0," RT ".jsxs)(" BARREL ".XY,{label:\"Default Compatibility Settings\",children:[" \
-    "BL.length?(0," RT ".jsx)(" BARREL ".Vb,{label:\"CrossOver version\"," \
+    "return MSCXPanel({fex,get:G,saved:G,set:s,head:(0," RT ".jsxs)(" BARREL ".XY,{label:" NP_WEB_TEXT("Default Compatibility Settings", "Default Compatibility Settings", "Impostazioni di compatibilit\\u00e0 predefinite") ",children:[" \
+    "BL.length?(0," RT ".jsx)(" BARREL ".Vb,{label:" NP_WEB_TEXT("CrossOver version", "CrossOver version", "Versione di CrossOver") "," \
     "bMatchWidth:!1,rgOptions:BL.map(x=>({data:x.id,label:x.label}))," \
     "selectedOption:b?b.id:\"\",onChange:v=>{const p=BL.find(x=>x.id===v.data);if(!p)return;" \
     "si(p.id);sr(p.runner===\"fex\"?1:0);clr()}},\"version\"):null," \
-    "b?btn(\"apply\",\"Apply as defaults for all \"+kind+\" Compatibility Tools\",\"Apply\",apply,ok||void 0):null" \
+    "b?btn(\"apply\",(" NP_WEB_IS_IT "?\"Applica come predefinite a tutti gli strumenti di compatibilit\\u00e0 \"+kind:\"Apply as defaults for all \"+kind+\" Compatibility Tools\")," NP_WEB_TEXT("Apply", "Apply", "Applica") ",apply,ok||void 0):null" \
     "]},\"defaults\")})};" \
     "return()=>{const up=typeof globalThis.MSCXUseState==\"function\"&&typeof globalThis.MSCXUseEffect==\"function\"" \
     "&&typeof globalThis.MSCXSpecifyRoute==\"function\";" \
@@ -1102,6 +1360,8 @@ char *np_webpatch_transform(const uint8_t *src, size_t src_len, size_t *out_len,
 
     if (out_shape)
         *out_shape = NULL;
+    if (!g_feat_pinned)
+        g_feat_ready_done = 0;
 
     const np_ui_shape_t *shape = NULL;
     for (size_t i = 0; i < NP_SHAPE_COUNT; i++) {
