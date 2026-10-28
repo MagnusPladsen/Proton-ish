@@ -334,6 +334,7 @@ enum SteamInstaller {
         try WriteRefused.catching(destination) {
             try atomicReplace(destination, from: source, step: step)
         }
+        DownloadMarkers.remove(from: destination)
     }
 
     static func write(_ version: String, to url: URL) throws {

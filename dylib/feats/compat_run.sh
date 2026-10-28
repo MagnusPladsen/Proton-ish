@@ -1551,6 +1551,12 @@ highball_environment() {
     echo "highball-env: missing, using the engine defaults" >> "$log" 2>&1 || true
     return 0
   fi
+  # A copy that kept the download's quarantine mark is refused by Gatekeeper, which would ask and
+  # leave the game waiting; Repair on Proton-ish's Status page installs a clean copy (#79)
+  if xattr -p com.apple.quarantine "$hb_helper" >/dev/null 2>&1; then
+    echo "highball-env: macOS quarantined it with the download, using the engine defaults; open Proton-ish and press Repair on the Status page" >> "$log" 2>&1 || true
+    return 0
+  fi
   # The game's executable lets Highball spot a DirectX 12-only program; the install path, marker
   # and registry file are for the prefix steps of the game's recipe
   hb_other=apply

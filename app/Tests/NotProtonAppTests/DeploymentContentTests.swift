@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Testing
 
@@ -83,6 +84,24 @@ struct DeploymentContentTests {
         try Data("new!".utf8).write(to: files[0].destination)
         try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: files[0].destination.path)
         #expect(try DeploymentContent.inspect(files: files, bundled: build, installed: build) == .repair(["run"]))
+    }
+
+    @Test("A copy that kept the download's quarantine mark needs repair, and installing it clears the mark")
+    func quarantinedCopy() throws {
+        let root = try scratchDirectory("content")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let files = try files(in: root)
+        try Data("new!".utf8).write(to: files[0].destination)
+        let mark = Data("0181;6adbdf4f;;015F615D-0E83-4C99-946B-60F55F2ABCE5".utf8)
+        let marked = mark.withUnsafeBytes {
+            setxattr(files[0].destination.path, DownloadMarkers.quarantine, $0.baseAddress, mark.count, 0, 0)
+        }
+        #expect(marked == 0)
+        #expect(try DeploymentContent.inspect(files: files, bundled: build, installed: build) == .repair(["run"]))
+
+        try SteamInstaller.installIfChanged(files[0])
+        #expect(!DownloadMarkers.isQuarantined(files[0].destination))
+        #expect(try files[0].matches())
     }
 
     @Test("A symlink is not mistaken for a matching installed file")
