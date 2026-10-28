@@ -177,6 +177,9 @@ int np_compat_runs_tool(const char *cmd);
 // True when the app is set to run with a NotProton compatibility tool.
 int np_compat_app_runs_tool(uint32_t appid);
 
+// NULL when the app doesn't have a Steam Play compatibility tool.
+const char *np_compat_app_tool_dir(uint32_t appid);
+
 // Command line template for the tool's toolmanifest.vdf commandline value.
 const char *np_compat_tool_commandline(void);
 

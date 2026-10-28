@@ -1,0 +1,20 @@
+{
+ "schema_version": 3,
+ "profile_version": 1,
+ "arch": "arm64",
+ "platform": "macos",
+ "steam_build": 0,
+ "steam_build_date": "",
+ "signatures": [
+  {
+   "name": "CWorkItemFunctionCall::ThreadProcess",
+   "module": "steamservice.dylib",
+   "aob_hex": "FF 03 01 D1 F4 4F 02 A9 FD 7B 03 A9 FD C3 00 91 F3 03 00 AA 02 1C 41 B9 00 70 40 F9 61 8E 5D 29 64 96 5E 29 66 FE 40 B9 67 82 40 F9 68 42 04 91 6A 62 04 91 69 0A 41 B9 A2 00 18 37 E8 AB 00 A9 E9 03 00 B9 ?? ?? ?? ?? 04 00 00 14 E8 AB 00 A9 E9 03 00 B9 ?? ?? ?? ?? 60 EA 00 B9 ?? ?? ?? ?? 61 82 40 F9 08 00 40 F9 08 11 40 F9",
+   "func_addr_this_build": "0x127b8",
+   "anchor": {
+    "kind": "rtti_slot",
+    "slot": 5
+   }
+  }
+ ]
+}

@@ -20,6 +20,7 @@
 #include "../resolver/anchor.h"
 #include "../util/file.h"
 #include "../util/log.h"
+#include "../util/spawn.h"
 
 // Route names carry the interface version the page asks for.
 #define ROUTE_GET_COMPAT_TOOLS     "CompatManager.GetCompatTools#1"
@@ -376,22 +377,14 @@ static int run_detached(char *const argv[]) {
 
     posix_spawn_file_actions_t actions;
     posix_spawnattr_t attr;
-    sigset_t none, all;
-    sigemptyset(&none);
-    sigfillset(&all);
     if (posix_spawn_file_actions_init(&actions) != 0) return 0;
-    if (posix_spawnattr_init(&attr) != 0) {
+    if (np_spawn_attr_clean(&attr, NP_SPAWN_OWN_GROUP) != 0) {
         posix_spawn_file_actions_destroy(&actions);
         return 0;
     }
     posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
     posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
     posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
-    posix_spawnattr_setsigmask(&attr, &none);
-    posix_spawnattr_setsigdefault(&attr, &all);
-    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSIGDEF |
-                                    POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETPGROUP);
-    posix_spawnattr_setpgroup(&attr, 0);
     pid_t pid;
     int rc = posix_spawn(&pid, argv[0], &actions, &attr, argv, envp);
     posix_spawnattr_destroy(&attr);

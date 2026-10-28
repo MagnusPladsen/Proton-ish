@@ -808,10 +808,27 @@ void *np_compat_manager(void) {
     return g_manager;
 }
 
-int np_compat_app_runs_tool(uint32_t appid) {
+static const char *app_tool_name(uint32_t appid) {
     const uint8_t *tool = np_compat_tool_for_app(g_manager, appid);
+    const char *name = tool ? *(const char *const *)(tool + COMPAT_TOOL_NAME_OFF) : NULL;
+    return is_tool_name(name) ? name : NULL;
+}
 
-    return tool && is_tool_name(*(const char *const *)(tool + COMPAT_TOOL_NAME_OFF));
+int np_compat_app_runs_tool(uint32_t appid) {
+    return app_tool_name(appid) != NULL;
+}
+
+const char *np_compat_app_tool_dir(uint32_t appid) {
+    const char *name = app_tool_name(appid);
+    if (!name)
+        return NULL;
+
+    load_tool_list_once();
+    for (int i = 0; i < g_tool_count; i++) {
+        if (strcmp(g_tools[i].name, name) == 0)
+            return g_tools[i].dir;
+    }
+    return NULL;
 }
 
 static void *find_tool(void *compat_mgr, const char *wanted) {

@@ -17,6 +17,7 @@ typedef enum {
     NP_MATCH_AOB,
     NP_MATCH_CALL_TARGET,
     NP_MATCH_CALLS,
+    NP_MATCH_RTTI_SLOT,          // vtable slot of an RTTI type name
 } np_match_kind_t;
 
 #define NP_CALL_PATH_MAX 4
@@ -60,6 +61,8 @@ typedef struct {
     int              call_count;
     int              calls_exact;    // the body makes these calls and no others
     int              no_data_refs;   // reject ADRP instructions
+
+    int              slot;       // for NP_MATCH_RTTI_SLOT
 } np_anchor_t;
 
 // Upper bound on a function body when scanning for a pair.

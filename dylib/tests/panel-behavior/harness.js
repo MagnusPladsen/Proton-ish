@@ -31,8 +31,11 @@ const FORMS = {
 
 // `fallback`, `fexTools`, `noD3DMetal` and `noDXVK` stand in for what the hook sets before the transform.
 function panel(emit, form, globals = { document: { documentElement: { lang: 'en' } } },
-               { fallback = 'protonish', fexTools = [], noD3DMetal = [], noDXVK = [], names = ['R0', 'B0'], data = false, drop = [] } = {}) {
+               { fallback = 'protonish', fexTools = [], noD3DMetal = [], noDXVK = [], names = ['R0', 'B0'], data = false, drop = [],
+                 ready, feats } = {}) {
   const env = { ...process.env, NP_PANEL_NO_D3DMETAL: noD3DMetal.join(','), NP_PANEL_NO_DXVK: noDXVK.join(',') };
+  if (ready !== undefined) env.NP_TEST_READY = ready;
+  if (feats !== undefined) env.NP_TEST_FEATS = feats;
   const raw = execFileSync(emit, [form + (data ? '-data' : ''), fallback, ...fexTools],
                            { encoding: 'utf8', env }).trim();
   const barrel = barrelFor(emit);

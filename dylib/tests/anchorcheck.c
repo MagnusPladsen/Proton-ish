@@ -109,6 +109,7 @@ static const char *kind_name(np_match_kind_t k) {
         case NP_MATCH_AOB:               return "aob";
         case NP_MATCH_CALL_TARGET:       return "call_target";
         case NP_MATCH_CALLS:             return "calls";
+        case NP_MATCH_RTTI_SLOT:         return "rtti_slot";
         default:                          return "none";
     }
 }
@@ -122,6 +123,7 @@ typedef struct {
     uintptr_t       recorded;
     uintptr_t       aob;
     int             has_pattern;
+    int             optional;
 } row_t;
 
 typedef struct {
@@ -242,6 +244,7 @@ static int check_db(dbcheck_t *db) {
         r->kind        = sig->anchor.kind;
         r->recorded    = sig->func_addr_this_build;
         r->has_pattern = sig->aob_hex[0] != '\0';
+        r->optional    = sig->optional;
 
         const image_t *im = image_for(sig->module);
         if (!im) {
@@ -339,6 +342,7 @@ static int report_db(const dbcheck_t *db, int is_live, int misses_excused) {
         const char *verdict;
 
         if (r->kind == NP_MATCH_NONE)          { verdict = "NO ANCHOR";     bad++; }
+        else if (!r->anchor && r->optional)    { verdict = "optional, left off";   }
         else if (!r->anchor)                   { verdict = (r->has_pattern && r->aob)
                                                              ? "ANCHOR FAILED (aob resolves)"
                                                              : "ANCHOR FAILED";

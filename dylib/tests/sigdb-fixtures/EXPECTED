@@ -47,3 +47,11 @@
 1 vtable_va_wild.json
 1 vtable_va_zero.json
 1 wrong_kind.json
+1 optional_not_bool.json
+0 optional_unresolved.json
+1 rtti_slot_negative.json
+1 rtti_slot_no_slot.json
+1 rtti_slot_no_type.json
+1 rtti_slot_past_end.json
+0 rtti_slot_real.json
+1 rtti_slot_unknown_type.json

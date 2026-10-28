@@ -31,6 +31,8 @@ int np_resolve_signatures(const struct mach_header_64 *mh, intptr_t slide,
 
 int np_required_for_module(const np_sigdb_t *sigdb, const char *module);
 
+int np_module_has_signatures(const np_sigdb_t *sigdb, const char *module);
+
 uintptr_t np_lookup_address(const np_resolve_result_t *result, const char *name);
 void      np_free_resolution(np_resolve_result_t *result);
 

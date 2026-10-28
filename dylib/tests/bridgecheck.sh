@@ -62,6 +62,8 @@ is "the launch goes on past staging" reached "$(cat "$work/out")"
 is "every file is copied" 6 "$(staged)"
 is "the ARM64 unix library is staged beside the DLL" "aarch64-unix bridge" "$(cat "$steam/lsteamclient.so" 2>/dev/null)"
 unlogged "nothing claims to be staged already" "=== bridge already staged ==="
+is "the prefix has system32/config, which Steam's CEG survey looks up" yes \
+	"$([ -d "$prefix/drive_c/windows/system32/config" ] && echo yes || echo no)"
 
 echo "== a second launch copies nothing"
 stage

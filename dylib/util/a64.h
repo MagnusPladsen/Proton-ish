@@ -17,6 +17,31 @@ static inline int a64_ldr_uimm(uint32_t w, int wide, uint32_t *rn, uint32_t *rt,
     return 1;
 }
 
+// LDRB Wt,[Xn,#imm], unsigned offset.
+static inline int a64_ldrb_uimm(uint32_t w, uint32_t *rn, uint32_t *rt, uint32_t *off) {
+    if ((w & 0xFFC00000u) != 0x39400000u) return 0;
+    *rt  = w & 0x1Fu;
+    *rn  = (w >> 5) & 0x1Fu;
+    *off = (w >> 10) & 0xFFFu;
+    return 1;
+}
+
+// TBZ/TBNZ Rt,#bit.
+static inline int a64_tbz(uint32_t w, uint32_t *rt, uint32_t *bit) {
+    if ((w & 0x7E000000u) != 0x36000000u) return 0;
+    *rt  = w & 0x1Fu;
+    *bit = ((w >> 26) & 0x20u) | ((w >> 19) & 0x1Fu);
+    return 1;
+}
+
+// MOV Xd,Xm, which assembles as ORR Xd,XZR,Xm.
+static inline int a64_mov(uint32_t w, uint32_t *rd, uint32_t *rm) {
+    if ((w & 0xFFE0FFE0u) != 0xAA0003E0u) return 0;
+    *rd = w & 0x1Fu;
+    *rm = (w >> 16) & 0x1Fu;
+    return 1;
+}
+
 // ADD Xd,Xn,#imm without the 12-bit shift.
 static inline int a64_add_imm(uint32_t w, uint32_t *rd, uint32_t *rn, uint32_t *imm) {
     if ((w & 0xFFC00000u) != 0x91000000u) return 0;

@@ -31,6 +31,7 @@ SRCS := \
 	dylib/util/log.c \
 	dylib/util/file.c \
 	dylib/util/peicon.c \
+	dylib/util/pe.c \
 	dylib/hooks/hooks.c \
 	dylib/hooks/hook_compat.c \
 	dylib/hooks/hook_shortcut.c \
@@ -41,6 +42,8 @@ SRCS := \
 	dylib/hooks/hook_spawn.c \
 	dylib/hooks/hook_launch.c \
 	dylib/hooks/hook_activate.c \
+	dylib/hooks/hook_ceg.c \
+	dylib/feats/ceg.c \
 	dylib/feats/compat.c \
 	dylib/feats/webui.c \
 	dylib/feats/compatsvc.c \
@@ -69,10 +72,11 @@ OBJS := $(patsubst %.c,$(OUT_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
 .PHONY: all clean rebuild dobby deploy dylib dylib-install sigcheck fonts fonts-install app-payload app app-zip \
-        anchorcheck callscheck sigdb-fixtures webpatch-fixtures peicon-fixtures panel-behavior app-tests \
+        anchorcheck callscheck sigdb-fixtures webpatch-fixtures peicon-fixtures ceg-check panel-behavior app-tests \
+        featcheck featstagecheck \
         tests-list overlay-shim overlay-shim-install overlay-shim-tests \
         overlay-shim-bench iconmaker icon \
-        appinfo helpers-install ntdll-resolve bridge runcheck compatcheck \
+        appinfo helpers-install ntdll-resolve bridge runcheck compatcheck envpasscheck \
         compatsvc-check prefixstate-check defaults-check compatpage-check defaults-drift shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck launch-shell activatecheck FORCE
 
 APP_PAYLOAD := app/Sources/NotProtonApp/Resources/payload
@@ -132,6 +136,16 @@ bridgecheck:
 	@if [ ! -f dylib/tests/bridgecheck.sh ]; then $(call SKIP,bridgecheck,dylib/tests/bridgecheck.sh); exit 0; fi; \
 	sh dylib/tests/bridgecheck.sh dylib/feats/compat_run.sh
 
+envpasscheck:
+	@if [ ! -f dylib/tests/envpasscheck.sh ]; then \
+		$(call SKIP,envpasscheck,dylib/tests/envpasscheck.sh); exit 0; fi; \
+	sh dylib/tests/envpasscheck.sh dylib/feats/compat_run.sh
+
+featstagecheck:
+	@if [ ! -f dylib/tests/featstagecheck.sh ]; then \
+		$(call SKIP,featstagecheck,dylib/tests/featstagecheck.sh); exit 0; fi; \
+	sh dylib/tests/featstagecheck.sh dylib/feats/compat_run.sh
+
 gamedrivecheck:
 	@if [ ! -f dylib/tests/gamedrivecheck.sh ]; then $(call SKIP,gamedrivecheck,dylib/tests/gamedrivecheck.sh); exit 0; fi; \
 	sh dylib/tests/gamedrivecheck.sh dylib/feats/compat_run.sh
@@ -148,7 +162,7 @@ mincheck:
 l10ncheck:
 	@bin=$$(swift build --package-path app -c release --show-bin-path); \
 	python3 dylib/tests/l10ncheck.py app/Sources/NotProtonApp/Resources/Localization/Localizable.xcstrings \
-		"$$bin/../../Intermediates.noindex/NotProtonApp.build/$$(basename "$$bin")" zh-Hans it
+		"$$bin/../../Intermediates.noindex/NotProtonApp.build/$$(basename "$$bin")" zh-Hans it de fr
 
 # runcheck owns compat_run.sh, whose warnings wait for a change that can move
 # the embedded __text baseline
@@ -284,9 +298,10 @@ sigdb-fixtures:
 
 PEICON_CHECK := $(OUT_DIR)/peicon-check
 
-$(PEICON_CHECK): dylib/tests/peicon-check.c dylib/util/peicon.c dylib/util/peicon.h
+$(PEICON_CHECK): dylib/tests/peicon-check.c dylib/util/peicon.c dylib/util/peicon.h \
+                 dylib/util/pe.c dylib/util/pe.h
 	@mkdir -p $(dir $@)
-	$(TEST_CC) -O1 -o $@ dylib/tests/peicon-check.c dylib/util/peicon.c
+	$(TEST_CC) -O1 -o $@ dylib/tests/peicon-check.c dylib/util/peicon.c dylib/util/pe.c
 
 peicon-fixtures:
 	@if [ ! -f dylib/tests/peicon-check.c ]; then \
@@ -299,7 +314,22 @@ peicon-fixtures:
 		echo "peicon-check ran out of time, so a hostile resource tree is unbounded"; fi; \
 	exit $$rc
 
+CEG_CHECK := $(OUT_DIR)/ceg-check
+CEG_CHECK_SRCS := dylib/tests/ceg-check.c dylib/feats/ceg.c dylib/util/pe.c dylib/util/file.c \
+                  dylib/util/log.c
+
+$(CEG_CHECK): $(CEG_CHECK_SRCS) dylib/feats/ceg.h dylib/util/a64.h dylib/util/pe.h dylib/util/file.h \
+              dylib/util/spawn.h
+	@mkdir -p $(dir $@)
+	$(TEST_CC) -O1 -fsanitize=address,undefined -fno-sanitize-recover=all \
+	  -DNP_CEG_CALL_TIMEOUT_S=2 -o $@ $(CEG_CHECK_SRCS)
+
+ceg-check:
+	@if [ ! -f dylib/tests/ceg-check.c ]; then $(call SKIP,ceg-check,dylib/tests/ceg-check.c); exit 0; fi; \
+	$(MAKE) -s $(CEG_CHECK) && $(CEG_CHECK)
+
 GATECHECK         := $(OUT_DIR)/gatecheck
+FEATCHECK         := $(OUT_DIR)/featcheck
 WEBPATCH_FIXTURES := dylib/tests/webpatch-fixtures
 
 $(GATECHECK): dylib/tests/gatecheck.c dylib/feats/webpatch.c dylib/feats/webpatch.h
@@ -311,6 +341,16 @@ NATIVEPLATFORMCHECK := $(OUT_DIR)/nativeplatformcheck
 $(NATIVEPLATFORMCHECK): dylib/tests/nativeplatformcheck.c dylib/feats/nativeplatform.c dylib/feats/nativeplatform.h dylib/util/file.c
 	@mkdir -p $(dir $@)
 	$(TEST_CC) -O1 -DHELPER_TIMEOUT_MS=1000 -o $@ dylib/tests/nativeplatformcheck.c dylib/feats/nativeplatform.c dylib/util/file.c
+
+$(FEATCHECK): dylib/tests/featcheck.c dylib/feats/webpatch.c dylib/feats/webpatch.h
+	@mkdir -p $(dir $@)
+	$(TEST_CC) -O1 -o $@ dylib/tests/featcheck.c
+
+featcheck:
+	@if [ ! -f dylib/tests/featcheck.c ]; then \
+		$(call SKIP,featcheck,dylib/tests/featcheck.c); exit 0; fi; \
+	$(MAKE) -s $(FEATCHECK) || exit 1; \
+	$(FEATCHECK)
 
 webpatch-fixtures:
 	@if [ ! -d $(WEBPATCH_FIXTURES) ] || [ ! -f dylib/tests/gatecheck.c ]; then \
@@ -530,15 +570,17 @@ ICONMAKER := $(OUT_DIR)/iconmaker
 
 iconmaker: $(ICONMAKER)
 
-$(ICONMAKER): helpers/iconmaker.swift helpers/iconmaker.h dylib/util/peicon.c dylib/util/peicon.h helpers/shortcuts.h helpers/shortcuts.c
+$(ICONMAKER): helpers/iconmaker.swift helpers/iconmaker.h dylib/util/peicon.c dylib/util/peicon.h dylib/util/pe.c dylib/util/pe.h helpers/shortcuts.h helpers/shortcuts.c
 	@mkdir -p $(OUT_DIR)
 	$(CC) -c -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) $(AVAIL) -std=c17 -O2 \
 		-Wall -Wextra -o $(OUT_DIR)/peicon-host.o dylib/util/peicon.c
 	$(CC) -c -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) $(AVAIL) -std=c17 -O2 \
+		-Wall -Wextra -o $(OUT_DIR)/pe-host.o dylib/util/pe.c
+	$(CC) -c -arch $(ARCH) -mmacosx-version-min=$(MIN_VER) $(AVAIL) -std=c17 -O2 \
 		-Wall -Wextra -o $(OUT_DIR)/shortcuts-host.o helpers/shortcuts.c
 	swiftc -O -target $(ARCH)-apple-macos$(MIN_VER) \
 		-framework AppKit -import-objc-header helpers/iconmaker.h \
-		-o $@ helpers/iconmaker.swift $(OUT_DIR)/peicon-host.o $(OUT_DIR)/shortcuts-host.o
+		-o $@ helpers/iconmaker.swift $(OUT_DIR)/peicon-host.o $(OUT_DIR)/pe-host.o $(OUT_DIR)/shortcuts-host.o
 	@echo "==> Built $@"
 
 APPINFO := $(OUT_DIR)/appinfo
