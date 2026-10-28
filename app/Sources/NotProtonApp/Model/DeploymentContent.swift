@@ -26,6 +26,8 @@ enum DeploymentContent {
             var info = stat()
             guard lstat(destination.path(percentEncoded: false), &info) == 0,
                 info.st_mode & S_IFMT == S_IFREG else { return false }
+            // A copy that kept the download's quarantine mark is refused by Gatekeeper; installing again clears it
+            if DownloadMarkers.isQuarantined(destination) { return false }
             if executable && !FileManager.default.isExecutableFile(atPath: destination.path(percentEncoded: false)) {
                 return false
             }
