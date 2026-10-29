@@ -86,3 +86,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-28: Fix Highball settings not applying after a Homebrew install: macOS quarantined the highball-env helper. Press Repair on the Status page once if it asks.
 - 2026-10-28: NotProton c413504 merged: Steam CEG support, a Winetricks window, feature plug-ins, launch options that set any environment variable, an NTFS warning, and German and French translations.
 - 2026-10-29: NotProton 1c851b6 merged: faster game launches, and a fix for some games that use Steam's CEG copy protection.
+- 2026-10-29: highball-db 2287d1b: Highball's fixes and per-game data as of this release.
