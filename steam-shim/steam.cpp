@@ -1844,6 +1844,12 @@ int main(int argc, char *argv[])
 
         game_process = TRUE;
     }
+    else
+    {
+        /* CEG Survey nonsense */
+        set_install_paths();
+        setup_steam_files();
+    }
 
     if (argc > 1)
     {

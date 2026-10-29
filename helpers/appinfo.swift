@@ -10,6 +10,43 @@
 import Foundation
 
 let args = CommandLine.arguments
+
+func sameBundle(_ left: String, _ right: String) throws -> Bool {
+    let fm = FileManager.default
+    let a = try fm.attributesOfItem(atPath: left)
+    let b = try fm.attributesOfItem(atPath: right)
+    guard let kind = a[.type] as? FileAttributeType,
+          kind == b[.type] as? FileAttributeType else { return false }
+    switch kind {
+    case .typeSymbolicLink:
+        return try fm.destinationOfSymbolicLink(atPath: left)
+            == fm.destinationOfSymbolicLink(atPath: right)
+    case .typeDirectory:
+        let names = try fm.contentsOfDirectory(atPath: left)
+        let other = try fm.contentsOfDirectory(atPath: right)
+        // Bytes, not String: == treats NFC and NFD names as equal.
+        guard Set(names.map { Array($0.utf8) }) == Set(other.map { Array($0.utf8) }) else { return false }
+        for name in names {
+            guard try sameBundle((left as NSString).appendingPathComponent(name),
+                                 (right as NSString).appendingPathComponent(name)) else { return false }
+        }
+        return true
+    case .typeRegular:
+        guard (a[.posixPermissions] as? NSNumber) == (b[.posixPermissions] as? NSNumber) else { return false }
+        return fm.contentsEqual(atPath: left, andPath: right)
+    default:
+        throw CocoaError(.fileReadUnknown)
+    }
+}
+
+if args.count == 4, args[1] == "--same-bundle" {
+    do {
+        exit(try sameBundle(args[2], args[3]) ? 0 : 1)
+    } catch {
+        exit(2)
+    }
+}
+
 let platforms = args.count == 3 && args[2] == "--platforms"
 guard args.count == 3, platforms || UInt32(args[2]) != nil else {
     fputs("usage: appinfo <appinfo.vdf> <appid>|--platforms\n", stderr)
