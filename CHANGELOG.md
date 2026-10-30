@@ -87,3 +87,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-28: NotProton c413504 merged: Steam CEG support, a Winetricks window, feature plug-ins, launch options that set any environment variable, an NTFS warning, and German and French translations.
 - 2026-10-29: NotProton 1c851b6 merged: faster game launches, and a fix for some games that use Steam's CEG copy protection.
 - 2026-10-29: highball-db 2287d1b: Highball's fixes and per-game data as of this release.
+- 2026-10-30: highball-db 8353d29: Highball's fixes and per-game data as of this release.
