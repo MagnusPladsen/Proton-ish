@@ -89,3 +89,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-29: highball-db 2287d1b: Highball's fixes and per-game data as of this release.
 - 2026-10-30: highball-db 8353d29: Highball's fixes and per-game data as of this release.
 - 2026-10-30: highball-db 49edc58: Highball's fixes and per-game data as of this release.
+- 2026-11-01: HighballKit 0.10.23, highball-db 2596252: Highball's fixes and per-game data as of this release. Supports Highball engine r28, r29.
