@@ -1,13 +1,13 @@
 {
-  "originHash" : "069eba824f5e3f20c2bf8639bad87599e19aa5a188ed6c3779dc91413e7886d7",
+  "originHash" : "cd8786697157a2308d2a9134d2d88903b216e3357823df6c3f3f49a5a90c96c2",
   "pins" : [
     {
       "identity" : "highball",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gauthierpiarrette/highball",
       "state" : {
-        "revision" : "daa2095b9fd4abad0b9db7c57cacbd4d49a9e06e",
-        "version" : "0.10.22"
+        "revision" : "1d18a1a149957d2887270e584c636ab874569975",
+        "version" : "0.10.23"
       }
     },
     {
