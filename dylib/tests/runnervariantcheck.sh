@@ -328,7 +328,7 @@ dst   = lib/wine
 build = 26.3
 CONF
   ok "a tree carrying $f falls back" "$(resolve 'bridge')" "$base"
-  logged "and names it" "would change lib/wine/$f, which carries NotProton's Steam bridge"
+  logged "and names it" "would change lib/wine/$f, which carries Proton-ish's Steam bridge"
 done
 : > "$work/log"
 rm -rf "$work/trees/bridge"
