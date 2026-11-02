@@ -118,7 +118,7 @@ leaked=$(LC_ALL=en_US.UTF-8 CX_ROOT="$CX_ROOT" np_runtime=highball hb_block="$hb
 is "a lowercase key is ignored under a UTF-8 locale" "" "$leaked"
 
 echo "== Highball environment reaches the game =="
-hb_forward=$(sed -n '/^# Highball: forward the engine environment/,/^fi # highball forward$/p' "$SRC")
+hb_forward=$(sed -n '/^ *# Highball: forward the engine environment/,/^ *fi # highball forward$/p' "$SRC")
 [ -n "$hb_forward" ] || { echo "FAIL: Highball forwarding block not found"; exit 1; }
 np_hb_keys=" DYLD_FALLBACK_LIBRARY_PATH GST_PLUGIN_PATH"
 GST_PLUGIN_PATH=/F/gst
@@ -128,7 +128,7 @@ is "engine and runtime keys are passed with --env" \
   "--env GST_PLUGIN_PATH=/F/gst --env CX_FWD_COMPAT_GL_CTX=1 --env WINEDLLPATH_PREPEND=$CX_ROOT/renderers/dxmt/wine --env WINEUSERNAME=steamuser " \
   "$(printf '%s ' "$@")"
 # shellcheck disable=SC2016 # Match the literal script lines.
-launcher_text=$(sed -n '/^cat > "$loader_macos\/launcher" <<LAUNCHER$/,/^LAUNCHER$/p' "$SRC")
+launcher_text=$(sed -n '/^ *cat > "$loader_macos\/launcher" <<LAUNCHER$/,/^LAUNCHER$/p' "$SRC")
 case "$launcher_text" in
   *'DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export'*) ok "launcher re-exports the engine's DYLD fallback paths" ;;
   *) bad "launcher re-exports the engine's DYLD fallback paths" "a DYLD_FALLBACK case in the launcher" "none" ;;
