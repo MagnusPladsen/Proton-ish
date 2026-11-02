@@ -89,3 +89,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-29: highball-db 2287d1b: Highball's fixes and per-game data as of this release.
 - 2026-10-30: highball-db 8353d29: Highball's fixes and per-game data as of this release.
 - 2026-10-30: highball-db 49edc58: Highball's fixes and per-game data as of this release.
+- 2026-11-02: NotProton e67dd9b merged: plug-ins can be dropdowns or sliders and target specific tools, runner variants, and Game Mode for CrossOver 26.3 games.
