@@ -1,0 +1,38 @@
+name: valve 32-bit probe
+on:
+  push:
+    branches: [scratch/valve-32bit-probe]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find the 32-bit tier0_s.dll and vstdlib_s.dll in Valve's packages
+        run: |
+          set -u
+          for base in https://client-update.akamai.steamstatic.com https://media.steampowered.com/client; do
+            curl -fsS -o win64.manifest "$base/steam_client_win64" && break
+          done
+          for base in https://client-update.akamai.steamstatic.com https://media.steampowered.com/client; do
+            curl -fsS -o win32.manifest "$base/steam_client_win32" && break
+          done
+          echo "== win64 manifest packages"; grep -E '"(file|zipvz|sha2|size)"|^\s*"[a-z_0-9]+"$' win64.manifest | head -80 || true
+          echo "== win32 manifest packages"; grep -E '"(file|zipvz|sha2|size)"|^\s*"[a-z_0-9]+"$' win32.manifest | head -80 || true
+          probe() {
+            name=$1
+            for base in https://client-update.akamai.steamstatic.com https://media.steampowered.com/client; do
+              curl -fsS -o "$name" "$base/$name" && break
+            done
+            [ -s "$name" ] || { echo "!! could not fetch $name"; return; }
+            echo "== $name sha256 $(sha256sum "$name" | cut -d' ' -f1)"
+            unzip -l "$name" | grep -iE 'tier0_s|vstdlib_s|steamclient' || echo "   (no tier0/vstdlib/steamclient)"
+            rm -rf x && mkdir x && unzip -q -o "$name" -d x 2>/dev/null || true
+            find x -iname 'tier0_s*.dll' -o -iname 'vstdlib_s*.dll' | while read -r f; do
+              echo "   file ${f#x/} $(sha256sum "$f" | cut -d' ' -f1) $(file -b "$f" | cut -c1-60)"
+            done
+          }
+          probe bins_win64.zip.36f5d9202e79ab2aa3e3c5902e84bbd799d31fc0
+          for m in win64 win32; do
+            for z in $(grep -oE '"file"\s+"[^"]+"' $m.manifest | sed -E 's/.*"([^"]+)"$/\1/' | grep -iE '^bins' ); do
+              echo "== $m package $z"; probe "$z"
+            done
+          done
