@@ -91,3 +91,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-10-30: highball-db 49edc58: Highball's fixes and per-game data as of this release.
 - 2026-11-01: HighballKit 0.10.23, highball-db 2596252: Highball's fixes and per-game data as of this release. Supports Highball engine r28, r29.
 - 2026-11-02: NotProton e67dd9b merged: plug-ins can be dropdowns or sliders and target specific tools, runner variants, and Game Mode for CrossOver 26.3 games.
+- 2026-11-02: highball-db ecc333f: Highball's fixes and per-game data as of this release.
