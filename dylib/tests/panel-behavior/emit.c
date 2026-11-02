@@ -54,7 +54,17 @@ int main(int argc, char **argv) {
         }
         np_webpatch_set_renderer_gaps(gaps[0], counts[0], gaps[1], counts[1]);
         if (data) set_sample_data();
+        // NP_TEST_TOOLS is the set NotProton installed: the panel is only for those.
+        const char *ours[NP_WEBPATCH_FEX_TOOLS_MAX];
+        char tools[1024];
+        size_t nours = 0;
+        snprintf(tools, sizeof(tools), "%s", getenv("NP_TEST_TOOLS") ? getenv("NP_TEST_TOOLS") : "");
+        for (char *tok = strtok(tools, ","); tok && nours < NP_WEBPATCH_FEX_TOOLS_MAX;
+             tok = strtok(NULL, ","))
+            ours[nours++] = tok;
+        np_webpatch_set_tool_builds(ours, ours, ours, nours);
         np_webpatch_set_features(getenv("NP_TEST_READY"), getenv("NP_TEST_FEATS"));
+        np_webpatch_set_variants(getenv("NP_TEST_VARS"));
         put_panel(strncmp(form, "component", 9) == 0 ? NP_CX_OPTIONS_COMPONENT
                                                      : NP_CX_OPTIONS_STATEMENT);
         return 0;
