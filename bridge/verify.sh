@@ -159,6 +159,7 @@ $(find "$pfx" -type f \
     \( -name lsteamclient.dll -o -name lsteamclient.so \
     -o -name steamclient.dll -o -name steamclient64.dll \
     -o -name tier0_s64.dll -o -name vstdlib_s64.dll \
+    -o -name tier0_s.dll -o -name vstdlib_s.dll \
     -o -name steam.exe \) 2>/dev/null)
 STRAYS
     done

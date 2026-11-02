@@ -17,3 +17,5 @@ file     steamclient.dll                         linux  legacycompat/steamclient
 file     steamclient64.dll                       linux  steamclient64.dll                       caba4826aa3501039d095aee1843a6bfb270fb43a3ab4455b2d6733223579fee
 file     tier0_s64.dll                           win64  tier0_s64.dll                           30f7bb8d9b86006852493c26124ba253bd9e7ffd40a8b3c7254f86a9032c3be3
 file     vstdlib_s64.dll                         win64  vstdlib_s64.dll                         99efb4c2ad47f90c803b5ee0bd6424916b28facb9fa2568845b1b1f58a36062a
+file     tier0_s.dll                             win64  tier0_s.dll                             562b2b47b7a724daa846c2a265b1129b590b28812b84e939068d0730a7815133
+file     vstdlib_s.dll                           win64  vstdlib_s.dll                           1d8872989be4bfa482ffe6c1c0221221c37957ac9e1a099000e92810c808a510

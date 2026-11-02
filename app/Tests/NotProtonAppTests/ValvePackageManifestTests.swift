@@ -10,8 +10,8 @@ struct ValvePackageManifestTests {
     func shippedManifestIsComplete() throws {
         let manifest = try ValvePackageManifest.bundled()
 
-        // Ten files out of two packages, over three hosts that serve identical bytes.
-        #expect(manifest.files.count == 10)
+        // Twelve files out of two packages, over three hosts that serve identical bytes.
+        #expect(manifest.files.count == 12)
         #expect(manifest.packages.count == 2)
         #expect(manifest.bases.count == 3)
 
@@ -72,12 +72,13 @@ struct ValvePackageManifestTests {
     func innerPathsAreDeduplicated() throws {
         let manifest = try ValvePackageManifest.bundled()
 
-        // Six of the ten come from the Linux package under legacycompat, and two are also staged
+        // Six of the twelve come from the Linux package under legacycompat, and two are also staged
         // at the bridge root, so eight bridge paths resolve to six entries in that archive.
         let linux = manifest.files.filter { $0.package == "linux" }
         #expect(linux.count == 8)
         #expect(manifest.innerPaths(package: "linux").count == 6)
-        #expect(manifest.innerPaths(package: "win64").count == 2)
+        // The other four, both libraries in their 32-bit and 64-bit builds, come from win64.
+        #expect(manifest.innerPaths(package: "win64").count == 4)
     }
 
     @Test("Row kinds parse into their own collections")
