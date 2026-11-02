@@ -39,12 +39,25 @@ enum RunnerStore {
         return .unpatched(builds: unpatched, problems: problems)
     }
 
+    // compat_run.sh assembles variant runners as <runtime>-<build>+<names>@<hash>, with its scratch
+    // and lock beside them as hidden .<runtime>-<build>+<names>*, and no build id holds a "+".
+    static func variantEntries(ofBuild build: String, in runners: URL) -> [URL] {
+        let entries = (try? FileManager.default.contentsOfDirectory(
+            at: runners, includingPropertiesForKeys: nil)) ?? []
+        let stems = RuntimeKind.allCases.map { "\($0.rawValue)-\(build)+" }
+        return entries.filter { entry in
+            let name = entry.lastPathComponent
+            return stems.contains { name.hasPrefix($0) || name.hasPrefix(".\($0)") }
+        }
+    }
+
     static func clonedBuilds(in runners: URL = SupportPaths.runners) -> [String] {
         let fm = FileManager.default
         let entries = (try? fm.contentsOfDirectory(at: runners, includingPropertiesForKeys: nil)) ?? []
         let prefixes = RuntimeKind.allCases.map { "\($0.rawValue)-" }
         return entries
             .map(\.lastPathComponent)
+            .filter { !$0.contains("+") }
             .compactMap { name in prefixes.first(where: name.hasPrefix).map { String(name.dropFirst($0.count)) } }
             .sorted()
     }
