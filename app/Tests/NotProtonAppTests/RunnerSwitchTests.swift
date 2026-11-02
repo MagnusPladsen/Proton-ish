@@ -672,7 +672,7 @@ struct RunnerRemovalTests {
         #expect(cache?.contains("$(dirname \"$STEAM_COMPAT_DATA_PATH\")/\(SupportPaths.prefixTemplateFolder)\"") == true)
         let template = script.split(separator: "\n").first { $0.contains("template_dir=\"") }
         #expect(template?.contains("template_dir=\"$template_cache/$runner_id$np_variant_key\"") == true)
-        #expect(script.contains("np_variant_key=${np_v_stem##*/crossover-\"$np_build\"}"))
+        #expect(script.contains("np_variant_key=${np_v_stem##*/\"$np_runtime\"-\"$np_build\"}"))
         let names = ["x86_64-unix", "aarch64-unix"].map { arch in
             expression.replacingOccurrences(of: "$np_runtime", with: "crossover")
                 .replacingOccurrences(of: "$np_build", with: "27.0.0.40921-fex")
