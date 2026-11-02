@@ -10,8 +10,8 @@ struct ValvePackageManifestTests {
     func shippedManifestIsComplete() throws {
         let manifest = try ValvePackageManifest.bundled()
 
-        // Ten files out of two packages, over three hosts that serve identical bytes.
-        #expect(manifest.files.count == 10)
+        // Twelve files out of two packages, over three hosts that serve identical bytes.
+        #expect(manifest.files.count == 12)
         #expect(manifest.packages.count == 2)
         #expect(manifest.bases.count == 3)
 
