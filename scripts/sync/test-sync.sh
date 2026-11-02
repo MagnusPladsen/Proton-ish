@@ -240,13 +240,19 @@ manifest() {   # dir id wine-sha minMacOS displayName
     "$2" "$4" "$5" "$3" "$3" > "$1/$2.json"
 }
 # The fork's real Makefile and Swift pins, with manifests for the revisions they pin
+# The engine pins as they stood when these tests were written. The real files grow with every
+# Highball revision Proton-ish pins, so the tests run on this frozen copy instead.
+pinned_engines="x64-crossover26.3-r19 x64-crossover26.3-r25 x64-crossover26.3-r26 x64-crossover26.3-r27"
+frozen_pins() {   # repo copy
+  cp "$here/testdata/SupportedRunner.swift" "$here/testdata/NtdllPatcher.swift" "$1/app/Sources/NotProtonApp/Model/"
+  sed -i.orig "s/^HIGHBALL_ENGINES := .*/HIGHBALL_ENGINES := $pinned_engines/" "$1/Makefile" && rm -f "$1/Makefile.orig"
+}
 pins() {
   rm -rf "$work/pin"; mkdir -p "$work/pin/scripts/sync" "$work/pin/app/Sources/NotProtonApp/Model" "$work/pin/engines"
   cp "$here"/pin-engines.sh "$here"/engine_pins.py "$work/pin/scripts/sync/"
   cp "$here/../../Makefile" "$work/pin/Makefile"
   cp "$here/../../app/Package.swift" "$work/pin/app/Package.swift"
-  cp "$here/../../app/Sources/NotProtonApp/Model/SupportedRunner.swift" "$here/../../app/Sources/NotProtonApp/Model/NtdllPatcher.swift" \
-    "$work/pin/app/Sources/NotProtonApp/Model/"
+  frozen_pins "$work/pin"
   manifest "$work/pin/engines" x64-crossover26.3-r19 wine0019 14.0 "Wine 11.0 (CrossOver 26.3) r19"
   for r in 24 25 27; do manifest "$work/pin/engines" "x64-crossover26.3-r$r" wine0024 14.0 "Wine 11.0 (CrossOver 26.3) r$r"; done
   manifest "$work/pin/engines" x64-crossover26.3-r26 wine0024 27.0 "Wine 11.0 (CrossOver 26.3) r26, D3DMetal 4.0 beta 3"
@@ -427,6 +433,7 @@ wb() {
   cp "$here"/wine_build.py "$here"/engine_pins.py "$work/wb/scripts/sync/" 2>/dev/null || :
   cp "$here/../../Makefile" "$work/wb/"; cp "$here/../../app/Package.swift" "$work/wb/app/"
   cp -R "$here/../../app/Sources/NotProtonApp/Model" "$here/../../app/Sources/NotProtonApp/Resources" "$work/wb/app/Sources/NotProtonApp/"
+  frozen_pins "$work/wb"
   engine="$work/wb-engine"; rm -rf "$engine"; mkdir -p "$engine/bin" "$engine/lib/wine/x86_64-windows" "$engine/lib/wine/i386-windows"
   printf 'a new launcher' > "$engine/bin/wine"
   printf 'a new 64-bit ntdll' > "$engine/lib/wine/x86_64-windows/ntdll.dll"
@@ -590,6 +597,7 @@ nwb() {   # [field=python-literal ...] for the 64-bit ntdll
   cp "$here/../../Makefile" "$work/nw/"; cp "$here/../../app/Package.swift" "$work/nw/app/"
   cp -R "$here/../../app/Sources/NotProtonApp/Model" "$here/../../app/Sources/NotProtonApp/Resources" "$work/nw/app/Sources/NotProtonApp/"
   cp "$here/../../ntdll-patch/resolve.py" "$here/../../ntdll-patch/apply.py" "$here/../../ntdll-patch/build-ntdll.sh" "$work/nw/ntdll-patch/"
+  frozen_pins "$work/nw"
   release_files "$work/nw"
   git_quiet -C "$work/nw" init -q && git_quiet -C "$work/nw" add -A && git_quiet -C "$work/nw" commit -q -m base
   git_quiet clone -q --bare "$work/nw" "$work/nw-origin.git"
