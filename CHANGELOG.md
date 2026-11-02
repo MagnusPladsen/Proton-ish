@@ -93,3 +93,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-02: NotProton e67dd9b merged: plug-ins can be dropdowns or sliders and target specific tools, runner variants, and Game Mode for CrossOver 26.3 games.
 - 2026-11-02: highball-db ecc333f: Highball's fixes and per-game data as of this release.
 - 2026-11-02: Fix 32-bit Steam games, such as Chrono Trigger, saying Steam must be running: the 32-bit Steam client's libraries are now set up in the prefix.
+- 2026-11-02: highball-db 0a5a344: Highball's fixes and per-game data as of this release.
