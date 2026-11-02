@@ -42,5 +42,9 @@ void np_compatpage_publish(const uint8_t *src, size_t len) {
     np_webpatch_set_renderer_gaps(
         no_d3dmetal, np_compat_tools_lacking("d3dmetal", no_d3dmetal, NP_WEBPATCH_FEX_TOOLS_MAX, gap_names[0], sizeof(gap_names[0])),
         no_dxvk, np_compat_tools_lacking("dxvk", no_dxvk, NP_WEBPATCH_FEX_TOOLS_MAX, gap_names[1], sizeof(gap_names[1])));
+    const char *tools[NP_WEBPATCH_BUILDS_MAX], *builds[NP_WEBPATCH_BUILDS_MAX];
+    const char *archs[NP_WEBPATCH_BUILDS_MAX];
+    np_webpatch_set_tool_builds(tools, builds, archs,
+        np_compat_tool_builds(tools, builds, archs, NP_WEBPATCH_BUILDS_MAX));
     if (np_webpatch_has_shape(src, len)) publish_defaults();
 }

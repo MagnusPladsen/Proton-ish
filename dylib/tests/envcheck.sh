@@ -118,7 +118,7 @@ leaked=$(LC_ALL=en_US.UTF-8 CX_ROOT="$CX_ROOT" np_runtime=highball hb_block="$hb
 is "a lowercase key is ignored under a UTF-8 locale" "" "$leaked"
 
 echo "== Highball environment reaches the game =="
-hb_forward=$(sed -n '/^# Highball: forward the engine environment/,/^fi # highball forward$/p' "$SRC")
+hb_forward=$(sed -n '/^ *# Highball: forward the engine environment/,/^ *fi # highball forward$/p' "$SRC")
 [ -n "$hb_forward" ] || { echo "FAIL: Highball forwarding block not found"; exit 1; }
 np_hb_keys=" DYLD_FALLBACK_LIBRARY_PATH GST_PLUGIN_PATH"
 GST_PLUGIN_PATH=/F/gst
@@ -128,7 +128,7 @@ is "engine and runtime keys are passed with --env" \
   "--env GST_PLUGIN_PATH=/F/gst --env CX_FWD_COMPAT_GL_CTX=1 --env WINEDLLPATH_PREPEND=$CX_ROOT/renderers/dxmt/wine --env WINEUSERNAME=steamuser " \
   "$(printf '%s ' "$@")"
 # shellcheck disable=SC2016 # Match the literal script lines.
-launcher_text=$(sed -n '/^cat > "$loader_macos\/launcher" <<LAUNCHER$/,/^LAUNCHER$/p' "$SRC")
+launcher_text=$(sed -n '/^ *cat > "$loader_macos\/launcher" <<LAUNCHER$/,/^LAUNCHER$/p' "$SRC")
 case "$launcher_text" in
   *'DYLD_FALLBACK_LIBRARY_PATH=*|DYLD_FALLBACK_FRAMEWORK_PATH=*) export'*) ok "launcher re-exports the engine's DYLD fallback paths" ;;
   *) bad "launcher re-exports the engine's DYLD fallback paths" "a DYLD_FALLBACK case in the launcher" "none" ;;
@@ -357,7 +357,7 @@ np_runtime=crossover
 library="$np_support/runners/crossover-$np_build/root/lib64/apple_gptk/external/libd3dshared.dylib"
 init=$(sed -n '/^CX_ROOT=/,/^wine_unix=/p' "$SRC")
 # shellcheck disable=SC2016 # Match the literal launcher loop.
-forward=$(sed -n '/^for name in $(env /,/^done$/p' "$SRC")
+forward=$(sed -n '/^ *for name in $(env .*CX_APPLEGPTK/,/^ *done$/p' "$SRC")
 [ -n "$init" ] && [ -n "$forward" ] || { echo "FAIL: runner environment blocks not found"; exit 1; }
 unset CX_APPLEGPTK_LIBD3DSHARED_PATH
 eval "$init"
@@ -390,7 +390,7 @@ verb=run
 eval "$defaults"
 drop_at=$(grep -n '^np_dropped=""$' "$SRC" | cut -d: -f1)
 # shellcheck disable=SC2016 # Match the literal launcher loop.
-forward_at=$(grep -n '^for name in $(env ' "$SRC" | cut -d: -f1)
+forward_at=$(grep -n '^ *for name in $(env .*CX_APPLEGPTK' "$SRC" | cut -d: -f1)
 [ "$drop_at" -lt "$forward_at" ] ||
   bad "the arm64 settings block runs before the forwarding loop" "< $forward_at" "$drop_at"
 seen() { sh -c 'env | sed -nE "s/^(CX_GRAPHICS_BACKEND|D3DM_[A-Z0-9_]*|DXMT_[A-Z0-9_]*|ROSETTA_[A-Z0-9_]*)=.*/\1/p" | sort | tr "\n" " "'; }

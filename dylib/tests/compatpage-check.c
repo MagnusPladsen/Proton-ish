@@ -40,6 +40,11 @@ void np_webpatch_set_renderer_gaps(const char *const *no_d3dmetal, size_t d3dmet
     snprintf(g_no_d3dmetal, sizeof g_no_d3dmetal, "%s", d3dmetal_count ? no_d3dmetal[0] : "");
     snprintf(g_no_dxvk, sizeof g_no_dxvk, "%s", dxvk_count ? no_dxvk[0] : "");
 }
+size_t np_compat_tool_builds(const char **names, const char **builds, const char **archs, size_t max) {
+    return 0;
+}
+void np_webpatch_set_tool_builds(const char *const *names, const char *const *builds,
+                                 const char *const *archs, size_t count) {}
 
 static int g_shape;
 int np_webpatch_has_shape(const uint8_t *src, size_t len) { return g_shape; }
