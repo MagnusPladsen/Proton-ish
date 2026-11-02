@@ -372,6 +372,8 @@ enum NtdllPatcher {
         "x64-crossover26.3-r25": highballBuild0024,
         "x64-crossover26.3-r26": highballBuild0024,
         "x64-crossover26.3-r27": highballBuild0024,
+        "x64-crossover26.3-r28": highballBuild0024,
+        "x64-crossover26.3-r29": highballBuild0024,
     ]
 
     // Highball engine build 0024, the Wine in r25, r26 and r27: r19's hooks and payloads, new image hashes
