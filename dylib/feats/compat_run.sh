@@ -2762,7 +2762,8 @@ link_legacy_steam_dll() {
   fi
 }
 
-bridge_files="steamclient64.dll steamclient.dll tier0_s64.dll vstdlib_s64.dll"
+# steamclient.dll, the 32-bit client, loads tier0_s.dll and vstdlib_s.dll; steamclient64.dll their _s64 pair
+bridge_files="steamclient64.dll steamclient.dll tier0_s64.dll vstdlib_s64.dll tier0_s.dll vstdlib_s.dll"
 bridge_files="$bridge_files lsteamclient.dll lsteamclient.so steam.exe"
 # A clone cannot cross drives, so a prefix on another drive clones from a copy of the
 # bridge kept beside that drive's templates.

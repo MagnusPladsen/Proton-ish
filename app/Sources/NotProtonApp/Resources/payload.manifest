@@ -12,6 +12,8 @@ valve    steamclient.dll
 valve    steamclient64.dll
 valve    tier0_s64.dll
 valve    vstdlib_s64.dll
+valve    tier0_s.dll
+valve    vstdlib_s.dll
 valve    legacycompat/GameOverlayRenderer64.dll
 valve    legacycompat/Steam.dll
 valve    legacycompat/SteamService.exe

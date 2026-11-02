@@ -10,10 +10,10 @@ struct PayloadManifestTests {
     func shippedManifestIsComplete() throws {
         let manifest = try PayloadManifest.bundled()
 
-        #expect(manifest.entries.count == 20)
+        #expect(manifest.entries.count == 22)
         #expect(manifest.paths(origin: .built).count == 7)
         #expect(manifest.paths(origin: .patched).count == 3)
-        #expect(manifest.paths(origin: .valve).count == 10)
+        #expect(manifest.paths(origin: .valve).count == 12)
 
         // Every payload file is fetchable from Valve or produced here, which is what dropping
         // the steam_api pair bought. A fourth origin would mean a file with no way to get it.
@@ -91,8 +91,8 @@ struct PayloadInspectionTests {
         let fex = try #require(SupportedRunners.all.first { $0.flavor == "fex" })
         let state = PayloadInspector.inspect(bridge: bridge, builds: [fex])
         #expect(state.manifestProblem == nil)
-        #expect(state.expected == 20)
-        #expect(state.present == 10)
+        #expect(state.expected == 22)
+        #expect(state.present == 12)
         #expect(state.missing(origin: .valve).isEmpty)
         #expect(state.missing(origin: .built).count == 7)
         #expect(state.missing(origin: .patched).count == 3)
