@@ -98,3 +98,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-03: highball-db cf7466b: Highball's fixes and per-game data as of this release.
 - 2026-11-03: NotProton 4df944f merged: a DXMT frame rate limit, a Launch Executable picker on the Compatibility page, and fixed icons for some games.
 - 2026-11-03: Fix 32-bit Steam games, such as Chrono Trigger, saying Steam must be running on Highball: the 32-bit Steam client is now handed to Proton-ish's Steam bridge.
+- 2026-11-03: highball-db f0bf6a2: Highball's fixes and per-game data as of this release.
