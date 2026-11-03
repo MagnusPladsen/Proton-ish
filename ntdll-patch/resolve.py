@@ -60,7 +60,7 @@ PINNED = {
     'e0c057cfd6d12bb62df58b7f71cfcf9a07704b4ffd1095442e784eea3f3f0bd2':
         {'hookRVA': 0x453d0, 'stolen': 'f64510017526', 'caveRVA': 0xaf000, 'caveSize': 4096,
          'resume': 0x453d6, 'wm': 'ebx', 'load_path': -0x3c,
-         'payload': 'a57199071c12bc80c2e5d4fb5740d09753a74127c10dfa8111dc41d5eb9cfe62',
+         'payload': '811631f8deb73fbad490d47ef53cc5a0a11a2bf11eb0988ccf4c51473a45fe1b',
          'exports': {'LdrGetDllHandle': 0x7bc12900, 'LdrLoadDll': 0x7bc134a0,
                      'NtProtectVirtualMemory': 0x7bc0d584, 'NtOpenFile': 0x7bc0d3b4,
                      'NtReadFile': 0x7bc0d0e4, 'NtClose': 0x7bc0d174}},
@@ -74,7 +74,7 @@ PINNED = {
     '54137f366a4f15403d9eecbbf3ce575b3129251e2eebdad125b55bd4b532e5ce':
         {'hookRVA': 0x453d0, 'stolen': 'f64510017526', 'caveRVA': 0xaf000, 'caveSize': 4096,
          'resume': 0x453d6, 'wm': 'ebx', 'load_path': -0x3c,
-         'payload': 'a57199071c12bc80c2e5d4fb5740d09753a74127c10dfa8111dc41d5eb9cfe62',
+         'payload': '811631f8deb73fbad490d47ef53cc5a0a11a2bf11eb0988ccf4c51473a45fe1b',
          'exports': {'LdrGetDllHandle': 0x7bc12900, 'LdrLoadDll': 0x7bc134a0,
                      'NtProtectVirtualMemory': 0x7bc0d584, 'NtOpenFile': 0x7bc0d3b4,
                      'NtReadFile': 0x7bc0d0e4, 'NtClose': 0x7bc0d174}},

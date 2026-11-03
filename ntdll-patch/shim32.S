@@ -10,8 +10,14 @@ shim_entry32:
 delta_ref:
     pop     ecx
     sub     ecx, offset delta_ref       // ecx = load base, preferred base
+#if WM_IS_EBX
+    // wm lives in ebx, so it has to be copied out before ebx takes the frame pointer
+    mov     esi, WM_REG                 // wm 
+    mov     ebx, ebp                    // fp; ebx/esi survive the cdecl call 
+#else
     mov     ebx, ebp                    // fp; ebx/esi survive the cdecl call 
     mov     esi, WM_REG                 // wm 
+#endif
     mov     edi, esp                    // pre-align esp, for an exact restore 
     and     esp, -16
     sub     esp, 0x30                   // [esp+0x00..0x0B] args, [esp+0x0C..0x27] ctx 

@@ -22,8 +22,9 @@ CFLAGS="-Os -fno-asynchronous-unwind-tables -ffreestanding -fno-stack-protector 
 # shellcheck disable=SC2086 # CFLAGS carries several flags and has to split
 "$CC" -c $CFLAGS detour32.c -o detour32_c.o \
   "-DFLAGS_SLOT=$NP_FLAGS_SLOT" "-DFLAGS_BIT=$NP_FLAGS_BIT" "-DLOAD_PATH_SLOT=$NP_LOAD_PATH"
+[ "$NP_WM" = ebx ] && wm_is_ebx=1 || wm_is_ebx=0
 "$CC" -c -x assembler-with-cpp shim32.S -o shim32.o \
-  "-DWM_REG=$NP_WM" "-DSTOLEN_HEAD_BYTES=$NP_STOLEN_HEAD_BYTES" \
+  "-DWM_REG=$NP_WM" "-DWM_IS_EBX=$wm_is_ebx" "-DSTOLEN_HEAD_BYTES=$NP_STOLEN_HEAD_BYTES" \
   "-DSTOLE_BRANCH=${NP_STOLE_BRANCH:-0}"
 "$LD" -T link32.ld shim32.o detour32_c.o -o detour32_linked.elf \
   --defsym "CAVE_VA=$NP_PAYLOAD_VA" \
