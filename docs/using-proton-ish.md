@@ -61,6 +61,10 @@ A Steam client update can break Proton-ish until Proton-ish catches up; the Stat
 Set a default tool under **Steam → Settings → Compatibility**, and override it per game under the game's
 **Properties → Compatibility**. A Rosetta tool is the safer default; FEX is worth trying per game.
 
+Under a Proton-ish tool, that Compatibility page also holds the game's own settings: the graphics backend, MetalFX
+upscaling, a **DXMT Frame Rate Limit**, and **Launch Executable**, which starts another `.exe` or `.bat` than the one
+Steam launches (a mod launcher, say), optionally from another folder.
+
 ## Good to know
 
 - **Native macOS versions win.** If a game has a macOS version, Steam installs and runs that. To get the Windows
