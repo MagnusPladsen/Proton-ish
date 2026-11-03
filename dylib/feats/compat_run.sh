@@ -83,7 +83,7 @@ resolve_icon() {
   fi
   # Capsule art (horrible) fallback if no icon at all exists...
   if [ -z "$art" ]; then
-    for name in library_600x900.jpg header.jpg; do
+    for name in library_600x900.jpg library_capsule.jpg library_header.jpg header.jpg; do
       found=$(find "$art_dir" -name "$name" 2>/dev/null | head -1)
       [ -n "$found" ] && { art="$found"; break; }
     done
@@ -114,6 +114,11 @@ resolve_icon() {
       # guard on every launch, so drop it to force a clean fetch next time.
       rm -f "$ico"
       echo "discarded unreadable client icon $meta_clienticon" >> "$log" 2>&1 || true
+      clienticon=$meta_clienticon
+      meta_clienticon=""
+      resolve_icon
+      icon_status=$?
+      meta_clienticon=$clienticon
     fi
   fi
   set -e
@@ -1047,10 +1052,44 @@ if [ "$verb" = waitforexitandrun ] && [ -f "$np_defaults_file" ] && [ -r "$np_de
         [ "${wine_unix##*/}" = aarch64-unix ] || continue ;;
       MTL_HUD_ENABLED=[01] | DXMT_ENABLE_NVEXT=[01] | DXMT_METALFX_SPATIAL_SWAPCHAIN=[01] | \
       WINEMSYNC=[01] | NOTPROTON_RETINA=[01] | NOTPROTON_RAW_CONTROLLERS=[01] | NOTPROTON_DISABLE_HIDRAW=[01]) ;;
+      DXMT_CONFIG=*\;*)
+        dxmt_added=""
+        old_ifs=$IFS; IFS=";"
+        set -f
+        for clause in $value; do
+          case "$clause" in d3d11.metalSpatialUpscaleFactor=*)
+            case "${clause#*=}" in 1.5 | 1.72 | 2.0 | 3.0) ;; *) continue ;; esac
+            if ! printf '%s' "${DXMT_CONFIG-}" | tr ';' '\n' \
+              | grep -q '^[[:space:]]*d3d11\.metalSpatialUpscaleFactor[[:space:]]*='; then
+              export DXMT_CONFIG="${DXMT_CONFIG:+$DXMT_CONFIG;}$clause"
+              dxmt_added="${dxmt_added:+$dxmt_added;}$clause"
+            fi ;;
+          d3d11.preferredMaxFrameRate=*)
+            case "${clause#*=}" in 30 | 40 | 60 | 120 | 144) ;; *) continue ;; esac
+            if ! printf '%s' "${DXMT_CONFIG-}" | tr ';' '\n' \
+              | grep -q '^[[:space:]]*d3d11\.preferredMaxFrameRate[[:space:]]*='; then
+              export DXMT_CONFIG="${DXMT_CONFIG:+$DXMT_CONFIG;}$clause"
+              dxmt_added="${dxmt_added:+$dxmt_added;}$clause"
+            fi ;; esac
+        done
+        set +f; IFS=$old_ifs
+        if [ -n "$dxmt_added" ]; then
+          np_defaulted="$np_defaulted${np_defaulted:+ }DXMT_CONFIG=$dxmt_added"
+        fi
+        continue ;;
       DXMT_CONFIG=d3d11.metalSpatialUpscaleFactor=*)
         case "${value#*=}" in 1.5 | 1.72 | 2.0 | 3.0) ;; *) continue ;; esac
         if printf '%s' "${DXMT_CONFIG-}" | tr ';' '\n' \
           | grep -q '^[[:space:]]*d3d11\.metalSpatialUpscaleFactor[[:space:]]*='; then
+          continue
+        fi
+        export DXMT_CONFIG="${DXMT_CONFIG:+$DXMT_CONFIG;}$value"
+        np_defaulted="$np_defaulted${np_defaulted:+ }$line"
+        continue ;;
+      DXMT_CONFIG=d3d11.preferredMaxFrameRate=*)
+        case "${value#*d3d11.preferredMaxFrameRate=}" in 30 | 40 | 60 | 120 | 144) ;; *) continue ;; esac
+        if printf '%s' "${DXMT_CONFIG-}" | tr ';' '\n' \
+          | grep -q '^[[:space:]]*d3d11\.preferredMaxFrameRate[[:space:]]*='; then
           continue
         fi
         export DXMT_CONFIG="${DXMT_CONFIG:+$DXMT_CONFIG;}$value"
