@@ -289,7 +289,7 @@ enum SupportedRunners {
             ],
             patchedNtdll: [
                 .x86_64Windows: "1238348ffd41f25a03d8dc5d0b019e6fffa789069fc15481fb30ed4fc75043bc",
-                .i386Windows: "836c05b939fcb56022f14476ce6e25ea71574a3287d1dda70f141b2a564e4da7",
+                .i386Windows: "d7baa038d87b275c2303a41ef41e32b2caef997a58438c0c90b6a6a1f6b644ce",
             ],
             tools: [
                 CompatTool(name: "protonish-highball-x64-crossover26.3-r19", flavor: .rosetta,
@@ -308,7 +308,7 @@ enum SupportedRunners {
             ],
             patchedNtdll: [
                 .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
-                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+                .i386Windows: "42226e3ec91aee673583e4564571305e8b4c3125158345f6fff51a8705ba48a8",
             ],
             tools: [
                 CompatTool(name: "protonish-highball-x64-crossover26.3-r25", flavor: .rosetta,
@@ -330,7 +330,7 @@ enum SupportedRunners {
             ],
             patchedNtdll: [
                 .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
-                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+                .i386Windows: "42226e3ec91aee673583e4564571305e8b4c3125158345f6fff51a8705ba48a8",
             ],
             tools: [
                 CompatTool(name: "protonish-highball-x64-crossover26.3-r26", flavor: .rosetta,
@@ -350,7 +350,7 @@ enum SupportedRunners {
             ],
             patchedNtdll: [
                 .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
-                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+                .i386Windows: "42226e3ec91aee673583e4564571305e8b4c3125158345f6fff51a8705ba48a8",
             ],
             tools: [
                 CompatTool(name: "protonish-highball-x64-crossover26.3-r28", flavor: .rosetta,
@@ -369,7 +369,7 @@ enum SupportedRunners {
             ],
             patchedNtdll: [
                 .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
-                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+                .i386Windows: "42226e3ec91aee673583e4564571305e8b4c3125158345f6fff51a8705ba48a8",
             ],
             tools: [
                 CompatTool(name: "protonish-highball-x64-crossover26.3-r27", flavor: .rosetta,
@@ -389,7 +389,7 @@ enum SupportedRunners {
             ],
             patchedNtdll: [
                 .x86_64Windows: "e51f33124c32f313cb41fc1343631dc0dd779cbdd6030284b57d2ead91ec9163",
-                .i386Windows: "9d204e484d626785b5a44bdca059db7d4a923b284bba4b073365bb89f501ae0c",
+                .i386Windows: "42226e3ec91aee673583e4564571305e8b4c3125158345f6fff51a8705ba48a8",
             ],
             tools: [
                 CompatTool(name: "protonish-highball-x64-crossover26.3-r29", flavor: .rosetta,
