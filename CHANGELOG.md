@@ -100,3 +100,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-03: Fix 32-bit Steam games, such as Chrono Trigger, saying Steam must be running on Highball: the 32-bit Steam client is now handed to Proton-ish's Steam bridge.
 - 2026-11-03: highball-db f0bf6a2: Highball's fixes and per-game data as of this release.
 - 2026-11-03: highball-db 84c4e32: Highball's fixes and per-game data as of this release.
+- 2026-11-04: highball-db 7be3961: Highball's fixes and per-game data as of this release.
