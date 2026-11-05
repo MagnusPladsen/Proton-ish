@@ -70,6 +70,8 @@ Steam launches (a mod launcher, say), optionally from another folder.
 - **Native macOS versions win.** If a game has a macOS version, Steam installs and runs that. To get the Windows
   version, tick **Force the use of a specific Steam Play compatibility tool** in the game's Compatibility settings
   and pick a tool. Unticking it switches back to the macOS version.
+- **The Games app.** Once a Windows game has run, it also shows up in macOS's Games app. Opening it there starts
+  it through Steam, as the Play button does, so Steam's sign-in, cloud saves and overlay still apply.
 - **No Valve Anti-Cheat.** VAC is not supported (Proton does not support it either). VAC games start in insecure
   mode and cannot join secure matchmaking.
 - **No NTFS.** Games on an NTFS volume (third-party NTFS drivers included) are not supported, as in NotProton.
