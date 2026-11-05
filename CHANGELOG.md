@@ -103,3 +103,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-04: highball-db 7be3961: Highball's fixes and per-game data as of this release.
 - 2026-11-04: highball-db c50b9bb: Highball's fixes and per-game data as of this release.
 - 2026-11-05: NotProton f050cac merged: launch Windows games from the macOS Games app, and Steam overlay fixes for native macOS games.
+- 2026-11-05: highball-db 8adc4b4: Highball's fixes and per-game data as of this release.
