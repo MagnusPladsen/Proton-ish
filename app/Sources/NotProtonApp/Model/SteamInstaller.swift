@@ -194,6 +194,7 @@ enum SteamInstaller {
 
         report(.registering)
         register(app)
+        GameTiles.refresh(launchers: support.appending(path: "launchers"), run: payload.run)
 
         let landed = SteamBundle.currentInsert(at: plist)
         guard landed == dylib.path(percentEncoded: false) else {
