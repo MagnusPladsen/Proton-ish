@@ -78,6 +78,17 @@ struct GameTuningTests {
         #expect(settings.dxvkAppConfig["game.exe"]?["dxgi.maxFrameRate"] == "60")
     }
 
+    @Test("A recipe's frame cap applies where no cap is set")
+    func recipeFrameCap() throws {
+        let recipe: [String: Any] = ["id": "game", "kind": "game", "title": "Game", "steps": [
+            ["type": "framecap", "value": 60],
+        ]]
+        let (settings, result) = try tune(data(games: [row("game", appID: 42)], recipes: [recipe]), appID: 42)
+        #expect(settings.fpsCap == 60)
+        #expect(result.notes.contains("highball-db frame cap 60"))
+        #expect(GameTuning.name(of: .frameCap(60)) == "framecap")
+    }
+
     @Test("A variable the user or run script already set is not replaced by a recipe")
     func recipeEnvironmentYields() throws {
         let recipe: [String: Any] = ["id": "game", "kind": "game", "title": "Game", "steps": [

@@ -3,5 +3,5 @@
 import HighballKit
 
 public enum HighballEnvCore {
-    public static let highballKitVersion = "0.10.23"
+    public static let highballKitVersion = "0.10.26"
 }
