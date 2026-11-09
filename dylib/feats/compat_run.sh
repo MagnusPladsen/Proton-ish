@@ -1198,7 +1198,7 @@ if [ "$verb" = waitforexitandrun ] && [ -f "$np_defaults_file" ] && [ -r "$np_de
       FEX_X87REDUCEDPRECISION=[01])
         [ "${wine_unix##*/}" = aarch64-unix ] || continue ;;
       MTL_HUD_ENABLED=[01] | DXMT_ENABLE_NVEXT=[01] | DXMT_METALFX_SPATIAL_SWAPCHAIN=[01] | \
-      WINEMSYNC=[01] | NOTPROTON_RETINA=[01] | NOTPROTON_RAW_CONTROLLERS=[01] | NOTPROTON_DISABLE_HIDRAW=[01]) ;;
+      WINEMSYNC=[01] | NOTPROTON_RETINA=[01] | NOTPROTON_RETINA_DPI=[01] | NOTPROTON_RAW_CONTROLLERS=[01] | NOTPROTON_DISABLE_HIDRAW=[01]) ;;
       DXMT_CONFIG=*\;*)
         dxmt_added=""
         old_ifs=$IFS; IFS=";"
@@ -1998,10 +1998,12 @@ winebus_lines() {
   printf '%s\r\n' '[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\WineBus]' "$hidraw_value" ''
 }
 
-# High Resolution doubles LogPixels and turning it off halves it
+# High Resolution doubles LogPixels and turning it off halves it.
+# NOTPROTON_RETINA_DPI=0 leaves it alone, since Wine shrinks the screen for games that are not DPI aware.
 plan_logpixels() {
   dpi_value=""
   new_dpi=""
+  [ "${NOTPROTON_RETINA_DPI-}" != 0 ] || return 0
   dpi_registry=/dev/null
   [ ! -f "$WINEPREFIX/user.reg" ] || dpi_registry="$WINEPREFIX/user.reg"
   read -r retina_was dpi <<EOF
