@@ -642,6 +642,14 @@ has "with the patched hashes on their own line" "^- Patched ntdll: x86_64 " "$ST
 has "and which pinned build it is patched like" "x64-crossover26.3-r27" "$STUB_LOG"
 hasnt "and opens no issue" "issue create" "$STUB_LOG"
 
+nwb
+COPYFILE_DISABLE=1 tar -czf "$STUB_DIR/wine.tar.gz" -C "$work/nw-tar" ./engine
+newbuild x64-crossover26.3-r90
+short=$(sha_of "$STUB_DIR/wine.tar.gz" | cut -c1-12)
+runnw
+has "a build that stores its paths as ./engine/... is read too" "^pr create .* --head sync/engine-$short " "$STUB_LOG"
+hasnt "without failing the job" "^exit" "$work/out"
+
 nwb hookRVA=0x484f4
 runnw
 has "a build whose constants differ becomes an issue" "^issue create .* --title Highball engine x64-crossover26.3-r90: Wine build 0025 needs new detour work" "$STUB_LOG"
