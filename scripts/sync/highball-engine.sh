@@ -90,8 +90,12 @@ got=$(wc -c < "$scratch/wine.tar.gz" | tr -d ' ')
 got=$(shasum -a 256 "$scratch/wine.tar.gz" | cut -d' ' -f1)
 [ "$got" = "$sha" ] || { echo "sync: $url has sha256 $got, its manifest says $sha" >&2; exit 1; }
 mkdir "$scratch/wine"
-tar -xzf "$scratch/wine.tar.gz" -C "$scratch/wine" \
-  "$subpath/bin/wine" "$subpath/lib/wine/x86_64-windows/ntdll.dll" "$subpath/lib/wine/i386-windows/ntdll.dll"
+extract_wine() {   # prefix the archive stores its paths under
+  tar -xzf "$scratch/wine.tar.gz" -C "$scratch/wine" \
+    "$1$subpath/bin/wine" "$1$subpath/lib/wine/x86_64-windows/ntdll.dll" "$1$subpath/lib/wine/i386-windows/ntdll.dll"
+}
+# tar matches member names as stored, and some builds store them as ./engine/... (r30, 2026-11-04)
+extract_wine "" 2> "$scratch/tar.err" || extract_wine ./ || { cat "$scratch/tar.err" >&2; exit 1; }
 # Hashed and read as the build's own files, never as whatever a link points at
 links=$(find "$scratch/wine" -type l)
 [ -z "$links" ] || { echo "sync: $url holds a symlink where its Wine files should be: ${links#"$scratch/wine/"}" >&2; exit 1; }
