@@ -108,3 +108,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-08: HighballKit 0.10.26, highball-db 3908f04: Highball's fixes and per-game data as of this release.
 - 2026-11-09: NotProton d69a6b5 merged: a Game Controllers window for each game's prefix, and a Don't Scale Windows DPI option for games that only offer low resolutions with High Resolution on.
 - 2026-11-10: highball-db b8a6763: Highball's fixes and per-game data as of this release.
+- 2026-11-11: highball-db 8f89486: Highball's fixes and per-game data as of this release.
