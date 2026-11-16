@@ -219,8 +219,8 @@ async function buildCases(form) {
        row(game('protonish-fex'), 'MSync').props.checked === true,
        'a FEX build\'s set beats the FEX defaults only for that build');
   {
-    const ga = panel(emit, form, g, { fexTools: FEX_TOOLS.concat('notproton-26.1-fex', 'arc-fex'),
-                                      tools: ['notproton-26.1', 'arc=26.1', 'arc-fex=26.1'] }).render;
+    const ga = panel(emit, form, g, { fexTools: FEX_TOOLS.concat('protonish-26.1-fex', 'arc-fex'),
+                                      tools: ['protonish-26.1', 'arc=26.1', 'arc-fex=26.1'] }).render;
     const adapter = tool => walk(ga({ details: details('%command%', { strCompatToolName: tool }) }));
     t.ok(row(adapter('arc'), 'MSync').props.checked === true &&
          row(adapter('arc-fex'), 'MSync').props.checked === false,
@@ -324,7 +324,7 @@ for (const form of Object.keys(FORMS)) {
   {
     const off = { rosetta: { ...SAVED.rosetta, NOTPROTON_GAME_MODE: '0' }, fex: SAVED.fex };
     const { render: PG, written: gw } = panel(emit, form, globalsWith(off), { fexTools: FEX_TOOLS });
-    const gm = o => row(walk(PG({ details: details(o, { strCompatToolName: 'notproton' }) })), 'Disable macOS Game Mode');
+    const gm = o => row(walk(PG({ details: details(o, { strCompatToolName: 'protonish' }) })), 'Disable macOS Game Mode');
     const gwLast = () => (gw.length ? gw[gw.length - 1].opts : '');
     t.ok(gm('%command%').props.checked === true, 'a default of 0 shows Game Mode disabled');
     gw.length = 0;
