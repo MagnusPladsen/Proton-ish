@@ -114,3 +114,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-12: highball-db 7f0c090: Highball's fixes and per-game data as of this release.
 - 2026-11-14: highball-db f75fd23: Highball's fixes and per-game data as of this release.
 - 2026-11-14: highball-db 36122a1: Highball's fixes and per-game data as of this release.
+- 2026-11-16: NotProton 47b903b merged: CrossOver Preview 20261111 support, an opt-out for macOS Game Mode, working desktop shortcuts for non-Steam games, and a fix for Steam's UI flashing at startup.
