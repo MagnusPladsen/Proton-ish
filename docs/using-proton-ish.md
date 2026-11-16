@@ -52,7 +52,7 @@ Design and roadmap: [design spec](superpowers/specs/2026-10-14-protonish-highbal
 
 In step 4 of the setup, click **Set Up** next to your CrossOver install instead of downloading Highball's engine.
 CrossOver works exactly as in NotProton. Supported: CrossOver 26.3 and the CrossOver Preview builds 20260821,
-20261006 and 20261015. Preview builds come in a Rosetta (x86) and an ARM64 variant; the ARM64 variant offers both a FEX and a
+20261006, 20261015 and 20261111. Preview builds come in a Rosetta (x86) and an ARM64 variant; the ARM64 variant offers both a FEX and a
 Rosetta compatibility tool. The Status screen shows which of your CrossOver installs can be set up.
 
 A Steam client update can break Proton-ish until Proton-ish catches up; the Status screen has a
