@@ -218,6 +218,14 @@ async function buildCases(form) {
   t.ok(row(game('protonish-26.1-fex'), 'MSync').props.checked === false &&
        row(game('protonish-fex'), 'MSync').props.checked === true,
        'a FEX build\'s set beats the FEX defaults only for that build');
+  {
+    const ga = panel(emit, form, g, { fexTools: FEX_TOOLS.concat('notproton-26.1-fex', 'arc-fex'),
+                                      tools: ['notproton-26.1', 'arc=26.1', 'arc-fex=26.1'] }).render;
+    const adapter = tool => walk(ga({ details: details('%command%', { strCompatToolName: tool }) }));
+    t.ok(row(adapter('arc'), 'MSync').props.checked === true &&
+         row(adapter('arc-fex'), 'MSync').props.checked === false,
+         'a tool that runs one of our builds shows that build\'s set for its runner');
+  }
 
   version().props.onChange({ data: 'protonish-25.0' });
   t.ok(row(h.render(page), 'High Resolution').props.checked === true,
@@ -312,6 +320,18 @@ for (const form of Object.keys(FORMS)) {
   t.ok(dropdowns(r)[1].props.selectedOption === '1.5', 'an unset upscaler shows the default factor');
   t.ok(!r.some(x => (x.type === 'Button' || x.type === 'button') && x.props.children === 'Reset to defaults'),
        'a game has no Reset to defaults');
+
+  {
+    const off = { rosetta: { ...SAVED.rosetta, NOTPROTON_GAME_MODE: '0' }, fex: SAVED.fex };
+    const { render: PG, written: gw } = panel(emit, form, globalsWith(off), { fexTools: FEX_TOOLS });
+    const gm = o => row(walk(PG({ details: details(o, { strCompatToolName: 'notproton' }) })), 'Disable macOS Game Mode');
+    const gwLast = () => (gw.length ? gw[gw.length - 1].opts : '');
+    t.ok(gm('%command%').props.checked === true, 'a default of 0 shows Game Mode disabled');
+    gw.length = 0;
+    gm('%command%').props.onChange(false);
+    t.ok(/(^|\s)NOTPROTON_GAME_MODE=1(\s|$)/.test(gwLast()), `a game turns Game Mode back on over the default (${gwLast()})`);
+    t.ok(gm('NOTPROTON_GAME_MODE=1 %command%').props.checked === false, "the game's 1 wins over the default");
+  }
 
   r = nodes('MTL_HUD_ENABLED=0 CX_GRAPHICS_BACKEND=auto %command%');
   t.ok(row(r, 'Metal HUD').props.checked === false, "the game's 0 wins over the default");
