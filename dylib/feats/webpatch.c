@@ -44,8 +44,8 @@
 // Stands for the JS array set by np_webpatch_set_fex_tools.
 #define NP_FEX_TOOLS "\022"
 // Stand for the JS arrays set by np_webpatch_set_renderer_gaps.
-#define NP_NO_D3DMETAL_TOOLS "\016"
-#define NP_NO_DXVK_TOOLS "\017"
+#define NP_NO_D3DMETAL_TOOLS "\036"
+#define NP_NO_DXVK_TOOLS "\037"
 #define NP_DEFAULTS "\027"
 #define NP_BUILDS "\030"
 // MSCXReady and MSCXFeat.
