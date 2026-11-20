@@ -178,7 +178,7 @@ enum SteamInstaller {
                 try signSteamBundle(app)
             } catch {
                 revertPlist(priorPlist, at: plist, app: app)
-                if cdhash(of: app) != priorHash { resetInputAccess() }
+                if requirement(app) != priorRequirement { resetInputAccess() }
                 throw error
             }
             let signed = requirement(app)
