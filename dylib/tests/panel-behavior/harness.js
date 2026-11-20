@@ -28,12 +28,13 @@ const barrelFor = emit => Object.fromEntries(
 const FORMS = {
   component: { react: '\u0004', barrel: '\u0005' },
   statement: { react: '\u0003', barrel: '\u0004' },
+  'statement-ui': { react: '\u0003', ui: true },
 };
 
 // `fallback`, `fexTools`, `noD3DMetal` and `noDXVK` stand in for what the hook sets before the transform.
 function panel(emit, form, globals = { document: { documentElement: { lang: 'en' } } },
                { fallback = 'protonish', fexTools = [], noD3DMetal = [], noDXVK = [], names = ['R0', 'B0'], data = false, drop = [],
-                 ready, feats, vars,
+                 ready, feats, vars, showAll,
                  // What an install would carry. The panel renders for these and no others.
                  tools = ['protonish', 'protonish-26.3', 'protonish-fex', 'protonish-fex-rosetta',
                           'protonish-rosetta', 'protonish-highball-x64-crossover26.3-r19'],
@@ -44,6 +45,7 @@ function panel(emit, form, globals = { document: { documentElement: { lang: 'en'
   if (ready !== undefined) env.NP_TEST_READY = ready;
   if (feats !== undefined) env.NP_TEST_FEATS = feats;
   if (vars !== undefined) env.NP_TEST_VARS = vars;
+  if (showAll) env.NP_TEST_SHOW_ALL = '1';
   // A build the page was given is a tool the install carries, as it is in a real one,
   // where the settings page lists a subset of what the compatibility folder holds.
   env.NP_TEST_TOOLS = [...new Set([...tools, ...(globals.MSCXBuilds || []).map(b => b && b.id),
@@ -53,7 +55,8 @@ function panel(emit, form, globals = { document: { documentElement: { lang: 'en'
   const barrel = barrelFor(emit);
   for (const n of drop) delete barrel[n];
   const f = FORMS[form];
-  const body = expand(raw, { [f.react]: names[0], [f.barrel]: names[1] });
+  const body = expand(raw, f.ui ? { [f.react]: names[0] } : { [f.react]: names[0], [f.barrel]: names[1] });
+  if (f.ui && !('MSCXUI' in globals)) globals.MSCXUI = barrel;
   const src = form === 'component' ? 'var ' + body.replace(/,$/, '') : body.replace(/;$/, '');
   const written = [];
   // A file dialog answers synchronously with the next entry in `files`, and rejects like Steam's when there is none.

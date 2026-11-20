@@ -178,6 +178,7 @@ enum SteamInstaller {
                 try signSteamBundle(app)
             } catch {
                 revertPlist(priorPlist, at: plist, app: app)
+                if requirement(app) != priorRequirement { resetInputAccess() }
                 throw error
             }
             let signed = requirement(app)
@@ -293,7 +294,8 @@ enum SteamInstaller {
         let deployed = SteamBundle.currentInsert(at: plist) == dylib.path(percentEncoded: false)
             && SteamBundle.currentControllerBlock(at: plist) == SteamBundle.controllerBlockValue
         let file = DeploymentContent.File(source: shipping, destination: dylib, name: SupportPaths.dylibName, allowsResigning: true)
-        if deployed, try file.matches() {
+        let sealed = deployed && (try? Shell.run("/usr/bin/codesign", ["--verify", app.path(percentEncoded: false)]))?.succeeded == true
+        if deployed, sealed, try file.matches() {
             AppLog.note("install: Steam already carries this dylib, installing for this account only")
             return false
         }

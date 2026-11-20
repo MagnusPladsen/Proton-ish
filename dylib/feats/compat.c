@@ -6,6 +6,7 @@
 #include "../util/ptr.h"
 
 #include <dirent.h>
+#include <mach/mach.h>
 #include <dlfcn.h>
 #include <pthread.h>
 #include <stdatomic.h>
@@ -78,6 +79,7 @@ static int ensure_dir(const char *path) {
 }
 
 static int32_t g_tool_shift;
+static int32_t g_head_shift;
 
 // LDR Wt,[X0,#imm]. Writes the byte offset and destination register.
 static int ldr32_from_x0(uint32_t w, uint32_t *off, uint32_t *rt) {
@@ -183,6 +185,11 @@ int np_compat_probe_tool_layout(uintptr_t appid_gate, uintptr_t oslist_gate) {
 
     int32_t by_appid   = (int32_t)appid_off   - COMPAT_TOOL_APPID_OFF;
     int32_t by_install = (int32_t)install_off - COMPAT_TOOL_INSTALL_OFF;
+    if (by_appid < 0) {
+        NP_ERR("np_compat_probe_tool_layout: the tool fields moved %+d, which no inserted "
+               "field explains", by_appid);
+        return 0;
+    }
     if (by_appid != by_install) {
         NP_ERR("np_compat_probe_tool_layout: appid moved %+d but install moved %+d; "
                "the tool layout no longer shifts as one block",
@@ -310,8 +317,66 @@ void *np_compat_user(const void *compat_mgr) {
 }
 
 uint32_t np_compat_tool_off(uint32_t reference_off) {
-    if (reference_off < COMPAT_TOOL_INSTALL_OFF) return reference_off;
+    if (reference_off < COMPAT_TOOL_HEAD_OFF) return reference_off;
+    if (reference_off < COMPAT_TOOL_INSTALL_OFF)
+        return (uint32_t)((int32_t)reference_off + g_head_shift);
     return (uint32_t)((int32_t)reference_off + g_tool_shift);
+}
+
+// LDR Xt,[Xn,#imm] or LDR Xt,[Xn,#imm]!. Writes the base register and the offset.
+static int ldr64_any(uint32_t w, uint32_t *base, int32_t *off) {
+    if ((w & 0xFFC00000u) == 0xF9400000u) {
+        *base = (w >> 5) & 0x1Fu;
+        *off = (int32_t)(((w >> 10) & 0xFFFu) * 8u);
+        return 1;
+    }
+    if ((w & 0xFFE00C00u) == 0xF8400C00u) {
+        int32_t imm = (int32_t)((w >> 12) & 0x1FFu);
+        *base = (w >> 5) & 0x1Fu;
+        *off = imm & 0x100 ? imm - 0x200 : imm;
+        return 1;
+    }
+    return 0;
+}
+
+int np_compat_probe_head_shift(uintptr_t yld_register_tool) {
+    if (!yld_register_tool) return 0;
+
+    const uint32_t *code = (const uint32_t *)yld_register_tool;
+    uint32_t holds = 1u << 1;
+    for (int i = 0; i < 64; i++) {
+        uint32_t w = code[i], base;
+        int32_t off;
+        if ((w & 0xFFE0FFE0u) == 0xAA0003E0u) {
+            uint32_t rd = w & 0x1Fu, rm = (w >> 16) & 0x1Fu;
+            holds = (holds & ~(1u << rd)) | ((holds >> rm & 1u) << rd);
+            continue;
+        }
+        if ((w & 0xFC000000u) == 0x94000000u || (w & 0xFFFFFC1Fu) == 0xD63F0000u) {
+            holds &= ~0x7FFFFu;
+            continue;
+        }
+        if ((w & 0x7F800000u) == 0x52800000u || (w & 0x7F800000u) == 0x12800000u) {
+            holds &= ~(1u << (w & 0x1Fu));
+            continue;
+        }
+        if (!ldr64_any(w, &base, &off) || !(holds >> base & 1u)) continue;
+
+        int32_t shift = off - COMPAT_TOOL_NAME_OFF;
+        if (shift < 0 || shift % 8 || shift > g_tool_shift) {
+            NP_ERR("np_compat_probe_head_shift: the name loads from +0x%x, which leaves the "
+                   "head %+d against a tail of %+d", (unsigned)off, shift, g_tool_shift);
+            return 0;
+        }
+        g_head_shift = shift;
+        if (shift)
+            NP_LOG("np_compat_probe_head_shift: tool fields from +0x%x to install are %+d "
+                   "from the baseline (name 0x%x)", COMPAT_TOOL_HEAD_OFF, shift, (unsigned)off);
+        return 1;
+    }
+    NP_WARN("np_compat_probe_head_shift: no name load from the tool in 0x%lx",
+            (unsigned long)yld_register_tool);
+    return 0;
 }
 
 size_t np_compat_tool_stride(void) {
@@ -723,17 +788,28 @@ const char *np_compat_tool_dir(void) {
     return g_tool_dir[0] ? g_tool_dir : NULL;
 }
 
+static int adopted(const char *name, size_t n) {
+    for (int i = 0; i < g_adopted_count; i++)
+        if (strlen(g_adopted[i].name) == n && memcmp(g_adopted[i].name, name, n) == 0) return 1;
+    return 0;
+}
+
 int np_compat_runs_tool(const char *cmd) {
-    static const char lead[]    = "/compatibilitytools.d/" TOOL_DIR_NAME;
+    static const char lead[]    = "/compatibilitytools.d/";
     static const char run[]     = "'" TOOL_RUN " ";
     static const char run_dot[] = "/.'" TOOL_RUN " ";
     if (!cmd) return 0;
 
     for (const char *at = strstr(cmd, lead); at; at = strstr(at + 1, lead)) {
-        const char *p = at + sizeof(lead) - 1;
+        const char *name = at + sizeof(lead) - 1;
+        const char *p = name;
         while (is_name_char(*p, "._-"))
             p++;
-        if (strncmp(p, run, sizeof(run) - 1) == 0 || strncmp(p, run_dot, sizeof(run_dot) - 1) == 0)
+        if (strncmp(p, run, sizeof(run) - 1) != 0 && strncmp(p, run_dot, sizeof(run_dot) - 1) != 0)
+            continue;
+        size_t n = (size_t)(p - name);
+        if ((n >= strlen(TOOL_DIR_NAME) && strncmp(name, TOOL_DIR_NAME, strlen(TOOL_DIR_NAME)) == 0)
+            || adopted(name, n))
             return 1;
     }
     return 0;
@@ -881,6 +957,47 @@ static void free_tool_paths(uint8_t *tool) {
     }
 }
 
+static int readable_name(uint64_t p) {
+    char buf[64];
+    vm_size_t got = 0;
+    if (!np_plausible_addr(p)) return 0;
+    if (vm_read_overwrite(mach_task_self(), (vm_address_t)p, sizeof(buf), (vm_address_t)buf, &got)
+        != KERN_SUCCESS || !got)
+        return 0;
+    for (vm_size_t i = 0; i < got; i++) {
+        if (!buf[i]) return i > 0;
+        if ((unsigned char)buf[i] < 0x20 || (unsigned char)buf[i] > 0x7e) return 0;
+    }
+    return 0;
+}
+
+static const uint8_t *g_checked_array;
+static uint32_t g_checked_count;
+static int g_layout_bad;
+
+static int names_readable(const uint8_t *array, uint32_t count) {
+    if (g_layout_bad) return 0;
+    if (array == g_checked_array && count == g_checked_count) return 1;
+    for (uint32_t i = 0; i < count; i++) {
+        const uint8_t *entry = array + (size_t)i * np_compat_tool_stride();
+        uint64_t p = *(const uint64_t *)(entry + np_compat_tool_off(COMPAT_TOOL_NAME_OFF));
+        if (p && !readable_name(p)) {
+            g_layout_bad = 1;
+            NP_ERR("np_compat: tool %u of %u has no readable name at +0x%x, so Proton-ish "
+                   "leaves the tool list alone", i, count, np_compat_tool_off(COMPAT_TOOL_NAME_OFF));
+            return 0;
+        }
+    }
+    g_checked_array = array;
+    g_checked_count = count;
+    return 1;
+}
+
+const char *np_compat_tool_name(const void *tool) {
+    if (!tool || g_layout_bad) return NULL;
+    return *(const char *const *)((const uint8_t *)tool + np_compat_tool_off(COMPAT_TOOL_NAME_OFF));
+}
+
 static void *g_manager;
 
 void *np_compat_manager(void) {
@@ -889,7 +1006,7 @@ void *np_compat_manager(void) {
 
 static const char *app_tool_name(uint32_t appid) {
     const uint8_t *tool = np_compat_tool_for_app(g_manager, appid);
-    const char *name = tool ? *(const char *const *)(tool + COMPAT_TOOL_NAME_OFF) : NULL;
+    const char *name = np_compat_tool_name(tool);
     return is_tool_name(name) ? name : NULL;
 }
 
@@ -923,10 +1040,11 @@ static void *find_tool(void *compat_mgr, const char *wanted) {
                    "which is not a list this reads", count, (const void *)array);
         return NULL;
     }
+    if (!names_readable(array, count)) return NULL;
 
     for (uint32_t i = 0; i < count; i++) {
         uint8_t *entry = array + (size_t)i * np_compat_tool_stride();
-        const char *name = *(const char **)(entry + COMPAT_TOOL_NAME_OFF);
+        const char *name = *(const char **)(entry + np_compat_tool_off(COMPAT_TOOL_NAME_OFF));
         if (name && strcmp(name, wanted) == 0)
             return entry;
     }
@@ -951,7 +1069,8 @@ void np_compat_register_crossover(void *compat_mgr) {
     // the registration gate, from_oslist=windows intersects the app mask so the
     // dropdown keeps it, and appid 0 marks a manager-local tool the resolver routes
     // to the local run script.
-    uint8_t (*buffers)[COMPAT_TOOL_STRIDE + 64] = calloc((size_t)g_tool_count, sizeof(*buffers));
+    size_t entry = np_compat_tool_stride() + 64;
+    uint8_t *buffers = calloc((size_t)g_tool_count, entry);
     if (g_tool_count && !buffers) {
         NP_WARN("np_compat_register_crossover: out of memory, no tool registered");
         return;
@@ -968,11 +1087,11 @@ void np_compat_register_crossover(void *compat_mgr) {
             continue;
         }
 
-        uint8_t *tool = buffers[i];
-        memset(tool, 0, sizeof(buffers[i]));
-        *(uint32_t *)(tool + COMPAT_TOOL_FLAGS_OFF)      = COMPAT_TOOL_FLAG_NO_APP;
-        *(const char **)(tool + COMPAT_TOOL_NAME_OFF)    = t->name;
-        *(const char **)(tool + COMPAT_TOOL_DISPLAY_OFF) = t->display;
+        uint8_t *tool = buffers + (size_t)i * entry;
+        memset(tool, 0, entry);
+        *(uint32_t *)(tool + np_compat_tool_off(COMPAT_TOOL_FLAGS_OFF)) = COMPAT_TOOL_FLAG_NO_APP;
+        *(const char **)(tool + np_compat_tool_off(COMPAT_TOOL_NAME_OFF))              = t->name;
+        *(const char **)(tool + np_compat_tool_off(COMPAT_TOOL_DISPLAY_OFF)) = t->display;
         *(const char **)(tool + np_compat_tool_off(COMPAT_TOOL_INSTALL_OFF)) = t->dir;
         *(uint32_t *)(tool + np_compat_tool_off(COMPAT_TOOL_APPID_OFF)) = 0;
         *(const char **)(tool + np_compat_tool_off(COMPAT_TOOL_FROM_OSLIST_OFF)) = from_oslist;

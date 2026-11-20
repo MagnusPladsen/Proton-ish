@@ -34,15 +34,18 @@
 #define NP_C10 "\024"
 #define NP_C11 "\025"
 #define NP_C12 "\026"
-#define NP_CAP_MAX 12
+#define NP_S1 "\016"
+#define NP_S2 "\017"
+#define NP_S3 "\020"
+#define NP_CAP_MAX 15
 
 // Stands for the name set by np_webpatch_set_fallback_tool.
 #define NP_FALLBACK_TOOL "\021"
 // Stands for the JS array set by np_webpatch_set_fex_tools.
 #define NP_FEX_TOOLS "\022"
 // Stand for the JS arrays set by np_webpatch_set_renderer_gaps.
-#define NP_NO_D3DMETAL_TOOLS "\016"
-#define NP_NO_DXVK_TOOLS "\017"
+#define NP_NO_D3DMETAL_TOOLS "\036"
+#define NP_NO_DXVK_TOOLS "\037"
 #define NP_DEFAULTS "\027"
 #define NP_BUILDS "\030"
 // MSCXReady and MSCXFeat.
@@ -51,16 +54,17 @@
 // Stands for the runner variants read from the support directory.
 #define NP_VARS "\033"
 #define NP_OUR_TOOLS "\034"
+#define NP_SHOW_ALL "\035"
 
 #define NP_TOOL_NAME_MAX 128
 
 #define NP_UNREAD_DEFAULTS "{rosetta:null,fex:null}"
 
 enum { IN_FALLBACK_TOOL, IN_FEX_TOOLS, IN_NO_D3DMETAL_TOOLS, IN_NO_DXVK_TOOLS, IN_DEFAULTS, IN_BUILDS,
-       IN_READY, IN_FEATS, IN_VARS, IN_OUR_TOOLS, IN_COUNT };
+       IN_READY, IN_FEATS, IN_VARS, IN_OUR_TOOLS, IN_SHOW_ALL, IN_COUNT };
 typedef struct { char *text[IN_COUNT]; } np_inputs_t;
 static const char *const g_unset[IN_COUNT] = { "", "[]", "[]", "[]", NP_UNREAD_DEFAULTS, "[]", "{}", "[]", "[]",
-                                               "[]" };
+                                               "[]", "0" };
 static pthread_key_t g_inputs_key;
 static pthread_once_t g_inputs_once = PTHREAD_ONCE_INIT;
 
@@ -114,7 +118,12 @@ static int is_ident_char(unsigned char c) {
 static int cap_index(unsigned char c) {
     if (c >= (unsigned char)NP_C1[0] && c <= (unsigned char)NP_C8[0]) return c - NP_C1[0];
     if (c >= (unsigned char)NP_C9[0] && c <= (unsigned char)NP_C12[0]) return c - NP_C9[0] + 8;
+    if (c >= (unsigned char)NP_S1[0] && c <= (unsigned char)NP_S3[0]) return c - NP_S1[0] + 12;
     return -1;
+}
+
+static int cap_char(int ci, unsigned char c) {
+    return is_ident_char(c) || (ci >= 12 && c == '-');
 }
 
 static int is_tool_name(const char *name) {
@@ -190,8 +199,10 @@ static int is_setting_key(const char *str, size_t n) {
 }
 
 static int is_setting_value(const char *str, size_t n) {
+    // ';' joins DXMT_CONFIG's clauses. It is safe inside the JS string this lands in.
     for (size_t i = 0; i < n; i++)
-        if (!is_ident_char((unsigned char)str[i]) && str[i] != '.' && str[i] != '=') return 0;
+        if (!is_ident_char((unsigned char)str[i]) && str[i] != '.' && str[i] != '='
+            && str[i] != ';') return 0;
     return 1;
 }
 
@@ -327,9 +338,9 @@ static const char *marker_text(char c) {
     if (c == NP_DEFAULTS[0]) return input_text(IN_DEFAULTS);
     if (c == NP_BUILDS[0]) return input_text(IN_BUILDS);
     if (c == NP_OUR_TOOLS[0]) return input_text(IN_OUR_TOOLS);
-    if (c == NP_READY[0] || c == NP_FEATS[0]) {
+    if (c == NP_READY[0] || c == NP_FEATS[0] || c == NP_SHOW_ALL[0]) {
         if (!g_feat_ready_done) feat_build();
-        return input_text(c == NP_READY[0] ? IN_READY : IN_FEATS);
+        return input_text(c == NP_READY[0] ? IN_READY : c == NP_FEATS[0] ? IN_FEATS : IN_SHOW_ALL);
     }
     if (c == NP_VARS[0]) {
         if (!g_var_done) var_build();
@@ -363,9 +374,9 @@ static size_t match_at(const char *src, size_t len, size_t pos,
             continue;
         }
 
-        if (s >= len || (src[s] >= '0' && src[s] <= '9')) return 0;
+        if (s >= len || (ci < 12 && src[s] >= '0' && src[s] <= '9')) return 0;
         size_t run = 0;
-        while (s + run < len && is_ident_char((unsigned char)src[s + run])) run++;
+        while (s + run < len && cap_char(ci, (unsigned char)src[s + run])) run++;
         if (run == 0) return 0;
 
         if (caps[ci].at) {
@@ -474,17 +485,42 @@ static int feat_put_list(np_out_t *o, const char *key, const np_conf_rec_t *rec,
     return out_put(o, "]", 1);
 }
 
-static void feat_build(void) {
-    const char *home = getenv("HOME");
+static int feat_put_env(np_out_t *o, const np_conf_rec_t *rec, const char *home) {
+    const char *n, *v;
+    int it = 0, wrote = 0, ok = 1;
+    if (!np_conf_get(rec, "env")) return 1;
+    if (!out_put(o, ",ev:[", 5)) return 0;
+    while (ok && np_conf_next(rec, &it, &n, &v)) {
+        const char *eq = strchr(v, '=');
+        if (strcmp(n, "env") != 0 || !eq) continue;
+        np_out_t t = { 0 };
+        const char *at = eq + 1, *hit;
+        ok = out_put(&t, v, (size_t)(at - v));
+        if (ok && home && strncmp(at, "~/", 2) == 0) { ok = out_put(&t, home, strlen(home)); at++; }
+        while (ok && home && (hit = strstr(at, "$HOME"))) {
+            ok = out_put(&t, at, (size_t)(hit - at)) && out_put(&t, home, strlen(home));
+            at = hit + 5;
+        }
+        ok = ok && out_put(&t, at, strlen(at) + 1)
+             && (!wrote++ || out_put(o, ",", 1)) && out_jsstr(o, t.buf);
+        free(t.buf);
+    }
+    return ok && out_put(o, "]", 1);
+}
+
+static int show_all_on(const char *home) {
+    char flag[1024];
+    np_support_path(flag, sizeof(flag), home, NP_SHOW_ALL_PLUGINS_FILE);
+    return access(flag, F_OK) == 0;
+}
+
+static int feat_rows(const char *home, char **ready_out, char **rows_out) {
     np_conf_rec_t *list = NULL;
     np_out_t ready = { 0 }, rows = { 0 };
-    int n = 0, wrote = 0;
+    int n = 0, wrote = 0, ok_all = 0;
 
-    g_feat_ready_done = 1;
-    set_input(IN_READY, NULL);
-    set_input(IN_FEATS, NULL);
     // 32 records of 4K each, which is too much for the stack of a thread Steam owns.
-    if (!home || !(list = calloc(NP_CONF_RECORDS_MAX, sizeof(*list)))) return;
+    if (!(list = calloc(NP_CONF_RECORDS_MAX, sizeof(*list)))) return 0;
     n = feat_load(home, list);
     if (!out_put(&ready, "{", 1) || !out_put(&rows, "[", 1)) goto done;
     for (int i = 0; i < n; i++) {
@@ -524,8 +560,9 @@ static void feat_build(void) {
         if (!out_put(&rows, ",dep:", 5) || !out_jsstr(&rows, dep ? dep : "")) goto done;
         if (!out_put(&rows, ",d:", 3) || !out_jsstr(&rows, desc ? desc : "")) goto done;
         if (!feat_put_list(&rows, ",dn:[", rec, "description_on")) goto done;
-        if (!feat_put_list(&rows, ",ev:[", rec, "env")) goto done;
+        if (!feat_put_env(&rows, rec, home)) goto done;
         if (!feat_put_list(&rows, ",tl:[", rec, "tools")) goto done;
+        if (!feat_put_list(&rows, ",ap:[", rec, "apps")) goto done;
         // What the run script would have done, for a page that has to do it itself: the
         // dylib to insert, and whether anything here only our own runner can deliver.
         if (*resolved && inj && strcmp(inj, "1") == 0) {
@@ -572,12 +609,33 @@ static void feat_build(void) {
         if (!out_put(&rows, "}", 1)) goto done;
     }
     if (!out_put(&ready, "}", 1) || !out_put(&rows, "]", 1)) goto done;
-    set_input(IN_READY, out_take(&ready));
-    set_input(IN_FEATS, out_take(&rows));
+    *ready_out = out_take(&ready);
+    *rows_out = out_take(&rows);
+    ok_all = 1;
 done:
     free(ready.buf);
     free(rows.buf);
     free(list);
+    return ok_all;
+}
+
+static void feat_build(void) {
+    const char *home = getenv("HOME");
+    char *ready, *rows;
+
+    g_feat_ready_done = 1;
+    set_input(IN_READY, NULL);
+    set_input(IN_FEATS, NULL);
+    set_input(IN_SHOW_ALL, NULL);
+    if (!home) return;
+    if (show_all_on(home)) set_input(IN_SHOW_ALL, strdup("1"));
+    if (!feat_rows(home, &ready, &rows)) return;
+    set_input(IN_READY, ready);
+    set_input(IN_FEATS, rows);
+}
+
+void np_webpatch_set_show_all(int on) {
+    set_input(IN_SHOW_ALL, strdup(on ? "1" : "0"));
 }
 
 void np_webpatch_set_features(const char *ready, const char *rows) {
@@ -607,6 +665,16 @@ static _Thread_local char g_var_build[NP_WEBPATCH_BUILDS_MAX][NP_TOOL_NAME_MAX];
 static _Thread_local char g_var_arch[NP_WEBPATCH_BUILDS_MAX][NP_TOOL_NAME_MAX];
 static _Thread_local size_t g_var_tools;
 
+typedef struct {
+    char tool[NP_WEBPATCH_BUILDS_MAX][NP_TOOL_NAME_MAX];
+    char build[NP_WEBPATCH_BUILDS_MAX][NP_TOOL_NAME_MAX];
+    char arch[NP_WEBPATCH_BUILDS_MAX][NP_TOOL_NAME_MAX];
+    size_t count;
+} var_tools_t;
+
+static pthread_mutex_t g_live_tools_lock = PTHREAD_MUTEX_INITIALIZER;
+static var_tools_t g_live_tools;
+
 void np_webpatch_set_tool_builds(const char *const *names, const char *const *builds,
                                  const char *const *archs, size_t count) {
     g_var_tools = 0;
@@ -620,6 +688,14 @@ void np_webpatch_set_tool_builds(const char *const *names, const char *const *bu
                  archs && archs[i] ? archs[i] : "");
         g_var_tools++;
     }
+    pthread_mutex_lock(&g_live_tools_lock);
+    for (size_t t = 0; t < g_var_tools; t++) {
+        memcpy(g_live_tools.tool[t], g_var_tool[t], NP_TOOL_NAME_MAX);
+        memcpy(g_live_tools.build[t], g_var_build[t], NP_TOOL_NAME_MAX);
+        memcpy(g_live_tools.arch[t], g_var_arch[t], NP_TOOL_NAME_MAX);
+    }
+    g_live_tools.count = g_var_tools;
+    pthread_mutex_unlock(&g_live_tools_lock);
     // They passed is_tool_name, so they need no escaping.
     np_js_t j = js_alloc(g_var_tools * (2 * NP_TOOL_NAME_MAX + 8) + 3);
     js_put(&j, "[", 1);
@@ -942,16 +1018,14 @@ static int var_load(const char *home, np_var_t *list) {
     return vc.count;
 }
 
-static void var_build(void) {
-    const char *home = getenv("HOME");
+static char *var_rows(const char *home, const var_tools_t *vt, int quiet) {
     np_var_t *list = NULL;
     np_out_t rows = { 0 };
     char runners[2048];
+    char *ret = NULL;
     int n, wrote = 0;
 
-    g_var_done = 1;
-    set_input(IN_VARS, NULL);
-    if (!home || !(list = calloc(NP_CONF_RECORDS_MAX, sizeof(*list)))) return;
+    if (!home || !(list = calloc(NP_CONF_RECORDS_MAX, sizeof(*list)))) return NULL;
     n = var_load(home, list);
     np_support_path(runners, sizeof(runners), home, "runners");
     if (!out_put(&rows, "[", 1)) goto done;
@@ -961,32 +1035,32 @@ static void var_build(void) {
         char hit[2048];
 
         if (!*list[i].removes && !var_holds_file(list[i].src, 0)) {
-            NP_WARN("variants: %s holds no files at %s, not offered", list[i].name, list[i].src);
+            if (!quiet) NP_WARN("variants: %s holds no files at %s, not offered", list[i].name, list[i].src);
             continue;
         }
         if (var_bridge_hit(&list[i], hit, sizeof(hit))) {
-            NP_WARN("variants: %s would change %s, which carries Proton-ish's Steam bridge, not offered",
+            if (!quiet) NP_WARN("variants: %s would change %s, which carries Proton-ish's Steam bridge, not offered",
                     list[i].name, hit);
             continue;
         }
-        for (size_t t = 0; t < g_var_tools; t++) {
+        for (size_t t = 0; t < vt->count; t++) {
             char runner[2048];
-            if (*list[i].builds && !var_has(list[i].builds, g_var_build[t])) continue;
-            if (!var_runner_dir(runner, sizeof(runner), runners, g_var_build[t])) continue;
-            if (!var_fits(&list[i], runner, g_var_arch[t])) continue;
+            if (*list[i].builds && !var_has(list[i].builds, vt->build[t])) continue;
+            if (!var_runner_dir(runner, sizeof(runner), runners, vt->build[t])) continue;
+            if (!var_fits(&list[i], runner, vt->arch[t])) continue;
             if (!*list[i].builds && var_wine_hit(&list[i], runner, "", 0, hit, sizeof(hit))) {
-                if (!unpinned++)
+                if (!unpinned++ && !quiet)
                     NP_WARN("variants: %s replaces %s, which is Wine's own, and names no build, not offered there",
                             list[i].name, hit);
                 continue;
             }
             if (var_apple_hit(&list[i], runner, "", 0, hit, sizeof(hit))) {
-                NP_WARN("variants: %s replaces %s, which holds an entitlement only Apple can sign for, not offered there",
+                if (!quiet) NP_WARN("variants: %s replaces %s, which holds an entitlement only Apple can sign for, not offered there",
                         list[i].name, hit);
                 continue;
             }
             snprintf(tools + strlen(tools), sizeof(tools) - strlen(tools), "%s\"%s\"",
-                     fits++ ? "," : "", g_var_tool[t]);
+                     fits++ ? "," : "", vt->tool[t]);
         }
         if (wrote && !out_put(&rows, ",", 1)) goto done;
         if (!out_put(&rows, "{k:", 3) || !out_jsstr(&rows, list[i].name)) goto done;
@@ -996,15 +1070,32 @@ static void var_build(void) {
         if (!out_put(&rows, ",t:[", 4) || !out_put(&rows, tools, strlen(tools))) goto done;
         if (!out_put(&rows, "]}", 2)) goto done;
         wrote++;
-        if (!fits)
+        if (!fits && !quiet)
             NP_LOG("variants: %s fits no installed runner, so it is offered nowhere",
                    list[i].name);
     }
     if (!out_put(&rows, "]", 1)) goto done;
-    set_input(IN_VARS, out_take(&rows));
+    ret = out_take(&rows);
 done:
     free(rows.buf);
     free(list);
+    return ret;
+}
+
+static void var_build(void) {
+    var_tools_t *vt = calloc(1, sizeof(*vt));
+
+    g_var_done = 1;
+    set_input(IN_VARS, NULL);
+    if (!vt) return;
+    for (size_t t = 0; t < g_var_tools; t++) {
+        memcpy(vt->tool[t], g_var_tool[t], NP_TOOL_NAME_MAX);
+        memcpy(vt->build[t], g_var_build[t], NP_TOOL_NAME_MAX);
+        memcpy(vt->arch[t], g_var_arch[t], NP_TOOL_NAME_MAX);
+    }
+    vt->count = g_var_tools;
+    set_input(IN_VARS, var_rows(getenv("HOME"), vt, 0));
+    free(vt);
 }
 
 // A check supplies the list rather than reading whatever an install happens to carry
@@ -1012,6 +1103,57 @@ void np_webpatch_set_variants(const char *rows) {
     set_input(IN_VARS, strdup(rows ? rows : "[]"));
     g_var_done = 1;
     g_var_pinned = 1;
+}
+
+static int out_json_keys(np_out_t *o, const char *js) {
+    int in_str = 0;
+    for (const char *p = js; *p; p++) {
+        if (in_str) {
+            if (!out_put(o, p, 1)) return 0;
+            if (*p == '\\' && p[1]) {
+                if (!out_put(o, ++p, 1)) return 0;
+            } else if (*p == '"') {
+                in_str = 0;
+            }
+            continue;
+        }
+        if (*p == '"') in_str = 1;
+        if (!out_put(o, p, 1)) return 0;
+        if (*p != '{' && *p != ',') continue;
+        const char *k = p + 1, *e = k;
+        while ((*e >= 'a' && *e <= 'z') || (*e >= 'A' && *e <= 'Z') || *e == '_') e++;
+        if (e == k || *e != ':') continue;
+        if (!out_put(o, "\"", 1) || !out_put(o, k, (size_t)(e - k)) || !out_put(o, "\"", 1))
+            return 0;
+        p = e - 1;
+    }
+    return 1;
+}
+
+char *np_webpatch_live_json(void) {
+    const char *home = getenv("HOME");
+    var_tools_t *vt = calloc(1, sizeof(*vt));
+    char *ready = NULL, *rows = NULL, *vars = NULL, *ret = NULL;
+    np_out_t o = { 0 };
+
+    if (!home || !vt) goto done;
+    pthread_mutex_lock(&g_live_tools_lock);
+    *vt = g_live_tools;
+    pthread_mutex_unlock(&g_live_tools_lock);
+    if (!feat_rows(home, &ready, &rows) || !(vars = var_rows(home, vt, 1))) goto done;
+    if (!out_put(&o, "{\"s\":", 5) || !out_put(&o, show_all_on(home) ? "1" : "0", 1)
+        || !out_put(&o, ",\"r\":", 5) || !out_put(&o, ready, strlen(ready))
+        || !out_put(&o, ",\"f\":", 5) || !out_json_keys(&o, rows)
+        || !out_put(&o, ",\"v\":", 5) || !out_json_keys(&o, vars)
+        || !out_put(&o, "}", 1)) goto done;
+    ret = out_take(&o);
+done:
+    free(o.buf);
+    free(ready);
+    free(rows);
+    free(vars);
+    free(vt);
+    return ret;
 }
 
 static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
@@ -1251,17 +1393,19 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
 
 #define NP_CX_DEFAULTS "(globalThis.MSCXDefaultsData||(globalThis.MSCXDefaultsData=" NP_DEFAULTS "))"
 #define NP_CX_BUILDS "(globalThis.MSCXBuilds||(globalThis.MSCXBuilds=" NP_BUILDS "))"
+#define NP_CX_SHOW_ALL "(globalThis.MSCXShowAllPlugins?\?(globalThis.MSCXShowAllPlugins=!!" NP_SHOW_ALL "))"
 
 // FEX runs arm64 Wine, which has no D3DMetal and never runs under Rosetta.
 #define NP_CX_PANEL(RT, BARREL) \
-    "({fex,nd,nx,get:G,saved:readSaved,set:s,clearUnused,head,dflt,dev,tool,ours=1,target:X})=>{" \
+    "({fex,nd,nx,get:G,saved:readSaved,set:s,clearUnused,head,foot,dflt,dev,tool,app,ours=1,target:X})=>{" \
     "const npZh=" NP_WEB_IS_ZH ",npIt=" NP_WEB_IS_IT ",npL=(en,zh,it)=>npZh?zh:npIt?it:en," \
     /* A plugin may name the tools it is for. Filtered here rather than at render, so the
        dependency chain and the indent depth see what the panel shows and nothing else. */ \
     "npTool=tool||\"\"," \
     "npFor=p=>\"*\"===p.slice(-1)?npTool.startsWith(p.slice(0,-1)):p===npTool," \
-    "MSCXReady=" NP_READY ",MSCXFeat=(" NP_FEATS ").filter(f=>!f.tl||f.tl.some(npFor))," \
-    "npCx=ours&&!MSCXFeat.some(f=>f.hc),MSCXVar=" NP_VARS "," \
+    "npLv=globalThis.MSCXLive,MSCXReady=npLv?npLv.r:" NP_READY ",MSCXFeat=(npLv?npLv.f:" NP_FEATS ").filter(f=>(!f.tl||f.tl.some(npFor))" \
+    "&&(!f.ap||!app||" NP_CX_SHOW_ALL "||f.ap.includes(String(app))))," \
+    "npCx=ours&&!MSCXFeat.some(f=>f.hc),MSCXVar=npLv?npLv.v:" NP_VARS "," \
     /* A toggle parent is satisfied by its on value; one that holds a value, such as a
        dropdown or a slider, by holding one at all rather than sitting on Default. */ \
     "on1=(k,n=0)=>{const p=MSCXFeat.find(x=>x.k===k);" \
@@ -1469,7 +1613,7 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     ":\"choice\"===f.ty?TC(kk,f.l,d,lv,f.ch,pe)" \
     ":\"slider\"===f.ty?(f.ch?TL(kk,f.l,d,lv,f.ch,f.df,pe)" \
     ":TS(kk,f.l,d,lv,f.mn,f.mx,f.st,f.df,f.sf,pe))" \
-    ":TD(f.k,f.l,f.on,f.off,d,lv)}))})},\"dev\"):null" \
+    ":TD(f.k,f.l,f.on,f.off,d,lv)}))})},\"dev\"):null,npCx&&foot" \
     "].filter(Boolean);" \
     /* A tool of someone else's with nothing of ours to offer gets no page at all. */ \
     "if(!npBody.length)return null;" \
@@ -1482,7 +1626,7 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "fex=" NP_FEX_TOOLS ".indexOf(tn)>=0,ot=" NP_OUR_TOOLS ".find(x=>x[0]===tn)," \
     "nd=" NP_NO_D3DMETAL_TOOLS ".indexOf(tn)>=0,nx=" NP_NO_DXVK_TOOLS ".indexOf(tn)>=0," \
     "L=MSCXLaunch(o,t.unAppID),g=L.g,has=k=>L.k.includes(k)," \
-    "lost=globalThis.MSCXDefaultsLost,DF=lost?{}:(" NP_CX_BUILDS ".find(x=>x.id===tn)" \
+    "lost=globalThis.MSCXDefaultsLost,DF=lost||!(tn===\"" NP_FALLBACK_TOOL "\"||ot)?{}:(" NP_CX_BUILDS ".find(x=>x.id===tn)" \
     "||ot&&" NP_CX_BUILDS ".find(x=>x.build===ot[1]&&x.runner===(fex?\"fex\":\"rosetta\"))" \
     "||{}).override||" NP_CX_DEFAULTS "[fex?\"fex\":\"rosetta\"]||{}," \
     "fk=" NP_CX_FACTOR_ENTRY ",fpk=" NP_CX_FPS_ENTRY "," \
@@ -1492,7 +1636,7 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "G=k=>\"DXMT_CONFIG\"===k?mergedDxmt:has(k)?g(k):DF[k]||\"\";" \
     "if(t.unAppID<2147483648&&(t.vecPlatforms||[]).indexOf(\"osx\")>=0" \
     "&&!t.strCompatToolName)return null;" \
-    "return MSCXPanel({fex,nd,nx,get:G,saved:g,set:L.s,clearUnused:1,dev:1,tool:tn," \
+    "return MSCXPanel({fex,nd,nx,get:G,saved:g,set:L.s,clearUnused:1,dev:1,tool:tn,app:t.unAppID," \
     "ours:tn===\"" NP_FALLBACK_TOOL "\"||!!ot," \
     "dflt:lost?null:k=>DF[k],target:(" NP_CX_TARGET ")(o,t.unAppID,t.strInstallFolder||\"\"),head:" \
     "typeof MSCXPrefixRow==\"function\"&&(0," RT ".jsx)(\"div\",{className:\"MSCXRow\",ref:e=>e&&MSCXPrefixRow(e,t.unAppID)},\"npstate\")" \
@@ -1537,7 +1681,10 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
     "selectedOption:b?b.id:\"\",onChange:v=>{const p=BL.find(x=>x.id===v.data);if(!p)return;" \
     "si(p.id);sr(p.runner===\"fex\"?1:0);clr()}},\"version\"):null," \
     "b?btn(\"apply\",(" NP_WEB_IS_IT "?\"Applica come predefinite a tutti gli strumenti di compatibilit\\u00e0 \"+kind:\"Apply as defaults for all \"+kind+\" Compatibility Tools\")," NP_WEB_TEXT("Apply", "Apply", "Applica") ",apply,ok||void 0):null" \
-    "]},\"defaults\")})};" \
+    "]},\"defaults\"),foot:(0," RT ".jsx)(" BARREL ".XY,{label:" NP_WEB_TEXT("Proton-ish Plugin System", "Proton-ish Plugin System", "Proton-ish Plugin System") "," \
+    "children:(0," RT ".jsx)(" BARREL ".Yh,{className:\"MSCXRow\",label:" NP_WEB_TEXT("Game-Specific Plugins Are Shown as Available for Every Game", "Game-Specific Plugins Are Shown as Available for Every Game", "Game-Specific Plugins Are Shown as Available for Every Game") "," \
+    "checked:!!" NP_CX_SHOW_ALL ",onChange:v=>q(()=>send(\"Protonish.SetShowAllPlugins#1\",v?1:0,\"\")" \
+    ".then(x=>done(x,()=>{globalThis.MSCXShowAllPlugins=!!v})))},\"showall\")},\"plugins\")})};" \
     "return()=>{const up=typeof globalThis.MSCXUseState==\"function\"&&typeof globalThis.MSCXUseEffect==\"function\"" \
     "&&typeof globalThis.MSCXSpecifyRoute==\"function\";" \
 "const dd=" NP_CX_DEFAULTS ";if(null===dd.rosetta||null===dd.fex){" \
@@ -1549,19 +1696,42 @@ static int out_expand(np_out_t *o, const char *replace, const np_cap_t *caps) {
 #define NP_CX_CAPTURE(BODY, RT, BARREL) \
     "((npReact,npUI)=>" BODY("npReact()", "npUI()") ")(()=>" RT ",()=>" BARREL ")"
 
+#define NP_CX_LIVE_FETCH \
+    "(()=>{const g=globalThis;if(g.MSCXLiveBusy||typeof g.MSCXRoute!==\"function\")return;g.MSCXLiveBusy=1;" \
+    "g.MSCXRoute(\"Protonish.GetPlugins#1\",0).then(j=>{if(!j||j===g.MSCXLiveRaw)return;const d=JSON.parse(j);" \
+    "g.MSCXLiveRaw=j;g.MSCXLive=d;g.MSCXShowAllPlugins=!!d.s;g.dispatchEvent?.(new CustomEvent(\"mscxplugins\"))})" \
+    ".catch(e=>console.error(\"Proton-ish: the plugin list was not refreshed\",e)).finally(()=>{g.MSCXLiveBusy=0})})"
+
+#define NP_CX_LIVE_WRAP(RT, C) \
+    "((npR,C)=>{const W=p=>{const[,b]=globalThis.MSCXUseState(0);" \
+    "globalThis.MSCXUseEffect(()=>{const on=()=>b(x=>x+1);globalThis.addEventListener?.(\"mscxplugins\",on);" \
+    NP_CX_LIVE_FETCH "();return()=>globalThis.removeEventListener?.(\"mscxplugins\",on)},[]);return C(p)};" \
+    "return p=>typeof globalThis.MSCXUseState===\"function\"&&typeof globalThis.MSCXUseEffect===\"function\"" \
+    "?(0,npR().jsx)(W,p):C(p)})(()=>" RT "," C ")"
+
 #define NP_CX_OPTIONS_COMPONENT \
     "MSCXLaunch=" NP_CX_LAUNCH ",MSCXPick=" NP_CX_PICK "," \
     "MSCXPanel=" NP_CX_CAPTURE(NP_CX_PANEL, NP_C4, NP_C5) "," \
-    "MSCXOpts=" NP_CX_CAPTURE(NP_CX_OPTIONS_BODY, NP_C4, NP_C5) ","
+    "MSCXOpts=" NP_CX_LIVE_WRAP(NP_C4, NP_CX_CAPTURE(NP_CX_OPTIONS_BODY, NP_C4, NP_C5)) ","
 
 // Valve is testing a new compatibility page UI, this logic relates to supporting that
-#define NP_CX_OPTIONS_STATEMENT \
+#define NP_CX_OPTIONS_STATEMENT_FOR(RT, BARREL, OPTS) \
     "var MSCXLaunch=" NP_CX_LAUNCH ";" \
     "var MSCXPick=" NP_CX_PICK ";" \
     "var MSCXToolQuery=" NP_CX_TOOL_QUERY ";" \
-    "var MSCXPanel=" NP_CX_CAPTURE(NP_CX_PANEL, NP_C3, NP_C4) ";" \
-    "var MSCXOpts=" NP_CX_CAPTURE(NP_CX_OPTIONS_BODY, NP_C3, NP_C4) ";" \
-    "var MSCXDefaultsPage=" NP_CX_CAPTURE(NP_CX_DEFAULTS_PAGE_BODY, NP_C3, NP_C4) ";"
+    "var MSCXPanel=" NP_CX_CAPTURE(NP_CX_PANEL, RT, BARREL) ";" \
+    "var MSCXOpts=" OPTS(RT, NP_CX_LIVE_WRAP(RT, NP_CX_CAPTURE(NP_CX_OPTIONS_BODY, RT, BARREL))) ";" \
+    "var MSCXDefaultsPage=" NP_CX_LIVE_WRAP(RT, NP_CX_CAPTURE(NP_CX_DEFAULTS_PAGE_BODY, RT, BARREL)) ";"
+#define NP_CX_OPTS_AS_IS(RT, C) C
+#define NP_CX_OPTIONS_STATEMENT NP_CX_OPTIONS_STATEMENT_FOR(NP_C3, NP_C4, NP_CX_OPTS_AS_IS)
+
+#define NP_CX_UI "(globalThis.MSCXUI||{})"
+#define NP_CX_OPTS_WHEN_READY(RT, C) \
+    "(npO=>p=>" NP_CX_BARREL_READY(NP_CX_UI) "?npO(p):null)(" C ")"
+#define NP_CX_OPTIONS_STATEMENT_UI NP_CX_OPTIONS_STATEMENT_FOR(NP_C3, NP_CX_UI, NP_CX_OPTS_WHEN_READY)
+#define NP_UI_REG(K, N) \
+    "Object.defineProperty(globalThis.MSCXUI||(globalThis.MSCXUI={}),\"" K "\",{get:()=>" N \
+    ",configurable:!0,enumerable:!0})"
 
 // 1.0.x saved CrossOver settings without %command%, this migrates them.
 #define NP_LAUNCH_MIGRATION_RULE \
@@ -1724,14 +1894,85 @@ static const np_gate_t g_gates_selecttool[] = {
       NP_COMPAT_HINT, 1, 0 },
 };
 
+static const np_gate_t g_gates_selecttool_ui[] = {
+    { NP_C1 "()&&" NP_C2 ".push({title:" NP_C3 "(`#AppProperties_CompatibilityPage`)",
+      "true&&" NP_C2 ".push({title:" NP_C3 "(`#AppProperties_CompatibilityPage`)", 2, 0 },
+    { "Compatibility:{visible:" NP_C1 "&&" NP_C2 "(),title:",
+      "Compatibility:{visible:" NP_C1 "&&true,title:", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsxs)(" NP_C4 ",{label:" NP_C5
+      "(`#Settings_SteamPlay_SteamPlay`),children:[(0," NP_C3 ".jsx)(" NP_C6 ",{details:" NP_C2 ".details}),"
+      "(0," NP_C3 ".jsx)(" NP_C7 ",{setting:`compat_show_all_tools`,label:" NP_C5
+      "(`#Settings_SteamPlay_ShowAll`),feature:7})]})}",
+      NP_CX_OPTIONS_STATEMENT_UI
+      "function " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsxs)(" NP_C3 ".Fragment,{children:["
+      "(0," NP_C3 ".jsxs)(" NP_C4 ",{label:" NP_C5
+      "(`#Settings_SteamPlay_SteamPlay`),children:[(0," NP_C3 ".jsx)(" NP_C6 ",{details:" NP_C2 ".details}),"
+      "(0," NP_C3 ".jsx)(" NP_C7 ",{setting:`compat_show_all_tools`,label:" NP_C5
+      "(`#Settings_SteamPlay_ShowAll`),feature:7})]}),"
+      "(0," NP_C3 ".jsx)(MSCXOpts,{details:" NP_C2 ".details})]})}", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsxs)(" NP_C4 ",{label:" NP_C5
+      "(`#Settings_SteamPlay_SteamPlay`),children:[(0," NP_C3 ".jsx)(" NP_C6 ",{}),"
+      "(0," NP_C3 ".jsx)(" NP_C7 ",{setting:`compat_show_all_tools`,label:" NP_C5
+      "(`#Settings_SteamPlay_ShowAll`),feature:7})]})}",
+      "function " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsxs)(" NP_C3 ".Fragment,{children:["
+      "(0," NP_C3 ".jsxs)(" NP_C4 ",{label:" NP_C5
+      "(`#Settings_SteamPlay_SteamPlay`),children:[(0," NP_C3 ".jsx)(" NP_C6 ",{}),"
+      "(0," NP_C3 ".jsx)(" NP_C7 ",{setting:`compat_show_all_tools`,label:" NP_C5
+      "(`#Settings_SteamPlay_ShowAll`),feature:7})]}),"
+      "(0," NP_C3 ".jsx)(MSCXDefaultsPage,{})]})}", 1, NP_GATE_PAGE },
+    { "function " NP_C1 "(" NP_C2 "," NP_C3 "){return " NP_C3 "||=" NP_C4 "().GetDefaultTransport()," NP_C3
+      "==null?new Promise((" NP_C5 "," NP_C6 ")=>{console.error(`Transport Error: no transport is available for request`)," NP_C6 "(`Transport Error: no transport is available for request`)}):" NP_C3
+      ".SendMsg(`CompatManager.SpecifyCompatTool#1`," NP_C7 "(" NP_C8 "," NP_C2 ")," NP_C9
+      ",{ePrivilege:1,eClientExecutionSite:2})}" NP_C10 ".SendMsgSpecifyCompatTool=" NP_C1 ",",
+      "function " NP_C1 "(" NP_C2 "," NP_C3 "){return " NP_C3 "||=" NP_C4 "().GetDefaultTransport()," NP_C3
+      "==null?new Promise((" NP_C5 "," NP_C6 ")=>{console.error(`Transport Error: no transport is available for request`)," NP_C6 "(`Transport Error: no transport is available for request`)}):" NP_C3
+      ".SendMsg(`CompatManager.SpecifyCompatTool#1`," NP_C7 "(" NP_C8 "," NP_C2 ")," NP_C9
+      ",{ePrivilege:1,eClientExecutionSite:2})}"
+      "globalThis.MSCXSpecifyRoute=(npRt,npA,npX)=>{const npT=" NP_C4 "().GetDefaultTransport();"
+      "return!/^Protonish\\./.test(npRt)?Promise.reject(\"not a Proton-ish route\"):"
+      "npT==null?Promise.reject(\"Transport Error: no transport is available for request\"):"
+      "npT.SendMsg(npRt," NP_C7 "(" NP_C8 ",{appid:npA,tool_name:npX}),"
+      NP_C9 ",{ePrivilege:1,eClientExecutionSite:2})},"
+      NP_C10 ".SendMsgSpecifyCompatTool=" NP_C1 ",", 1, NP_GATE_PAGE },
+    { "var " NP_C1 "=new " NP_C2 ";function " NP_C3 "(" NP_C4 "){let " NP_C5 "=" NP_C6
+      ".useCallback(async()=>{let " NP_C7 "=await " NP_C8 ".GetCompatTools({appid:" NP_C4 "});",
+      "var " NP_C1 "=new " NP_C2 ";globalThis.MSCXUseState=" NP_C6 ".useState;"
+      "globalThis.MSCXUseEffect=" NP_C6 ".useEffect;function " NP_C3 "(" NP_C4 "){let " NP_C5 "=" NP_C6
+      ".useCallback(async()=>{let " NP_C7 "=await " NP_C8 ".GetCompatTools({appid:" NP_C4 "});", 1, NP_GATE_PAGE },
+    { "[" NP_C1 "," NP_C2 "]=" NP_C3 "(" NP_C4 ");if(" NP_C1 ".isLoading||!" NP_C1
+      ".data?.tools?.length)return null;",
+      "[" NP_C1 "," NP_C2 "]=(typeof MSCXToolQuery==\"function\"?MSCXToolQuery:r=>r)"
+      "(" NP_C3 "(" NP_C4 ")," NP_C4 ");if(" NP_C1
+      ".isLoading||!" NP_C1 ".data?.tools?.length)return null;", 1, 1 },
+    { NP_C7 "||=" NP_C8 "().GetDefaultTransport()," NP_C7 "==null?new Promise((" NP_C9 "," NP_C10
+      ")=>{console.error(`Transport Error: no transport is available for request`)," NP_C10 "(`Transport Error: no transport is available for request`)}):" NP_C7 ".SendMsg(`CompatManager.GetCompatTools#1`,"
+      NP_C1 "(" NP_C2 "," NP_C3 ")," NP_C4 ",{ePrivilege:1,eClientExecutionSite:2})}" NP_C5 ".GetCompatTools=" NP_C6 ";",
+      NP_C7 "||=" NP_C8 "().GetDefaultTransport()," NP_C7 "==null?new Promise((" NP_C9 "," NP_C10
+      ")=>{console.error(`Transport Error: no transport is available for request`)," NP_C10 "(`Transport Error: no transport is available for request`)}):" NP_C7 ".SendMsg(`CompatManager.GetCompatTools#1`,"
+      NP_C1 "(" NP_C2 "," NP_C3 ")," NP_C4 ",{ePrivilege:1,eClientExecutionSite:2})}"
+      "globalThis.MSCXRoute=(r,id)=>{const t=" NP_C8 "().GetDefaultTransport();"
+      "return!/^Protonish\\./.test(r)?Promise.reject(\"not a Proton-ish route\"):t?t.SendMsg(r," NP_C1 "(" NP_C2 ",{appid:id})," NP_C4 ",{ePrivilege:1,eClientExecutionSite:2})"
+      ".then(x=>x.BSuccess()?x.Body().toObject().default_tool_identifier||\"\":Promise.reject(\"result \"+x.GetEResult()))"
+      ":Promise.reject(\"no transport\")};" NP_CX_PREFIX_ROW NP_C5 ".GetCompatTools=" NP_C6 ";", 1, 1 },
+    { "get is_invalid_os_type(){return this.most_available_per_client_data.is_invalid_os_type}",
+      "get is_invalid_os_type(){return false}", 1, 0 },
+    { NP_C1 ".is_invalid_os_type&&(0," NP_C2 ".jsx)(" NP_C3 ",{})",
+      "!" NP_C1 ".local_per_client_data?.installed&&"
+      NP_C1 ".most_available_per_client_data?.is_invalid_os_type&&"
+      "(0," NP_C2 ".jsx)(" NP_C3 ",{})", 1, 0 },
+    { NP_C1 "(`#GameList_Entry_Invalid_OSType2`)",
+      NP_COMPAT_HINT, 1, 0 },
+};
+
 #define NP_PLATFORM_LISTS "window.__NOTPROTON_NATIVE_PLATFORM__"
 #define NP_MAC_64(APP) \
     "(" NP_PLATFORM_LISTS ".mac.has(" APP ".appid)&&!" APP ".most_available_per_client_data?.is_invalid_os_type)"
-#define NP_MAC_CHECK(OS, APP) \
-    "(0," OS ".Pr)()&&" NP_PLATFORM_LISTS ".mac.has(" APP ".appid)?!" APP \
-    ".most_available_per_client_data?.is_invalid_os_type:(0," OS ".Pr)()&&" \
-    NP_WINDOWS(APP) "?!1:(0," OS ".Pr)()?" \
+#define NP_MAC_CHECK_ON(MAC, APP) \
+    MAC "&&" NP_PLATFORM_LISTS ".mac.has(" APP ".appid)?!" APP \
+    ".most_available_per_client_data?.is_invalid_os_type:" MAC "&&" \
+    NP_WINDOWS(APP) "?!1:" MAC "?" \
     APP ".is_available_on_current_platform&&!" APP ".most_available_per_client_data?.is_invalid_os_type:"
+#define NP_MAC_CHECK(OS, APP) NP_MAC_CHECK_ON("(0," OS ".Pr)()", APP)
 // .exe shortcuts = Windows
 #define NP_RUNS_EXE "window.__NOTPROTON_RUNS_EXE__"
 #define NP_RUNS_EXE_JS \
@@ -1740,6 +1981,9 @@ static const np_gate_t g_gates_selecttool[] = {
     "return/\\.exe\"?$/i.test(e?.details?.strShortcutExe??\"\")};\n"
 #define NP_WINDOWS(APP) \
     "(" NP_PLATFORM_LISTS ".windows.has(" APP ".appid)||" NP_RUNS_EXE "(" APP "))"
+#define NP_WINDOWS_ONLY_CASE_ON(MAC, APP) \
+    "case\"notprotonWindows\":return " MAC "&&" NP_WINDOWS(APP) "&&!" \
+    NP_MAC_64(APP) ";"
 #define NP_WINDOWS_ONLY_CASE(OS, APP) \
     "case\"notprotonWindows\":return(0," OS ".Pr)()&&" NP_WINDOWS(APP) "&&!" \
     NP_MAC_64(APP) ";"
@@ -1776,6 +2020,58 @@ static const np_gate_t g_fixes[] = {
       "this.m_bServicesInitialized=!0," NP_LAUNCH_MIGRATION ",SteamClient.UI.NotifyAppInitialized()", 1, 0 },
     { "(\"small_mode\")," NP_C1 "=!" NP_C2 "||" NP_C3 "," NP_C4 "=" NP_C1 "," NP_C5 "=200,",
       "(\"small_mode\")," NP_C1 "=!" NP_C2 "||" NP_C3 "," NP_C4 "=!!0," NP_C5 "=200,", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){let{label:" NP_C3 ",className:" NP_C4 ",children:" NP_C5 ",..." NP_C6
+      "}=" NP_C2 "," NP_C7 "=" NP_C8 ".useId();return(0," NP_C9 ".jsx)(" NP_C10 ",{className:" NP_C11
+      "(`DialogSettingsSection`,",
+      NP_UI_REG("XY", NP_C1) ";function  " NP_C1 "(" NP_C2 "){let{label:" NP_C3 ",className:" NP_C4
+      ",children:" NP_C5 ",..." NP_C6 "}=" NP_C2 "," NP_C7 "=" NP_C8 ".useId();return(0," NP_C9 ".jsx)("
+      NP_C10 ",{className:" NP_C11 "(`DialogSettingsSection`,", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsx)(" NP_C4 ".Provider,{value:{PagedSettings:" NP_C5
+      ",Content:" NP_C6 ",DropDownControlButton:" NP_C7 ",DropDownField:" NP_C8 ",DropDownMenu:" NP_C9
+      ",ToggleField:" NP_C10 ",",
+      NP_UI_REG("J1", NP_C1) ";" NP_UI_REG("y4", NP_C10) ";function  " NP_C1 "(" NP_C2 "){return(0," NP_C3
+      ".jsx)(" NP_C4 ".Provider,{value:{PagedSettings:" NP_C5 ",Content:" NP_C6 ",DropDownControlButton:" NP_C7
+      ",DropDownField:" NP_C8 ",DropDownMenu:" NP_C9 ",ToggleField:" NP_C10 ",", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){let{label:" NP_C3 ",description:" NP_C4 ",tabIndex:" NP_C5 ",className:" NP_C6
+      ",showValue:" NP_C7 ",renderValue:" NP_C8 ",valueSuffix:" NP_C9 ",validValues:",
+      NP_UI_REG("d3", NP_C1) ";function  " NP_C1 "(" NP_C2 "){let{label:" NP_C3 ",description:" NP_C4
+      ",tabIndex:" NP_C5 ",className:" NP_C6 ",showValue:" NP_C7 ",renderValue:" NP_C8 ",valueSuffix:" NP_C9
+      ",validValues:", 1, 0 },
+    { "," NP_C1 "=" NP_C2 ".forwardRef(function(" NP_C3 "," NP_C4 "){return(0," NP_C5 ".jsx)(" NP_C6
+      ",{type:`button`,..." NP_C3 ",ref:" NP_C4 ",className:" NP_C7 "(" NP_C3
+      ".className,`DialogButton`,`_DialogLayout`,`Secondary`)})})",
+      ", " NP_C1 "=" NP_C2 ".forwardRef(function(" NP_C3 "," NP_C4 "){return(0," NP_C5 ".jsx)(" NP_C6
+      ",{type:`button`,..." NP_C3 ",ref:" NP_C4 ",className:" NP_C7 "(" NP_C3
+      ".className,`DialogButton`,`_DialogLayout`,`Secondary`)})}),MSCXuiButton=" NP_UI_REG("$n", NP_C1), 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){let " NP_C3 "=" NP_C4 "(`DropDownField`," NP_C5 ");return(0," NP_C6
+      ".jsx)(" NP_C3 ",{..." NP_C2 "})}",
+      NP_UI_REG("m", NP_C1) ";function  " NP_C1 "(" NP_C2 "){let " NP_C3 "=" NP_C4 "(`DropDownField`," NP_C5
+      ");return(0," NP_C6 ".jsx)(" NP_C3 ",{..." NP_C2 "})}", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){let{label:" NP_C3 ",icon:" NP_C4 ",tooltip:" NP_C5 ",explainer:" NP_C6
+      ",explainerTitle:" NP_C7 ",disabled:" NP_C8 ",strClassName:" NP_C9 ",dropDownControlRef:",
+      NP_UI_REG("Vb", NP_C1) ";function  " NP_C1 "(" NP_C2 "){let{label:" NP_C3 ",icon:" NP_C4 ",tooltip:" NP_C5
+      ",explainer:" NP_C6 ",explainerTitle:" NP_C7 ",disabled:" NP_C8 ",strClassName:" NP_C9
+      ",dropDownControlRef:", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){let{rValues:" NP_C3 ",onChange:" NP_C4 ",onChangeComplete:" NP_C5
+      ",value:" NP_C6 ",renderValue:" NP_C7 ",showBookendLabels:" NP_C8 "=!1,",
+      NP_UI_REG("gz", NP_C1) ";function  " NP_C1 "(" NP_C2 "){let{rValues:" NP_C3 ",onChange:" NP_C4
+      ",onChangeComplete:" NP_C5 ",value:" NP_C6 ",renderValue:" NP_C7 ",showBookendLabels:" NP_C8 "=!1,", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "," NP_C3 "){let{accessibilityId:" NP_C4 ",label:" NP_C5 ",description:" NP_C6
+      ",icon:" NP_C7 ",children:" NP_C8 ",childrenLayout:",
+      NP_UI_REG("D0", NP_C1) ";function  " NP_C1 "(" NP_C2 "," NP_C3 "){let{accessibilityId:" NP_C4
+      ",label:" NP_C5 ",description:" NP_C6 ",icon:" NP_C7 ",children:" NP_C8 ",childrenLayout:", 1, 0 },
+    { "var " NP_C1 "=class extends " NP_C2 "{render(){let " NP_C3 "=`DialogCheckbox`+",
+      NP_UI_REG("Yh", NP_C1) ";var  " NP_C1 "=class extends " NP_C2 "{render(){let " NP_C3 "=`DialogCheckbox`+", 1, 0 },
+    { "(`#AddNonSteam_Filter_Exe_MacOS`),rFilePatterns:[`*.app`]",
+      "(`#AddNonSteam_Filter_Exe_MacOS`),rFilePatterns:[`*.app`,`*.exe`]", 1, 0 },
+    { "{strFileTypeName:`Image Files (*.tga,*.png)`,rFilePatterns:[`*.tga`,`*.png`]}",
+      "{strFileTypeName:" NP_IMAGE_FILES_LABEL ",rFilePatterns:[`*.tga`,`*.png`,`*.exe`]}", 1, 0 },
+    { "(`small_mode`)," NP_C1 "=!" NP_C2 "||" NP_C3 "," NP_C4 "=" NP_C1 "," NP_C5 "=" NP_C6 ".useRef(void 0),",
+      "(`small_mode`)," NP_C1 "=!" NP_C2 "||" NP_C3 "," NP_C4 "=!!0," NP_C5 "=" NP_C6 ".useRef(void 0),", 1, 0 },
+    { "function " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsxs)(`svg`,{version:`1.1`,xmlns:`http://www.w3.org/2000/svg`,"
+      "x:`0px`,y:`0px`,className:`SVGIcon_Button SVGIcon_WindowsLogo`",
+      NP_UI_REG("WindowsLogo", NP_C1) ";function  " NP_C1 "(" NP_C2 "){return(0," NP_C3 ".jsxs)(`svg`,{version:`1.1`,"
+      "xmlns:`http://www.w3.org/2000/svg`,x:`0px`,y:`0px`,className:`SVGIcon_Button SVGIcon_WindowsLogo`", 1, 0 },
     // Pr means macOS, td means Windows.
     // Steam Play makes every game count as available, so the Apple filter goes by oslist.
     // Games missing from appinfo.vdf, and other platforms, keep Steam's check.
@@ -1790,11 +2086,16 @@ static const np_gate_t g_fixes[] = {
       NP_WINDOWS_ONLY_CASE(NP_C3, NP_C5) "case " NP_C1 "." NP_C2 ":return " NP_MAC_CHECK(NP_C3, NP_C5)
       "(0," NP_C3 ".CI)()&&!(0," NP_C3 ".mP)()?" NP_C4 "(" NP_C5 "):(0,"
       NP_C3 ".td)()?!0:" NP_C5 ".is_available_on_current_platform&&!" NP_C5 ".is_invalid_os_type;", 1, 0 },
+    { "return " NP_C1 "()&&!" NP_C2 "()?" NP_C3 "(" NP_C4 "):" NP_C5 "()?!0:" NP_C4
+      ".is_available_on_current_platform&&!" NP_C4 ".is_invalid_os_type;",
+      "return " NP_MAC_CHECK_ON("!0", NP_C4) NP_C1 "()&&!" NP_C2 "()?" NP_C3 "(" NP_C4 "):" NP_C5 "()?!0:" NP_C4
+      ".is_available_on_current_platform&&!" NP_C4 ".is_invalid_os_type;" NP_WINDOWS_ONLY_CASE_ON("!0", NP_C4), 1, 0 },
 };
 #define NP_FIX_COUNT (sizeof(g_fixes) / sizeof(g_fixes[0]))
 
-#define NP_NATIVE_MAC_FILTER_FIX (NP_FIX_COUNT - 2)
-#define NP_UPDATED_NATIVE_MAC_FILTER_FIX (NP_FIX_COUNT - 1)
+#define NP_NATIVE_MAC_FILTER_FIX (NP_FIX_COUNT - 3)
+#define NP_UPDATED_NATIVE_MAC_FILTER_FIX (NP_FIX_COUNT - 2)
+#define NP_UI_NATIVE_MAC_FILTER_FIX (NP_FIX_COUNT - 1)
 
 #define NP_PLATFORM_TIP "\"#GameList_View_Platform_Linux\":\"#GameList_View_Platform_Apple\""
 #define NP_LOCALIZED_PLATFORM_TIP "(0," NP_C12 ".we)(\"#GameList_View_Platform_Linux\"):(0," NP_C12 \
@@ -1851,6 +2152,50 @@ static const np_gate_t g_library_filters[] = {
 };
 #define NP_LIBRARY_FILTER_COUNT (sizeof(g_library_filters) / sizeof(g_library_filters[0]))
 
+#define NP_WINDOWS_BUTTON_UI \
+    NP_C1 "&&!" NP_C4 "&&globalThis.MSCXUI?.WindowsLogo&&(0," NP_C2 ".jsxs)(" NP_C3 ",{direction:`top`,nDelayShowMS:240," \
+    "toolTipContent:" NP_LIBRARY_WINDOWS_HINT ",className:" NP_C5 "(`" NP_S1 "`," NP_C7 "&&`" NP_S2 "`," \
+    "npWindows&&`" NP_S3 "`),onClick:()=>" NP_C7 "||npStore.SelectCollectionsAppFilterOption(\"notprotonWindows\",null,!npWindows)," \
+    "children:[(0," NP_C2 ".jsx)(\"style\",{children:\".\"+`" NP_S1 "`+" \
+    "\" .SVGIcon_WindowsLogo{width:13px;height:13px}.\"+`" NP_S1 "`+" \
+    "\" .SVGIcon_WindowsLogo rect{fill:inherit}\"}),(0," NP_C2 ".jsx)(globalThis.MSCXUI.WindowsLogo,{})]})"
+#define NP_PLATFORM_BUTTON_UI \
+    NP_C1 "&&(0," NP_C2 ".jsxs)(" NP_C3 ",{direction:`top`,nDelayShowMS:240,toolTipContent:" NP_C12 "(" NP_C4 \
+    "?`#GameList_View_Platform_Linux`:`#GameList_View_Platform_Apple`),className:" NP_C5 "(`" NP_S1 "`," NP_C7 \
+    "&&`" NP_S2 "`," NP_C8 "&&`" NP_S3 "`),onClick:()=>" NP_C7 "||" NP_C9 "(1,5,!" NP_C8 "),children:[" NP_C4 \
+    "&&(0," NP_C2 ".jsx)(" NP_C10 ",{}),!" NP_C4 "&&(0," NP_C2 ".jsx)(" NP_C11 ",{})]})"
+
+static const np_gate_t g_library_filters_ui[] = {
+    { "if(!" NP_C1 "(" NP_C2 "[1]," NP_C4 "(" NP_C5 "))||!" NP_C1 "(" NP_C2 "[2],",
+      "if(!(this.m_filterSpec.notprotonWindows?((npGroup,npCheck)=>{"
+      "const npApple=npGroup.rgOptions.includes(5);return " NP_C1 "({...npGroup,"
+      "rgOptions:[...npGroup.rgOptions.filter(npOption=>npOption!==5),\"notprotonWindows\"]},"
+      "npOption=>npOption===\"notprotonWindows\"?npCheck(npOption)||npApple&&npCheck(5):npCheck(npOption))"
+      "})(" NP_C2 "[1]," NP_C4 "(" NP_C5 ")):" NP_C1 "(" NP_C2 "[1]," NP_C4 "(" NP_C5 ")))||!"
+      NP_C1 "(" NP_C2 "[2],", 2, 0 },
+    { ",strSearchText:" NP_C1 "&&" NP_C1 ".strSearchText||``,filterGroups:",
+      ",strSearchText:" NP_C1 "&&" NP_C1 ".strSearchText||``,"
+      "notprotonWindows:!!" NP_C1 "?.notprotonWindows,filterGroups:", 1, 0 },
+    { "SelectOption(" NP_C1 "," NP_C2 "," NP_C3 "){let " NP_C4 "=this.m_filterSpec.filterGroups[" NP_C1 "].rgOptions;",
+      "SelectOption(" NP_C1 "," NP_C2 "," NP_C3 "){if(" NP_C1 "===\"notprotonWindows\"){"
+      "this.m_filterSpec.notprotonWindows=!!" NP_C3 ";return}let " NP_C4 "=this.m_filterSpec.filterGroups[" NP_C1 "].rgOptions;", 1, 0 },
+    { "Reset(){this.m_filterSpec.strSearchText=``,",
+      "Reset(){this.m_filterSpec.notprotonWindows=!1,this.m_filterSpec.strSearchText=``,", 1, 0 },
+    { "get bIsEmpty(){return this.searchText.length==0&&",
+      "get bIsEmpty(){return!this.m_filterSpec.notprotonWindows&&this.searchText.length==0&&", 1, 0 },
+    { "let " NP_C1 "=this.GetSelectedOptions(1);" NP_C1 ".length>0&&" NP_C3 ".push(" NP_C1 ".map("
+      NP_C4 "=>{if(" NP_C4 "==5){",
+      "let " NP_C1 "=this.GetSelectedOptions(1);this.m_filterSpec.notprotonWindows&&(" NP_C1 "=[..."
+      NP_C1 ",\"notprotonWindows\"]);" NP_C1 ".length>0&&" NP_C3 ".push(" NP_C1 ".map(" NP_C4 "=>{if(" NP_C4
+      "===\"notprotonWindows\")return " NP_LIBRARY_WINDOWS_SUMMARY ";if(" NP_C4 "==5){", 1, 0 },
+    { "," NP_C1 "=" NP_C2 ".currentAppFilter.BIsSelected(1,5);return(0," NP_C4 ".jsxs)(`div`,{className:" NP_C5 ",",
+      "," NP_C1 "=" NP_C2 ".currentAppFilter.BIsSelected(1,5),npStore=" NP_C2 ","
+      "npWindows=!!" NP_C2 ".currentAppFilter.m_filterSpec.notprotonWindows;return(0,"
+      NP_C4 ".jsxs)(`div`,{className:" NP_C5 ",", 1, 0 },
+    { "children:[" NP_PLATFORM_BUTTON_UI, "children:[" NP_WINDOWS_BUTTON_UI "," NP_PLATFORM_BUTTON_UI, 1, 0 },
+};
+#define NP_LIBRARY_FILTER_UI_COUNT (sizeof(g_library_filters_ui) / sizeof(g_library_filters_ui[0]))
+
 // Exactly one of the two toolbar anchors has to match.
 #define NP_LIBRARY_TOOLBAR (NP_LIBRARY_FILTER_COUNT - 2)
 #define NP_LOCALIZED_LIBRARY_TOOLBAR (NP_LIBRARY_FILTER_COUNT - 1)
@@ -1865,12 +2210,15 @@ typedef struct {
 static const np_ui_shape_t g_shapes[] = {
     { NP_SHAPE_FORCETOOL,  "#AppProperties_CompatilibityForceTool",
       g_gates_forcetool,  sizeof(g_gates_forcetool) / sizeof(g_gates_forcetool[0]) },
-    { NP_SHAPE_SELECTTOOL, "#AppProperties_Compat_SelectTool",
+    { NP_SHAPE_SELECTTOOL, "\"#AppProperties_Compat_SelectTool\"",
       g_gates_selecttool, sizeof(g_gates_selecttool) / sizeof(g_gates_selecttool[0]) },
+    { NP_SHAPE_SELECTTOOL, "`#AppProperties_Compat_SelectTool`",
+      g_gates_selecttool_ui, sizeof(g_gates_selecttool_ui) / sizeof(g_gates_selecttool_ui[0]) },
 };
 #define NP_SHAPE_COUNT (sizeof(g_shapes) / sizeof(g_shapes[0]))
 _Static_assert(sizeof(g_gates_forcetool) / sizeof(np_gate_t) <= NP_GATE_MAX, "gate table too long");
 _Static_assert(sizeof(g_gates_selecttool) / sizeof(np_gate_t) <= NP_GATE_MAX, "gate table too long");
+_Static_assert(sizeof(g_gates_selecttool_ui) / sizeof(np_gate_t) <= NP_GATE_MAX, "gate table too long");
 
 static int has_suffix(const char *s, const char *suf) {
     size_t ls = strlen(s), lf = strlen(suf);
@@ -1948,7 +2296,8 @@ static const char *settle_page(const np_ui_shape_t *shape, const char *s, size_t
         }
     const char *why = !page_in ? NULL
                     : page_missing ? "one of its gates did not match"
-                    : !find_barrel(s, len, NULL) ? "Steam's component barrel lacks a name it takes"
+                    : shape->gates != g_gates_selecttool_ui && !find_barrel(s, len, NULL)
+                    ? "Steam's component barrel lacks a name it takes"
                     : NULL;
     for (size_t g = 0; why && g < shape->count; g++)
         if (shape->gates[g].optional == NP_GATE_PAGE && gate_on[g]) {
@@ -1986,7 +2335,8 @@ char *np_webpatch_transform(const uint8_t *src, size_t src_len, size_t *out_len,
     for (size_t f = 0; f < NP_FIX_COUNT; f++) {
         size_t n = count_matches(s, src_len, g_fixes[f].find);
         fix_on[f] = n == (size_t)g_fixes[f].expect;
-        if ((f == NP_NATIVE_MAC_FILTER_FIX || f == NP_UPDATED_NATIVE_MAC_FILTER_FIX) && fix_on[f]) {
+        if ((f == NP_NATIVE_MAC_FILTER_FIX || f == NP_UPDATED_NATIVE_MAC_FILTER_FIX ||
+             f == NP_UI_NATIVE_MAC_FILTER_FIX) && fix_on[f]) {
             free(native_mac_js);
             native_mac_js = np_nativeplatform_javascript();
         }
@@ -1995,22 +2345,30 @@ char *np_webpatch_transform(const uint8_t *src, size_t src_len, size_t *out_len,
             NP_WARN("webpatch: fix %zu expected %d occurrence(s), found %zu; "
                     "leaving it alone", f, g_fixes[f].expect, n);
     }
-    if (!native_mac_js && (fix_on[NP_NATIVE_MAC_FILTER_FIX] || fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX])) {
+    if (!native_mac_js && (fix_on[NP_NATIVE_MAC_FILTER_FIX] || fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX] ||
+                           fix_on[NP_UI_NATIVE_MAC_FILTER_FIX])) {
         NP_WARN("webpatch: no platform list from appinfo.vdf, the Apple filter stays stock");
-        fix_live -= fix_on[NP_NATIVE_MAC_FILTER_FIX] + fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX];
+        fix_live -= fix_on[NP_NATIVE_MAC_FILTER_FIX] + fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX] +
+                    fix_on[NP_UI_NATIVE_MAC_FILTER_FIX];
         fix_on[NP_NATIVE_MAC_FILTER_FIX] = fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX] = 0;
+        fix_on[NP_UI_NATIVE_MAC_FILTER_FIX] = 0;
     }
-    int library_filter = fix_on[NP_NATIVE_MAC_FILTER_FIX] || fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX];
-    int library_on[NP_LIBRARY_FILTER_COUNT] = {0};
-    for (size_t g = 0; library_filter && g < NP_LIBRARY_FILTER_COUNT; g++) {
-        size_t n = count_matches(s, src_len, g_library_filters[g].find);
-        library_on[g] = n == (size_t)g_library_filters[g].expect;
-        if (library_on[g] || g == NP_LIBRARY_TOOLBAR || g == NP_LOCALIZED_LIBRARY_TOOLBAR) continue;
+    int lib_ui = fix_on[NP_UI_NATIVE_MAC_FILTER_FIX];
+    const np_gate_t *lib = lib_ui ? g_library_filters_ui : g_library_filters;
+    size_t lib_count = lib_ui ? NP_LIBRARY_FILTER_UI_COUNT : NP_LIBRARY_FILTER_COUNT;
+    int library_filter = fix_on[NP_NATIVE_MAC_FILTER_FIX] || fix_on[NP_UPDATED_NATIVE_MAC_FILTER_FIX] || lib_ui;
+    int library_on[NP_LIBRARY_FILTER_COUNT + NP_LIBRARY_FILTER_UI_COUNT] = {0};
+    for (size_t g = 0; library_filter && g < lib_count; g++) {
+        size_t n = count_matches(s, src_len, lib[g].find);
+        library_on[g] = n == (size_t)lib[g].expect;
+        if (library_on[g] || (!lib_ui && (g == NP_LIBRARY_TOOLBAR || g == NP_LOCALIZED_LIBRARY_TOOLBAR)))
+            continue;
         NP_WARN("webpatch: library anchor %zu expected %d occurrence(s), found %zu; "
-                "no Windows filter button", g, g_library_filters[g].expect, n);
+                "no Windows filter button", g, lib[g].expect, n);
         library_filter = 0;
     }
-    if (library_filter && library_on[NP_LIBRARY_TOOLBAR] == library_on[NP_LOCALIZED_LIBRARY_TOOLBAR]) {
+    if (library_filter && !lib_ui &&
+        library_on[NP_LIBRARY_TOOLBAR] == library_on[NP_LOCALIZED_LIBRARY_TOOLBAR]) {
         NP_WARN("webpatch: %s; no Windows filter button",
                 library_on[NP_LIBRARY_TOOLBAR] ? "both library toolbar anchors matched"
                                                : "no library toolbar anchor matched");
@@ -2067,8 +2425,8 @@ char *np_webpatch_transform(const uint8_t *src, size_t src_len, size_t *out_len,
         if (gate_on[g]) mark_start(can_start, shape->gates[g].find);
     for (size_t f = 0; f < NP_FIX_COUNT; f++)
         if (fix_on[f]) mark_start(can_start, g_fixes[f].find);
-    for (size_t g = 0; library_filter && g < NP_LIBRARY_FILTER_COUNT; g++)
-        if (library_on[g]) mark_start(can_start, g_library_filters[g].find);
+    for (size_t g = 0; library_filter && g < lib_count; g++)
+        if (library_on[g]) mark_start(can_start, lib[g].find);
     for (size_t i = 0; i < src_len; ) {
         size_t plain = i;
         while (plain < src_len && !can_start[(unsigned char)s[plain]]) plain++;
@@ -2089,10 +2447,10 @@ char *np_webpatch_transform(const uint8_t *src, size_t src_len, size_t *out_len,
             used = match_at(s, src_len, i, g_fixes[f].find, caps);
             if (used) { hit = &g_fixes[f]; break; }
         }
-        for (size_t g = 0; !hit && library_filter && g < NP_LIBRARY_FILTER_COUNT; g++) {
+        for (size_t g = 0; !hit && library_filter && g < lib_count; g++) {
             if (!library_on[g]) continue;
-            used = match_at(s, src_len, i, g_library_filters[g].find, caps);
-            if (used) { hit = &g_library_filters[g]; break; }
+            used = match_at(s, src_len, i, lib[g].find, caps);
+            if (used) { hit = &lib[g]; break; }
         }
         int ok = hit ? out_expand(&out, hit->replace, caps)
                      : out_put(&out, s + i, 1);

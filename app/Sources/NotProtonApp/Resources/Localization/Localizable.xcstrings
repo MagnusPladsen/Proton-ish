@@ -197,6 +197,34 @@
         }
       }
     },
+    "%@ could not be moved to the Trash. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ could not be moved to the Trash. %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ could not be moved to the Trash. %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ could not be moved to the Trash. %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ could not be moved to the Trash. %@"
+          }
+        }
+      }
+    },
     "%@ could not be read as a property list." : {
       "localizations" : {
         "de" : {
@@ -1300,6 +1328,34 @@
         }
       }
     },
+    "%lld plugins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld plugins"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld plugins"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld plugins"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld plugins"
+          }
+        }
+      }
+    },
     "%lld selected: %@" : {
       "localizations" : {
         "de" : {
@@ -1496,6 +1552,34 @@
         }
       }
     },
+    "1 plugin" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 plugin"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 plugin"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 plugin"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 plugin"
+          }
+        }
+      }
+    },
     "A Steam client update may break Proton-ish." : {
       "localizations" : {
         "de" : {
@@ -1548,6 +1632,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "有游戏或 Wine 工具正在使用构建版本 %@。请先退出，再更新 Proton-ish。"
+          }
+        }
+      }
+    },
+    "A game or Wine tool is running. Quit it before removing Proton-ish." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A game or Wine tool is running. Quit it before removing Proton-ish."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A game or Wine tool is running. Quit it before removing Proton-ish."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A game or Wine tool is running. Quit it before removing Proton-ish."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A game or Wine tool is running. Quit it before removing Proton-ish."
           }
         }
       }
@@ -1968,6 +2080,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "从其他文件夹添加 CrossOver 应用。"
+          }
+        }
+      }
+    },
+    "Add a plugin by putting its .conf file in the plugins folder." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add a plugin by putting its .conf file in the plugins folder."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add a plugin by putting its .conf file in the plugins folder."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add a plugin by putting its .conf file in the plugins folder."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add a plugin by putting its .conf file in the plugins folder."
+          }
+        }
+      }
+    },
+    "All games" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All games"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All games"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All games"
           }
         }
       }
@@ -5730,6 +5898,34 @@
         }
       }
     },
+    "File" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File"
+          }
+        }
+      }
+    },
     "Find Proton-ish's components" : {
       "localizations" : {
         "de" : {
@@ -5978,6 +6174,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "从下次启动游戏起，将应用在其他引擎上验证过的游戏修复。"
+          }
+        }
+      }
+    },
+    "Games" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Games"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Games"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Games"
           }
         }
       }
@@ -6598,6 +6822,34 @@
         }
       }
     },
+    "Its .conf file goes to the Trash, with the files it requires from the plugins folder. Games stop loading it from their next launch." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Its .conf file goes to the Trash, with the files it requires from the plugins folder. Games stop loading it from their next launch."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Its .conf file goes to the Trash, with the files it requires from the plugins folder. Games stop loading it from their next launch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Its .conf file goes to the Trash, with the files it requires from the plugins folder. Games stop loading it from their next launch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Its .conf file goes to the Trash, with the files it requires from the plugins folder. Games stop loading it from their next launch."
+          }
+        }
+      }
+    },
     "Its output was still open when it exited, so none was captured." : {
       "localizations" : {
         "de" : {
@@ -6934,6 +7186,34 @@
         }
       }
     },
+    "List the plugins again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "List the plugins again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "List the plugins again."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "List the plugins again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "List the plugins again."
+          }
+        }
+      }
+    },
     "List the prefixes again and update their sizes." : {
       "localizations" : {
         "de" : {
@@ -7018,6 +7298,34 @@
         }
       }
     },
+    "Looking for plugins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Looking for plugins"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Looking for plugins"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Looking for plugins"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Looking for plugins"
+          }
+        }
+      }
+    },
     "Looking for prefixes" : {
       "localizations" : {
         "de" : {
@@ -7070,6 +7378,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手动下载"
+          }
+        }
+      }
+    },
+    "Missing %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing %@"
           }
         }
       }
@@ -7242,6 +7578,118 @@
         }
       }
     },
+    "Move the selected plugin to the Trash." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move the selected plugin to the Trash."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move the selected plugin to the Trash."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move the selected plugin to the Trash."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move the selected plugin to the Trash."
+          }
+        }
+      }
+    },
+    "Move to Trash" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move to Trash"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move to Trash"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move to Trash"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move to Trash"
+          }
+        }
+      }
+    },
+    "Move “%@” to the Trash?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move “%@” to the Trash?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move “%@” to the Trash?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move “%@” to the Trash?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move “%@” to the Trash?"
+          }
+        }
+      }
+    },
+    "Moved %@ to the Trash." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Moved %@ to the Trash."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Moved %@ to the Trash."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Moved %@ to the Trash."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Moved %@ to the Trash."
+          }
+        }
+      }
+    },
     "Name" : {
       "localizations" : {
         "de" : {
@@ -7378,6 +7826,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "暂无备份"
+          }
+        }
+      }
+    },
+    "No Plugins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No Plugins"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No Plugins"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No Plugins"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No Plugins"
           }
         }
       }
@@ -8026,6 +8502,34 @@
         }
       }
     },
+    "Open Plugins Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open Plugins Folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open Plugins Folder"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open Plugins Folder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open Plugins Folder"
+          }
+        }
+      }
+    },
     "Open System Settings" : {
       "localizations" : {
         "de" : {
@@ -8050,6 +8554,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开系统设置"
+          }
+        }
+      }
+    },
+    "Open the folder Proton-ish reads plugins from." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open the folder Proton-ish reads plugins from."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open the folder Proton-ish reads plugins from."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open the folder Proton-ish reads plugins from."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open the folder Proton-ish reads plugins from."
           }
         }
       }
@@ -8274,6 +8806,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请先运行 CrossOver，然后重试。"
+          }
+        }
+      }
+    },
+    "Plugin" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugin"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugin"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugin"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugin"
+          }
+        }
+      }
+    },
+    "Plugins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugins"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugins"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugins"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Plugins"
           }
         }
       }
@@ -11192,6 +11780,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在访达中显示所选备份。"
+          }
+        }
+      }
+    },
+    "Show the selected plugin in the Finder." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the selected plugin in the Finder."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the selected plugin in the Finder."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the selected plugin in the Finder."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the selected plugin in the Finder."
           }
         }
       }
