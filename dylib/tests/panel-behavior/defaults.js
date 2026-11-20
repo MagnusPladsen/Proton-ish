@@ -130,13 +130,13 @@ async function showAllCases(form) {
   const label = 'Game-Specific Plugins Are Shown as Available for Every Game';
   let { g, sent, r } = openPage(form, BUILDS);
   t.ok(row(r(), label) && row(r(), label).props.checked === false, 'off by default');
-  const sec = r().find(x => x.type === 'Section' && x.props.label === 'NotProton Plugin System');
+  const sec = r().find(x => x.type === 'Section' && x.props.label === 'Proton-ish Plugin System');
   const secs = r().filter(x => x.type === 'Section').map(x => x.props.label);
-  t.ok(sec && secs[secs.length - 1] === 'NotProton Plugin System',
+  t.ok(sec && secs[secs.length - 1] === 'Proton-ish Plugin System',
        `in its own section at the bottom (${secs.join(', ')})`);
   row(r(), label).props.onChange(true);
   await settle(); await settle();
-  t.ok(sent.length === 1 && sent[0].route === 'NotProton.SetShowAllPlugins#1' && sent[0].appid === 1,
+  t.ok(sent.length === 1 && sent[0].route === 'Protonish.SetShowAllPlugins#1' && sent[0].appid === 1,
        `on sends 1 (${JSON.stringify(sent)})`);
   t.ok(g.MSCXShowAllPlugins === true && row(r(), label).props.checked === true, 'and shows as on');
   row(r(), label).props.onChange(false);

@@ -58,7 +58,7 @@ function page(form, reply) {
     {
       const p = page(form, () => Promise.resolve(JSON.stringify(NEW)));
       assert(p.show().includes('Old plugin'), `${form}: the first render shows the list Steam started with`);
-      assert.deepEqual(p.calls, [['NotProton.GetPlugins#1', 0]], `${form}: opening asks for the list once`);
+      assert.deepEqual(p.calls, [['Protonish.GetPlugins#1', 0]], `${form}: opening asks for the list once`);
       await settle();
       const now = p.show();
       assert(now.includes('New plugin') && !now.includes('Old plugin'), `${form}: the answer re-renders the panel`);
