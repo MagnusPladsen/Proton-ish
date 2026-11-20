@@ -17,6 +17,7 @@
 #include "defaults.h"
 #include "prefixstate.h"
 #include "webui.h"
+#include "webpatch.h"
 #include "../resolver/anchor.h"
 #include "../util/file.h"
 #include "../util/log.h"
@@ -35,6 +36,8 @@
 #define ROUTE_SET_DEFAULTS         "Protonish.SetDefaults#1"
 #define ROUTE_SET_TOOL_DEFAULTS    "Protonish.SetToolDefaults#1"
 #define ROUTE_APPLY_TOOL_DEFAULTS  "Protonish.ApplyToolDefaults#1"
+#define ROUTE_SET_SHOW_ALL         "Protonish.SetShowAllPlugins#1"
+#define ROUTE_GET_PLUGINS          "Protonish.GetPlugins#1"
 
 // Mangled RTTI names of the message types. A client that builds the CompatManager
 // page compiles these without registering the service, so the vtables are there to
@@ -149,7 +152,7 @@ static void pb_tool(np_pb_t *w, uint32_t resp_field,
 static int offered(const uint8_t *tool, uint32_t platforms, int bypass) {
     uint32_t converts_from =
         *(const uint32_t *)(tool + np_compat_tool_off(COMPAT_TOOL_PLATFORM_OFF));
-    uint32_t gate = *(const uint32_t *)(tool + COMPAT_TOOL_GATE_FLAGS_OFF);
+    uint32_t gate = *(const uint32_t *)(tool + np_compat_tool_off(COMPAT_TOOL_GATE_FLAGS_OFF));
 
     if (!(platforms & converts_from)) return 0;
     if ((gate & COMPAT_TOOL_GATE_HIDDEN) && !bypass) return 0;
@@ -157,8 +160,7 @@ static int offered(const uint8_t *tool, uint32_t platforms, int bypass) {
 }
 
 static const char *tool_name(const void *tool) {
-    if (!tool) return NULL;
-    return *(const char *const *)((const uint8_t *)tool + COMPAT_TOOL_NAME_OFF);
+    return np_compat_tool_name(tool);
 }
 
 static int get_compat_tools(uintptr_t request, uintptr_t response) {
@@ -213,7 +215,7 @@ static int get_compat_tools(uintptr_t request, uintptr_t response) {
     int32_t best = 0;
     for (uint32_t i = 0; i < count; i++) {
         int32_t prio = *(const int32_t *)(array + (size_t)i * np_compat_tool_stride()
-                                          + COMPAT_TOOL_PRIORITY_OFF);
+                                          + np_compat_tool_off(COMPAT_TOOL_PRIORITY_OFF));
         if (prio > best) best = prio;
     }
 
@@ -235,9 +237,9 @@ static int get_compat_tools(uintptr_t request, uintptr_t response) {
         const char *name = tool_name(tool);
         if (!name) continue;
 
-        int32_t prio = *(const int32_t *)(tool + COMPAT_TOOL_PRIORITY_OFF);
+        int32_t prio = *(const int32_t *)(tool + np_compat_tool_off(COMPAT_TOOL_PRIORITY_OFF));
         pb_tool(&w, RESP_TOOLS, name,
-                *(const char *const *)(tool + COMPAT_TOOL_DISPLAY_OFF),
+                *(const char *const *)(tool + np_compat_tool_off(COMPAT_TOOL_DISPLAY_OFF)),
                 active && strcmp(active, name) == 0,
                 best != 0 && prio != best && prio > 0);
         if (!w.ok) {
@@ -364,6 +366,27 @@ static int prefix_state(uintptr_t request, uintptr_t response) {
     }
     NP_DBG("compatsvc: app %u prefix state %s", appid, json);
     return answer_json(response, appid, json);
+}
+
+static int get_plugins(uintptr_t request, uintptr_t response) {
+    (void)request;
+    char *json = np_webpatch_live_json();
+    if (!json) {
+        NP_ERR("compatsvc: the plugin list could not be read");
+        return RESULT_FAIL;
+    }
+    size_t len = strlen(json);
+    uint8_t *body = malloc(len + 16);
+    int result = RESULT_FAIL;
+    if (body) {
+        np_pb_t w = { body, len + 16, 0, 1 };
+        pb_string(&w, RESP_DEFAULT, json);
+        if (w.ok && np_webui_parse_into(response, body, (uint32_t)w.len)) result = RESULT_OK;
+        else NP_ERR("compatsvc: the client rejected the %zu byte plugin list", len);
+    }
+    free(body);
+    free(json);
+    return result;
 }
 
 // Runs argv with nothing of Steam's environment, so neither the insert nor Steam's own
@@ -518,6 +541,26 @@ static int apply_tool_defaults(uintptr_t request, uintptr_t response) {
     return done > 0 ? RESULT_OK : done < 0 ? NP_COMPATSVC_PARTLY_APPLIED : RESULT_FAIL;
 }
 
+static int set_show_all(uintptr_t request, uintptr_t response) {
+    uint32_t has_bits = *(const uint32_t *)(request + REQ_HAS_BITS_OFF);
+    uint32_t on       = (has_bits & SPECIFY_HAS_APPID)
+                      ? *(const uint32_t *)(request + SPECIFY_APPID_OFF) : 0;
+    const char *home  = np_home_dir();
+    char path[PATH_MAX];
+    (void)response;
+    if (!home) return RESULT_FAIL;
+    np_support_path(path, sizeof path, home, NP_SHOW_ALL_PLUGINS_FILE);
+    if (on) {
+        int fd = open(path, O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0644);
+        if (fd < 0) return RESULT_FAIL;
+        close(fd);
+    } else if (unlink(path) != 0 && errno != ENOENT) {
+        return RESULT_FAIL;
+    }
+    NP_LOG("compatsvc: plugins made for other games are %s", on ? "shown" : "hidden");
+    return RESULT_OK;
+}
+
 static uintptr_t g_state_changed;
 static int g_routes = NP_COMPATSVC_UNTRIED;
 
@@ -564,7 +607,9 @@ void np_compatsvc_register(const struct mach_header_64 *mh, intptr_t slide,
         || !np_webui_register_route(ROUTE_SET_TOOL_DEFAULTS, specify_request, specify_response,
                                     set_tool_defaults)
         || !np_webui_register_route(ROUTE_APPLY_TOOL_DEFAULTS, specify_request, specify_response,
-                                    apply_tool_defaults))
+                                    apply_tool_defaults)
+        || !np_webui_register_route(ROUTE_SET_SHOW_ALL, specify_request, specify_response,
+                                    set_show_all))
         NP_WARN("compatsvc: the Settings page cannot save default compatibility settings");
 
     g_routes = NP_COMPATSVC_READY;
@@ -575,6 +620,8 @@ void np_compatsvc_register(const struct mach_header_64 *mh, intptr_t slide,
                                     backup_and_rebuild_prefix)
         || !np_webui_register_route(ROUTE_OPEN_LOG, request, response, open_prefix_log))
         NP_WARN("compatsvc: the Compatibility page cannot rebuild prefixes");
+    if (!np_webui_register_route(ROUTE_GET_PLUGINS, request, response, get_plugins))
+        NP_WARN("compatsvc: the Compatibility page shows the plugins Steam started with");
 
     uintptr_t notification = np_rtti_vptr(mh, slide, text_base, text_size,
                                           TYPE_STATE_CHANGED);
