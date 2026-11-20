@@ -117,3 +117,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-16: NotProton 47b903b merged: CrossOver Preview 20261111 support, an opt-out for macOS Game Mode, working desktop shortcuts for non-Steam games, and a fix for Steam's UI flashing at startup.
 - 2026-11-20: highball-db 1584073: Highball's fixes and per-game data as of this release.
 - 2026-11-20: NotProton 42c1a91 merged: support for Steam Beta Client 1795048523, game-specific plugins with a plugin management page, and a batch of bug fixes.
+- 2026-11-20: highball-db 037b550: Highball's fixes and per-game data as of this release.
