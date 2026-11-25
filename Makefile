@@ -78,7 +78,7 @@ DEPS := $(OBJS:.o=.d)
         tests-list overlay-shim overlay-shim-install overlay-shim-tests \
         overlay-shim-bench iconmaker icon \
         appinfo helpers-install ntdll-resolve bridge runcheck compatcheck envpasscheck \
-        compatsvc-check prefixstate-check defaults-check compatpage-check defaults-drift shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck launchercheck bundlecheck launch-shell activatecheck FORCE
+        compatsvc-check prefixstate-check defaults-check compatpage-check defaults-drift shortcutcheck scriptcheck envcheck buildcheck settingscheck routecheck bridgecheck gamedrivecheck extdrivecheck launchercheck bundlecheck launch-shell activatecheck FORCE
 
 APP_PAYLOAD := app/Sources/NotProtonApp/Resources/payload
 # Highball engines Proton-ish can download; manifests come from the pinned Highball package
@@ -155,6 +155,10 @@ runnervariantcheck:
 gamedrivecheck:
 	@if [ ! -f dylib/tests/gamedrivecheck.sh ]; then $(call SKIP,gamedrivecheck,dylib/tests/gamedrivecheck.sh); exit 0; fi; \
 	sh dylib/tests/gamedrivecheck.sh dylib/feats/compat_run.sh
+
+extdrivecheck:
+	@if [ ! -f dylib/tests/extdrivecheck.sh ]; then $(call SKIP,extdrivecheck,dylib/tests/extdrivecheck.sh); exit 0; fi; \
+	sh dylib/tests/extdrivecheck.sh dylib/feats/compat_run.sh
 
 launchercheck:
 	@if [ ! -f dylib/tests/launchercheck.sh ]; then $(call SKIP,launchercheck,dylib/tests/launchercheck.sh); exit 0; fi; \
@@ -500,27 +504,25 @@ app-tests:
 	cd app && swift test --manifest-cache none --no-parallel
 
 PANEL_TESTS := dylib/tests/panel-behavior
+PANEL_SCRIPTS := behavior switching launch-options shell migration localization fex renderer-gaps prefix-row live defaults
 
 panel-behavior:
 	@if [ ! -d $(PANEL_TESTS) ]; then $(call SKIP,panel-behavior,$(PANEL_TESTS)); exit 0; fi; \
 	if ! command -v node >/dev/null 2>&1; then \
 		[ -z "$$CI" ] || { echo "FAIL: panel-behavior needs node in CI"; exit 1; }; \
 		echo "==> panel-behavior: node not found, skipped"; exit 0; fi; \
-	mkdir -p $(OUT_DIR) && \
+	mkdir -p $(OUT_DIR)/panel-logs && \
 	$(TEST_CC) -O1 -o $(OUT_DIR)/panel-emit \
 	  $(PANEL_TESTS)/emit.c dylib/feats/conf.c dylib/util/file.c && \
-	node $(PANEL_TESTS)/behavior.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/switching.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/launch-options.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/shell.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/migration.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/localization.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/fex.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/renderer-gaps.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/prefix-row.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/live.js $(OUT_DIR)/panel-emit && \
-	node $(PANEL_TESTS)/defaults.js $(OUT_DIR)/panel-emit && \
-	echo "==> panel behavior: renders as expected, no stale arguments"
+	$(TEST_CC) -O1 -o $(OUT_DIR)/panel-probe $(PANEL_TESTS)/probe.c && \
+	pids=""; for t in $(PANEL_SCRIPTS); do \
+	  node $(PANEL_TESTS)/$$t.js $(OUT_DIR)/panel-emit $(CURDIR)/$(OUT_DIR)/panel-probe \
+	    > $(OUT_DIR)/panel-logs/$$t.log 2>&1 & pids="$$pids $$t:$$!"; \
+	done; \
+	fail=0; for p in $$pids; do \
+	  wait $${p#*:} || fail=1; cat $(OUT_DIR)/panel-logs/$${p%%:*}.log; \
+	done; \
+	[ $$fail -eq 0 ] && echo "==> panel behavior: renders as expected, no stale arguments"
 
 CX_ROOT ?= /Applications/CrossOver Preview.app
 
