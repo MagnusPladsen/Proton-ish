@@ -122,3 +122,4 @@ on [Releases](https://github.com/MagnusPladsen/Proton-ish/releases).
 - 2026-11-22: highball-db 568534c: Highball's fixes and per-game data as of this release.
 - 2026-11-24: HighballKit 0.10.29, highball-db 2ec4dcd: Highball's fixes and per-game data as of this release.
 - 2026-11-25: NotProton 8a993ad merged: drive letters for external disks in non-Steam games (with an on/off toggle), prefix rebuilds keep games installed inside non-Steam shortcut prefixes, and Dock icons get Apple's rounded mask.
+- 2026-11-25: highball-db 76d6c55: Highball's fixes and per-game data as of this release.
